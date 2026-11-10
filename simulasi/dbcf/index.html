@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="../../assets/logo-tazkia.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Donation Based Crowdfunding Simulation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: papan kendali lembaga filantropi. Atas = peta alur DBCF, kiri = indikator dan register risiko, kanan = meja keputusan bulanan. Satu tampilan gelap bernuansa Tazkia (navy + emas). */
+:root{
+  --ink:#0d1e36; --panel:#13294a; --panel2:#1a3560; --line:#2b4a78;
+  --gold:#f2c200; --gold-soft:#f7dc6f; --green:#3fb37f; --red:#e0604f; --blue:#5b9bf0;
+  --fg:#eef2f8; --muted:#a9b7cc; --dim:#7487a3;
+  --display:"Young Serif", Georgia, "Times New Roman", serif;
+  --body:"Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--ink);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:18px 40px}
+h1,h2,h3{font-family:var(--display);font-weight:400;text-wrap:balance;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.note{font-size:12.5px;color:var(--dim)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+
+/* ---------- layar awal ---------- */
+#intro .hero{display:grid;gap:10px;margin-block:10px 20px}
+#intro h1{font-size:clamp(34px,5vw,54px);line-height:1.05}
+#intro h1 em{font-style:normal;color:var(--gold)}
+#intro h2.sub{font-size:clamp(20px,2.6vw,28px);color:var(--gold-soft)}
+#intro p.lead{max-width:70ch;color:var(--muted);margin:0}
+.forks{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:16px}
+.fork{background:var(--panel2);border-radius:12px;padding:14px}
+.fork b{display:block;font-family:var(--display);font-weight:400;font-size:18px;color:var(--gold-soft);margin-bottom:4px}
+.fork span{font-size:13.5px;color:var(--muted)}
+.start{margin-top:18px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.rules{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.rule{border-top:2px solid var(--line);padding-top:10px}
+.rule b{display:block;font-size:14px;margin-bottom:2px}
+.rule span{font-size:13.5px;color:var(--muted)}
+.compare{margin-top:22px}
+.learn{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:16px}
+.learn .panel b.h{display:block;font-family:var(--display);font-weight:400;font-size:18px;color:var(--gold-soft);margin-bottom:6px}
+.learn ol{margin:0;padding-left:20px;display:grid;gap:5px;font-size:14px;color:var(--muted)}
+.ref{font-size:12.5px;color:var(--muted)} .ref b{color:var(--gold)}
+
+/* ---------- peta proses ---------- */
+.proc{margin-bottom:16px;display:grid;gap:12px}
+.proc .head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+.proc .head b{font-size:15px}
+.steps{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
+@media (max-width:860px){.steps{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.step{display:grid;gap:2px;justify-items:center;align-content:start;text-align:center;background:var(--panel2);border:1px solid transparent;border-radius:10px;padding:8px 4px}
+.step .n{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--gold);font-weight:800;font-size:12px;font-family:var(--mono)}
+.step .t{font-size:12.5px;font-weight:700}
+.step .a{font-size:11px;color:var(--muted);line-height:1.3}
+.step.gov{background:#1d2f4d;border-style:dashed;border-color:var(--line)}
+.step.on{background:var(--gold);color:var(--ink)}
+.step.on .a{color:#3a3000}
+.step.sel{border:1px solid var(--gold)}
+.step.on.sel{box-shadow:0 0 0 2px var(--fg) inset}
+.pdetail{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;font-size:13.5px}
+.pdetail div{background:var(--ink);border-radius:10px;padding:10px 12px}
+.pdetail b{display:block;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+
+/* ---------- permainan ---------- */
+.top{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.top h1{font-size:26px}
+.chip{font-size:13px;font-weight:700;padding:4px 12px;border-radius:99px;color:var(--ink);background:var(--gold)}
+.months{display:flex;gap:4px;flex-wrap:wrap}
+.clock{display:flex;gap:8px}
+.clock div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 12px;min-width:110px}
+.clock small{display:block;font-size:11px;color:var(--muted);letter-spacing:.04em}
+.clock b{font-family:var(--mono);font-size:20px;font-variant-numeric:tabular-nums}
+.clock div.warn b{color:var(--red)}
+.cbar{height:6px;background:var(--panel);border-radius:99px;overflow:hidden;margin:-6px 0 16px}
+.cbar span{display:block;height:100%;background:var(--gold);transition:width .5s linear}
+.wait{font-size:14px;background:var(--ink);border-left:4px solid var(--gold);border-radius:8px;padding:10px 14px;font-variant-numeric:tabular-nums}
+.months i{width:30px;height:24px;border-radius:5px;background:var(--panel);font-style:normal;font-size:10.5px;display:grid;place-items:center;color:var(--dim);font-family:var(--mono)}
+.months i.done{background:var(--panel2);color:var(--muted)}
+.months i.now{background:var(--gold);color:var(--ink);font-weight:700}
+.grid{display:grid;grid-template-columns:minmax(0,370px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.stats{display:grid;gap:14px}
+.money{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.money div{background:var(--panel2);border-radius:10px;padding:10px 12px}
+.money small{display:block;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.money b{font-family:var(--mono);font-size:19px;font-variant-numeric:tabular-nums}
+.money b.neg{color:var(--red)}
+.meter{display:grid;gap:5px}
+.meter .row{display:flex;justify-content:space-between;font-size:13.5px}
+.meter .row b{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.bar{height:9px;background:var(--ink);border-radius:99px;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:99px;transition:width .5s ease}
+.fee{background:var(--panel2);border-radius:10px;padding:12px}
+.fee .row{display:flex;justify-content:space-between;align-items:baseline}
+.fee b{font-family:var(--mono);font-size:20px}
+.fee input{width:100%;accent-color:var(--gold);margin-top:6px}
+.fee .scale{position:relative;height:16px;font-size:10.5px;color:var(--dim);font-family:var(--mono)}
+.fee .scale span{position:absolute;transform:translateX(-50%)}
+.fee .scale span:first-child{transform:none}
+.fee .scale span:last-child{transform:translateX(-100%)}
+.fee .warn{font-size:12.5px;margin-top:4px;min-height:1.4em}
+.spark svg{width:100%;height:70px;display:block}
+.shape{background:var(--panel2);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--muted)}
+.shape b{display:block;color:var(--gold-soft);font-size:14px}
+.risks{display:grid;gap:6px}
+.risks .rh{display:flex;justify-content:space-between;font-size:13.5px;gap:8px}
+.risks ul{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.risks li{display:grid;grid-template-columns:12px 1fr auto;gap:8px;align-items:center;font-size:13px;background:var(--panel2);border-radius:8px;padding:6px 10px}
+.risks li i{width:10px;height:10px;border-radius:50%;background:var(--dim)}
+.risks li em{font-style:normal;font-size:11.5px;color:var(--muted)}
+.risks li.ok i{background:var(--green)} .risks li.bad i{background:var(--red)}
+.risks li.ok em{color:var(--green)} .risks li.bad em{color:var(--red)}
+.risks li.hot{outline:1px solid var(--gold)}
+
+.event{display:grid;gap:14px}
+.event .kind{display:flex;gap:8px;flex-wrap:wrap}
+.event .kind span{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:6px;background:var(--panel2);color:var(--gold-soft)}
+.event .kind span.stg{background:var(--gold);color:var(--ink)}
+.event h2{font-size:clamp(22px,2.6vw,28px);line-height:1.2}
+.event p.story{margin:0;color:var(--muted);max-width:70ch}
+.quiz{background:#1b2f52;border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:8px}
+.quiz .qh{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12.5px}
+.quiz .qh b{color:var(--gold);letter-spacing:.08em;text-transform:uppercase}
+.quiz .qh span{color:var(--muted)}
+.quiz p{margin:0;font-weight:600}
+.qopts{display:grid;gap:6px}
+.qo{text-align:left;background:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:14px}
+.qo:hover:not(:disabled){border-color:var(--gold)}
+.qo:disabled{cursor:default;opacity:.6}
+.qo.right{opacity:1;border-color:var(--green);background:#173b33}
+.qo.wrong{opacity:1;border-color:var(--red);background:#3a1f2a}
+.qexp{font-size:13.5px;border-radius:8px;padding:8px 12px;background:var(--ink)}
+.qexp.ok b{color:var(--green)} .qexp.no b{color:var(--red)}
+.locked{font-size:12.5px;color:var(--dim);margin:0}
+.opts{display:grid;gap:10px}
+.opt{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start;text-align:left;background:var(--panel2);border:1px solid transparent;border-radius:12px;padding:12px 14px;transition:border-color .15s,background .15s}
+.opt:hover:not(:disabled){border-color:var(--gold)}
+.opt:disabled{cursor:default;opacity:.45}
+.opt.chosen{opacity:1;border-color:var(--gold);background:#22406f}
+.opt .k{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--gold);font-weight:800;font-family:var(--mono)}
+.opt b{display:block;font-size:15px}
+.opt span{font-size:13.5px;color:var(--muted)}
+.lens{display:grid;gap:10px;border-top:1px dashed var(--line);padding-top:14px}
+.fx{display:flex;flex-wrap:wrap;gap:6px}
+.fx span{font-size:12.5px;font-family:var(--mono);padding:3px 8px;border-radius:6px;background:var(--ink)}
+.fx .up{color:var(--green)} .fx .dn{color:var(--red)}
+.lens .why{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.lens .why div{background:var(--ink);border-radius:10px;padding:10px 12px;font-size:13.5px}
+.lens .why b{display:block;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+.next{justify-self:start;background:var(--gold);color:var(--ink);border:0;border-radius:10px;padding:10px 18px;font-weight:800}
+.alert{border-left:4px solid var(--red);background:#3a1f2a;padding:10px 14px;border-radius:8px;font-size:14px}
+.alert.good{border-color:var(--green);background:#173b33}
+.alert.info{border-color:var(--gold);background:#2d2a1a}
+.log{margin-top:18px}
+.log ol{margin:8px 0 0;padding-left:20px;display:grid;gap:4px;font-size:13.5px;color:var(--muted)}
+
+/* ---------- laporan akhir ---------- */
+.end{display:grid;gap:16px}
+.verdict{padding:22px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.verdict h2{font-size:clamp(28px,4vw,40px);margin-block:6px}
+.verdict p{margin:0;color:var(--muted);max-width:72ch}
+.scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.scores div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.scores small{display:block;color:var(--muted);font-size:12px}
+.scores b{font-family:var(--mono);font-size:22px}
+.recap{overflow-x:auto}
+.recap table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:620px}
+.recap th,.recap td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.recap th{color:var(--gold);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+.ghost{background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:10px 18px;font-weight:700}
+.cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.cmp .c{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.cmp .c h3{font-size:18px;margin-bottom:4px}
+.cmp dl{display:grid;grid-template-columns:1fr auto;gap:3px 12px;margin:0;font-size:13.5px}
+.cmp dt{color:var(--muted)} .cmp dd{margin:0;font-family:var(--mono)}
+.grade{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:16px;align-items:center}
+@media (max-width:700px){.grade{grid-template-columns:minmax(0,1fr)}}
+.grade .big{background:var(--ink);border-radius:14px;padding:16px;text-align:center}
+.grade .big b{display:block;font-family:var(--display);font-weight:400;font-size:56px;line-height:1;color:var(--gold)}
+.grade .big span{display:block;font-family:var(--mono);font-size:22px;margin-top:4px}
+.grade .big small{display:block;color:var(--muted);font-size:12px;margin-top:6px}
+.rub{display:grid;gap:6px;font-size:13.5px}
+.rub div{display:grid;grid-template-columns:1fr auto;gap:10px;background:var(--panel2);border-radius:8px;padding:6px 10px}
+.rub div b{font-family:var(--mono)}
+.form{display:grid;gap:12px}
+.form .ids{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.form label{display:grid;gap:4px;font-size:13.5px;color:var(--muted)}
+.form input,.form textarea{font:inherit;color:var(--fg);background:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.form textarea{min-height:96px;resize:vertical}
+.form .wc{font-size:12px;color:var(--dim);justify-self:end}
+.form .wc.ok{color:var(--green)}
+.status{font-size:13.5px;min-height:1.4em}
+.guide{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom, 0px));width:min(350px, calc(100vw - 32px));z-index:50;background:#fff7d6;color:#0d1e36;border:2px solid var(--gold);border-radius:14px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.45);display:grid;gap:8px;font-size:14px}
+.guide .gh{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.guide .gh b{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#7a5a00}
+.guide .gh button{background:transparent;border:0;color:#5b4a14;font-size:12.5px;text-decoration:underline;padding:0}
+.guide h4{margin:0;font-family:var(--display);font-weight:400;font-size:18px;line-height:1.2}
+.guide ol{margin:0;padding-left:18px;display:grid;gap:3px}
+.guide .gbtn{display:flex;gap:8px;flex-wrap:wrap}
+.guide .gbtn button{background:#0d1e36;color:#f2c200;border:0;border-radius:8px;padding:6px 12px;font-weight:700;font-size:13px}
+.guide .dots{display:flex;gap:4px}
+.guide .dots i{width:22px;height:5px;border-radius:9px;background:#e5d9a8}
+.guide .dots i.on{background:#0d1e36}
+.guide.min{width:auto;padding:8px 14px;cursor:pointer}
+.guide.min > *:not(.gh){display:none}
+.hl{outline:3px solid var(--gold)!important;outline-offset:4px;border-radius:12px;animation:hlp 1.2s ease-in-out 2}
+@keyframes hlp{50%{outline-color:transparent}}
+body{padding-bottom:180px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <!-- ===================== INTRO ===================== -->
+  <section id="intro">
+    <p style="margin:0 0 6px"><a href="../../" style="color:var(--gold);font-weight:700;text-decoration:none">← Learn Islamic Fintech with Tazkia</a></p>
+    <div class="hero">
+      <div class="eyebrow">Teknologi Keuangan Islam · Simulasi Kelas</div>
+      <h1>Donation Based Crowdfunding <em>Simulation</em></h1>
+      <h2 class="sub">Amanah atau Margin?</h2>
+      <p class="lead">Permainan ini menempatkan Anda sebagai pimpinan <b>Lumbung Amanah</b>, sebuah platform donasi daring berbadan hukum yayasan, selama 12 bulan pada 2026. Setiap bulan Anda menjawab satu kuis akad, kemudian mengambil satu keputusan. Keputusan tersebut dipetakan pada alur DBCF dan register risiko, untuk kemudian dijelaskan melalui Lensa Akad, Lensa Regulasi, Lensa Teori, dan Lensa Risiko.</p>
+    </div>
+
+    <div class="panel proc">
+      <div class="head"><b>Cara kerja DBCF: tujuh tahap dan tata kelola</b><span class="note">Klik setiap tahap untuk melihat akad dan risikonya</span></div>
+      <div class="steps" id="procIntro"></div>
+      <div class="pdetail" id="procIntroD"></div>
+    </div>
+
+    <div class="learn">
+      <div class="panel"><b class="h">Capaian pembelajaran</b>
+        <ol>
+          <li>Menjelaskan alur DBCF dari pengajuan kampanye hingga pelaporan, beserta akad pada setiap tahapnya.</li>
+          <li>Mengidentifikasi risiko syariah dan risiko operasional pada setiap keputusan, sekaligus menentukan mitigasinya.</li>
+          <li>Menganalisis pembentukan model bisnis DBCF, mulai dari Orkestrasi Mitra, Orkestrasi Mitra Berbasis AI, hingga Ekosistem Bundling.</li>
+          <li>Mengkritisi gejala Mission Drift dengan merujuk pada UU Yayasan, PP No. 29 Tahun 1980, dan fatwa DSN-MUI.</li>
+        </ol>
+      </div>
+      <div class="panel"><b class="h">Cara bermain di kelas</b>
+        <ol>
+          <li>Mahasiswa dibagi ke dalam kelompok berisi 3 sampai 4 orang. Satu putaran berlangsung tepat 10 menit, di mana 1 bulan simulasi setara dengan 50 detik dan bulan berganti secara otomatis.</li>
+          <li>Setiap kuis akad dijawab melalui diskusi kelompok terlebih dahulu, kemudian keputusan diambil berdasarkan kesepakatan.</li>
+          <li>Rujukan slide pada setiap keputusan dapat digunakan untuk membuka kembali materi terkait.</li>
+          <li>Pada sesi debrief, setiap kelompok memaparkan model bisnis yang terbentuk, skor literasi akad, serta risiko yang terjadi.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="forks">
+      <div class="fork"><b>Model bisnis terbentuk dari keputusan</b><span>Model bisnis tidak dipilih di awal. Keputusan terkait investor, pendirian PT, produk proteksi, dan Charity Run pada akhirnya akan membentuk model bisnis lembaga.</span></div>
+      <div class="fork"><b>Orkestrasi mitra</b><span>Lembaga tetap berbentuk satu yayasan dan menjalankan program bersama mitra lokal. Kas yang terbatas dapat diimbangi dengan efisiensi melalui Karyawan AI.</span></div>
+      <div class="fork"><b>Ekosistem Bundling</b><span>Yayasan ditopang oleh PT dan beberapa produk lain. Skala dan kas lebih kuat, namun lebih rentan terhadap Mission Drift.</span></div>
+    </div>
+
+    <div class="start">
+      <button class="next" id="startBtn" type="button">Mulai memimpin Lumbung Amanah →</button>
+      <span class="note">Durasi tetap 10 menit: 1 bulan simulasi berlangsung 50 detik</span>
+    </div>
+
+    <div class="rules">
+      <div class="rule"><b>Kepercayaan publik</b><span>Penggerak utama donasi. Apabila turun di bawah 15, izin PUB dicabut sebagaimana terjadi pada ACT di tahun 2022.</span></div>
+      <div class="rule"><b>Kepatuhan syariah dan hukum</b><span>Mencakup akad, PP No. 29 Tahun 1980, UU Yayasan, dan UU Pelindungan Data Pribadi. Apabila turun di bawah 15, kegiatan lembaga dihentikan regulator.</span></div>
+      <div class="rule"><b>Misi sosial</b><span>Berkurang setiap kali logika bisnis mengambil alih arah lembaga. Indikator ini menjadi ukuran Mission Drift.</span></div>
+      <div class="rule"><b>Kas operasional</b><span>Defisit selama dua bulan berturut-turut membuat lembaga berhenti beroperasi.</span></div>
+      <div class="rule"><b>Waktu</b><span>Kuis yang belum dijawab di akhir bulan dihitung salah, dan keputusan yang tidak diambil menurunkan kepercayaan serta kepatuhan.</span></div>
+    </div>
+    <div class="compare" id="introCompare" hidden></div>
+    <p class="note" style="margin-top:18px">Lumbung Amanah merupakan lembaga fiktif, dan seluruh angka serta peristiwa di dalamnya merupakan simulasi untuk kepentingan pembelajaran. Disusun berdasarkan materi kuliah Dr. Yaser Taufik Syamlan, ME, CIFP.</p>
+  </section>
+
+  <!-- ===================== GAME ===================== -->
+  <section id="game" hidden>
+    <div class="top">
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <h1>DBCF Simulation</h1>
+        <span class="chip">Lumbung Amanah</span>
+      </div>
+      <div class="months" id="months" aria-label="Linimasa bulan"></div>
+      <div class="clock" aria-live="off">
+        <div id="clkTotBox"><small>Sisa waktu simulasi</small><b id="clkTot">10:00</b></div>
+        <div id="clkMonBox"><small id="clkDay">Hari ke-1</small><b id="clkMon">0:50</b></div>
+      </div>
+    </div>
+    <div class="cbar" aria-hidden="true"><span id="clkBar"></span></div>
+    <div class="panel proc">
+      <div class="head"><b>Posisi keputusan dalam alur DBCF</b><span class="note">Tahap yang menyala adalah titik keputusan bulan ini</span></div>
+      <div class="steps" id="procGame"></div>
+      <div class="pdetail" id="procGameD"></div>
+    </div>
+    <div class="grid">
+      <aside class="panel stats" aria-label="Indikator lembaga">
+        <div class="money">
+          <div><small>Donasi bulan ini</small><b id="mDon">0</b></div>
+          <div><small>Kas operasional</small><b id="mKas">0</b></div>
+          <div><small>Total tersalur</small><b id="mTot">0</b></div>
+          <div><small>Penerima manfaat</small><b id="mPen">0</b></div>
+        </div>
+        <div class="spark" aria-label="Grafik donasi bulanan"><svg id="spark" viewBox="0 0 300 70" preserveAspectRatio="none"></svg></div>
+        <div class="meter"><div class="row"><span>Kepercayaan publik</span><b id="vTrust"></b></div><div class="bar"><span id="bTrust"></span></div></div>
+        <div class="meter"><div class="row"><span>Kepatuhan syariah dan hukum</span><b id="vComp"></b></div><div class="bar"><span id="bComp"></span></div></div>
+        <div class="meter"><div class="row"><span>Misi sosial (100 = tanpa Mission Drift)</span><b id="vMis"></b></div><div class="bar"><span id="bMis"></span></div></div>
+        <div class="fee">
+          <div class="row"><span>Potongan operasional</span><b id="feeVal">6%</b></div>
+          <input id="fee" type="range" min="0" max="15" step="1" value="6" aria-label="Potongan operasional dalam persen">
+          <div class="scale"><span style="left:0%">0</span><span style="left:33.3%">5</span><span style="left:66.6%;color:var(--gold)">10 batas</span><span style="left:100%">15</span></div>
+          <div class="warn" id="feeWarn"></div>
+        </div>
+        <div class="shape" id="shape"></div>
+        <div class="risks">
+          <div class="rh"><b>Register risiko</b><span>Literasi akad <b id="qScore">0/0</b></span></div>
+          <ul id="riskList"></ul>
+        </div>
+        <p class="note">Satuan uang: Rp miliar (angka simulasi).</p>
+      </aside>
+      <main class="panel event" id="eventBox" aria-live="polite"></main>
+    </div>
+    <div class="log panel"><b>Jejak keputusan</b><ol id="log"></ol></div>
+  </section>
+
+  <!-- ===================== END ===================== -->
+  <section id="end" class="end" hidden></section>
+</div>
+
+<aside class="guide" id="guide" aria-live="polite">
+  <div class="gh"><b id="gStep">Panduan</b><button type="button" id="gMin">Sembunyikan</button></div>
+  <div class="dots" id="gDots"></div>
+  <h4 id="gTitle"></h4>
+  <div id="gText"></div>
+  <div class="gbtn"><button type="button" id="gGo">Tunjukkan</button></div>
+</aside>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(() => {
+const MONTHS = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+const BASE = {base:10, ops:0.55, kas:2, fee:6, pt:0, drift:8, trust:70, comp:76};
+// Musim: Ramadan Feb-Mar 2026, Iduladha akhir Mei 2026
+const SEASON = [1,1.35,1.45,1,1.2,1,1,1,1,1,1,1.15];
+
+// ---------- peta proses ----------
+const STAGES = [
+  {k:1, t:"Ajukan", s:"Penggalang mengajukan kampanye", akad:"Penggalang bertindak sebagai wakil penerima manfaat melalui akad Wakalah.", risk:"Kisah palsu atau dokumen fiktif yang mengandung unsur Tadlis."},
+  {k:2, t:"Verifikasi", s:"Kisah dan rekening diuji", akad:"Platform memastikan objek dan peruntukan Wakalah telah jelas.", risk:"Penipuan penggalang lolos verifikasi, serta Gharar atas peruntukan dana."},
+  {k:3, t:"Tayang", s:"Kampanye dipromosikan", akad:"Informasi wajib disampaikan secara jujur, dan paket produk menggunakan akad yang terpisah.", risk:"Dramatisasi kisah serta penggunaan data donatur tanpa izin."},
+  {k:4, t:"Donasi", s:"Dana masuk rekening yayasan", akad:"Wakalah atas sedekah, infak, dan zakat. Dana mengendap ditempatkan dengan akad Wadiah atau Mudharabah.", risk:"Zakat bercampur dengan infak, serta penerimaan bunga bank konvensional."},
+  {k:5, t:"Potong", s:"Donasi operasional", akad:"Wakalah bil Ujrah merujuk pada Fatwa DSN-MUI No. 113/DSN-MUI/IX/2017, dengan bagian amil paling banyak 1/8.", risk:"Potongan melampaui 10% atau pemotongan atas dana bencana."},
+  {k:6, t:"Cairkan", s:"Ke penggalang atau mitra", akad:"Wakalah Muqayyadah, di mana mitra berkedudukan sebagai wakil kedua melalui Taukil.", risk:"Khianat atas peruntukan, kelalaian mitra, serta aliran dana kepada pihak berisiko."},
+  {k:7, t:"Lapor", s:"Kabar dan laporan dana", akad:"Wakil bertanggung jawab kepada pemberi kuasa (muwakkil).", risk:"Krisis reputasi apabila laporan tidak dibuka kepada publik."},
+  {k:"L", t:"Tata kelola", s:"Yayasan, PT, dan investor", akad:"Ijarah jasa platform, Syirkah investor di PT, dan Tabarru' untuk produk proteksi.", risk:"Related Party Transaction, gaji organ yayasan, dan Mission Drift."}
+
+];
+const RISKS = {penipuan:"Penipuan penggalang", internal:"Penyalahgunaan internal", reputasi:"Reputasi", kepatuhan:"Kepatuhan regulasi", apu:"APU PPT dan PPPT", data:"Data dan siber", syariah:"Syariah"};
+
+// ---------- kartu peristiwa (satu per bulan) ----------
+// fx: trust, comp, drift (+ = misi turun), kas (kelipatan biaya ops bulanan), growth (persen basis), pt (subsidi PT per bulan, kelipatan ops)
+// req: "pt" hanya muncul bila sudah ada PT, "nopt" hanya bila belum ada PT
+const EVENTS = [
+ {stage:2, risks:["penipuan","reputasi"], kind:["Verifikasi","Akad Wakalah"], title:"Kampanye Pengobatan Anak Viral dalam Semalam",
+  story:"Seorang penggalang mengunggah kisah anak yang membutuhkan operasi jantung. Dokumen medis belum lengkap, namun donasi sudah mengalir deras setelah beberapa figur publik ikut membagikan kampanye tersebut.",
+  quiz:{q:"Ketika donatur mentransfer dana ke sebuah kampanye, platform berkedudukan sebagai apa?", o:["Wakil donatur melalui akad Wakalah","Pemilik dana karena menerima Hibah","Peminjam dana melalui akad Qardh"], a:0,
+   e:"Dalam hal ini platform menerima kuasa dari donatur untuk menyalurkan dana sesuai peruntukan, sehingga platform berkewajiban memastikan kampanye tersebut benar sebelum dana dicairkan."},
+  opts:[
+   {t:"Tayangkan penuh sekarang", d:"Momentum viral dimanfaatkan, dokumen menyusul kemudian.", fx:{growth:6,trust:2}, flag:"unverified",
+    lens:{akad:"Platform bertindak sebagai wakil donatur. Menayangkan kisah yang belum diuji membuka ruang Gharar dan Tadlis atas objek Wakalah.", reg:"Verifikasi merupakan titik kontrol pertama dalam alur DBCF, yaitu pada tahap kedua.", teori:"Sebagai contoh, kasus Cak Budi pada 2017 menunjukkan kepercayaan publik hilang ketika donasi dipakai di luar peruntukan."}},
+   {t:"Tahan 2x24 jam untuk verifikasi", d:"Dokumen rumah sakit dan rekening tujuan diperiksa terlebih dahulu, baru kemudian kampanye ditayangkan.", fx:{growth:2,trust:5,comp:3,kas:-0.1},
+    lens:{akad:"Wakalah Muqayyadah menuntut peruntukan yang jelas sejak awal akad.", reg:"Pencairan langsung ke rumah sakit dapat meminimalisir celah penyalahgunaan dana.", teori:"Pada akhirnya kepercayaan merupakan aset utama model bisnis DBCF, sebagaimana tergambar pada Business Model Canvas."}},
+   {t:"Tayang dengan label 'dalam verifikasi', dana ditahan", d:"Donasi tetap diterima, sedangkan pencairan menunggu kelengkapan dokumen.", fx:{growth:4,trust:4,comp:2},
+    lens:{akad:"Dana tetap berstatus amanah di tangan wakil sampai syarat peruntukan terpenuhi.", reg:"Keterbukaan status kampanye dapat menekan risiko reputasi.", teori:"Dengan kata lain, kecepatan platform digital tetap dapat dijalankan tanpa mengorbankan amanah."}}
+  ]},
+ {stage:4, risks:["syariah","kepatuhan"], kind:["Ramadan","Zakat"], title:"Ramadan Tiba, Penghimpunan Zakat Melonjak",
+  story:"Donatur menyalurkan zakat, infak, dan sedekah dalam waktu yang bersamaan. Tim keuangan kemudian mengusulkan agar seluruh dana dicatat dalam satu rekening supaya operasional lebih ringkas.",
+  quiz:{q:"Berapa bagian maksimal amil zakat merujuk pada Fatwa MUI No. 8 Tahun 2011 tentang Amil Zakat?", o:["Seperdelapan (1/8) dari zakat yang dihimpun","Seperempat (1/4) dari zakat yang dihimpun","Tidak dibatasi selama disetujui pengurus"], a:0,
+   e:"Amil merupakan salah satu dari delapan asnaf, sehingga bagiannya paling banyak 1/8. Di sisi lain, dana zakat wajib dipisahkan dari infak dan sedekah."},
+  opts:[
+   {t:"Satu rekening untuk seluruh dana", d:"Lebih sederhana dan biaya administrasi bank lebih rendah.", fx:{kas:0.3,comp:-12,trust:-3},
+    lens:{akad:"Zakat memiliki delapan asnaf yang telah ditentukan, sehingga bercampurnya zakat dengan infak membuat peruntukan menjadi kabur.", reg:"Merujuk pada UU No. 23 Tahun 2011 tentang Pengelolaan Zakat, penghimpunan zakat memerlukan izin LAZ atau kemitraan dengan BAZNAS dan LAZ.", teori:"Zakat yang bercampur dengan infak termasuk risiko syariah dalam peta manajemen risiko DBCF."}},
+   {t:"Rekening terpisah, zakat disalurkan melalui LAZ mitra", d:"Bagian amil paling banyak 1/8 sesuai Fatwa MUI No. 8 Tahun 2011.", fx:{kas:-0.1,comp:8,trust:5},
+    lens:{akad:"Platform bertindak sebagai wakil donatur, sedangkan LAZ bertindak sebagai amil.", reg:"Pemisahan rekening per jenis dana merupakan titik kontrol pada tahap keempat.", teori:"Kemitraan dengan LAZ menambah legitimasi lembaga tanpa harus mengurus izin baru."}}
+  ]},
+ {stage:4, risks:["syariah"], kind:["Dana Mengendap","Akad Wadiah"], title:"Dana Kampanye Mengendap Sebelum Dicairkan",
+  story:"Ratusan kampanye Ramadan belum mencairkan dananya sehingga saldo rekening yayasan cukup besar. Sebuah bank konvensional menawarkan bunga deposito yang menarik untuk dana menganggur (idle fund) tersebut.",
+  quiz:{q:"Bunga bank konvensional yang terlanjur diterima lembaga harus diperlakukan sebagai apa?", o:["Pendapatan operasional yayasan","Tambahan donasi bagi kampanye","Dana nonhalal yang disalurkan untuk kepentingan umum"], a:2,
+   e:"Bunga termasuk riba, sehingga tidak dapat diakui sebagai pendapatan lembaga maupun dicampur dengan donasi. Dalam hal ini dana tersebut disalurkan untuk kepentingan umum."},
+  opts:[
+   {t:"Tempatkan di deposito bank konvensional", d:"Bunga deposito menambah kas operasional.", fx:{kas:1,comp:-14,trust:-3},
+    lens:{akad:"Bunga merupakan riba, sehingga menjadikannya pendapatan lembaga bertentangan dengan prinsip syariah.", reg:"Apabila terlanjur diterima, bunga wajib dikeluarkan sebagai dana nonhalal.", teori:"Kasus ini menggambarkan godaan margin yang pada akhirnya menggerus kepatuhan."}},
+   {t:"Tempatkan di bank syariah dengan akad Wadiah atau Mudharabah", d:"Bagi hasil lebih kecil, namun akadnya jelas.", fx:{kas:0.3,comp:6},
+    lens:{akad:"Wadiah atau Mudharabah merupakan akad yang sesuai untuk dana mengendap.", reg:"Pilihan ini menjaga kepatuhan syariah lembaga.", teori:"Kas tumbuh lebih lambat, namun misi lembaga tidak bergeser."}}
+  ]},
+ {stage:6, risks:["penipuan","syariah"], kind:["Orkestrasi Mitra","Akad Wakalah"], title:"Yayasan Panti di Garut Mengajukan Kemitraan",
+  story:"Sebuah yayasan lokal mengajukan pembangunan panti sekaligus dukungan bagi guru honorer. Mitra tersebut meminta seluruh dana dicairkan sekaligus agar pembangunan dapat segera dimulai.",
+  quiz:{q:"Apa yang dimaksud dengan Wakalah Muqayyadah dalam penyaluran dana kepada mitra?", o:["Perwakilan yang bebas tanpa batasan","Perwakilan yang terikat pada peruntukan tertentu","Perwakilan yang boleh mengambil keuntungan"], a:1,
+   e:"Muqayyadah berarti terikat. Dengan kata lain, mitra hanya dapat menggunakan dana untuk program yang telah disepakati, sehingga pencairan bertahap disertai bukti menjadi wajar."},
+  opts:[
+   {t:"Cairkan seluruh dana sekaligus", d:"Proses lebih cepat dan mitra merasa dipercaya.", fx:{growth:3,comp:-6}, flag:"partnerRisk",
+    lens:{akad:"Mitra berkedudukan sebagai wakil kedua, sehingga tanpa syarat bukti peruntukan dana sulit dipastikan.", reg:"Pencairan tanpa tahapan melemahkan titik kontrol pada tahap keenam.", teori:"Dalam model orkestrasi, reputasi platform pada akhirnya bergantung pada mitra yang paling lemah."}},
+   {t:"Verifikasi legalitas, cairkan bertahap disertai bukti", d:"Mitra menyerahkan akta, izin, dan laporan foto pada setiap tahap.", fx:{growth:2,trust:5,comp:6,kas:-0.1},
+    lens:{akad:"Sejalan dengan Wakalah Muqayyadah, dana mengikuti peruntukan yang telah disepakati.", reg:"Standar kemitraan mencakup legalitas, rencana anggaran, dan bukti pada setiap tahap.", teori:"Kekuatan model orkestrasi terletak pada kedekatan dan kepercayaan dengan mitra."}}
+  ]},
+ {stage:6, risks:["penipuan","syariah"], kind:["Iduladha","Qurban 3T"], title:"Program Qurban ke Wilayah 3T",
+  story:"Pesanan hewan qurban untuk wilayah Aceh hingga Papua meningkat tajam. Seorang vendor menawarkan harga jauh di bawah pasar, namun tidak menyediakan bukti penyembelihan.",
+  quiz:{q:"Lembaga yang menerima dana qurban dari donatur berkedudukan sebagai apa?", o:["Wakil untuk membeli, menyembelih, dan membagikan hewan","Pemilik hewan qurban","Pemberi pinjaman kepada peternak"], a:0,
+   e:"Lembaga bertindak sebagai wakil pequrban. Hewan harus memenuhi syarat dan disembelih sesuai syariat, sehingga bukti penyembelihan menjadi bagian dari amanah."},
+  opts:[
+   {t:"Gunakan vendor termurah", d:"Selisih harga menambah kas lembaga.", fx:{kas:1,comp:-8}, flag:"qurbanRisk",
+    lens:{akad:"Wakalah qurban menuntut hewan memenuhi syarat dan disembelih sesuai syariat.", reg:"Tanpa bukti, laporan penyaluran tidak dapat ditelusuri.", teori:"Margin dari selisih harga merupakan tanda logika bisnis mulai memimpin."}},
+   {t:"Gunakan mitra lokal dengan laporan foto dan nama penerima", d:"Biaya lebih tinggi, namun penyaluran dapat ditelusuri.", fx:{trust:7,comp:5,growth:4,kas:-0.1},
+    lens:{akad:"Amanah qurban tertunaikan dan dapat dibuktikan.", reg:"Laporan penyaluran ini sejalan dengan tahap ketujuh alur DBCF.", teori:"Orkestrasi mitra pada akhirnya menjadi nilai jual lembaga."}}
+  ]},
+ {stage:5, risks:["reputasi","kepatuhan"], kind:["Bencana","Dana Kemanusiaan"], title:"Banjir Besar Melanda Sumatera", disaster:true,
+  story:"Dalam 24 jam, kampanye bencana menghimpun dana dalam jumlah sangat besar. Tim keuangan menghitung bahwa potongan operasional dari dana tersebut cukup untuk menutup defisit selama setahun.",
+  quiz:{q:"Potongan operasional pada DBCF paling tepat menggunakan akad apa?", o:["Mudharabah","Wakalah bil Ujrah","Murabahah"], a:1,
+   e:"Lembaga mewakili donatur dan mengambil ujrah yang disepakati di muka, merujuk pada Fatwa DSN-MUI No. 113/DSN-MUI/IX/2017 tentang Akad Wakalah bil Ujrah. Untuk dana bencana, Kemensos meminta dana disalurkan penuh."},
+  opts:[
+   {t:"Potong operasional seperti kampanye lainnya", d:"Biaya logistik memang besar sehingga potongan dianggap wajar.", fx:{kas:3,trust:-14,comp:-12}, cut:true,
+    lens:{akad:"Ujrah atas dana bencana yang tidak diungkapkan sama dengan mengambil tanpa hak.", reg:"Kemensos menegaskan dana bencana disalurkan penuh. Potongan ACT sebesar 13,7% menjadi salah satu dasar pencabutan izinnya.", teori:"Satu skandal dapat menular ke seluruh sektor filantropi melalui risiko reputasi."}},
+   {t:"Salurkan 100%, biaya ditanggung kas lembaga", d:"Biaya operasional ditutup dari kas atau subsidi PT.", fx:{kas:-1.2,trust:12,comp:6,growth:5},
+    lens:{akad:"Amanah ditunaikan penuh kepada penerima manfaat.", reg:"Pilihan ini sejalan dengan kebijakan Kemensos untuk dana bencana.", teori:"Kepercayaan yang meningkat akan menambah donasi pada bulan-bulan berikutnya."}},
+   {t:"Salurkan 100%, galang dana operasional secara terpisah", d:"Donatur diajak berinfak khusus untuk biaya logistik.", fx:{kas:-0.3,trust:9,comp:8,growth:3},
+    lens:{akad:"Akad dipisahkan, sehingga donasi bencana dan infak operasional memiliki peruntukan yang jelas.", reg:"Pilihan ini transparan dan tetap dalam batas izin PUB.", teori:"Desain ini menjaga misi sekaligus keberlanjutan operasional."}}
+  ]},
+ {stage:"L", risks:["internal","kepatuhan"], kind:["Investor","Pemisahan Entitas"], title:"Investor Menawarkan Modal untuk Mendirikan PT Teknologi",
+  story:"Biaya teknologi dan tim kampanye terus meningkat. Seorang investor menawarkan modal dengan syarat entitas dipisahkan, yaitu yayasan untuk dana publik dan PT untuk teknologi serta bisnis. Di sisi lain, tim TI mengusulkan Karyawan AI untuk menekan biaya. Keputusan ini akan menentukan model bisnis lembaga ke depan.",
+  quiz:{q:"Investor membeli saham PT teknologi milik grup. Akad apa yang paling mendekati?", o:["Syirkah (Musyarakah) dalam perusahaan","Qardh kepada yayasan","Wakaf produktif"], a:0,
+   e:"Penyertaan saham merupakan Syirkah pada PT, bukan pada yayasan. Dengan kata lain, dana umat di yayasan tidak boleh ikut menjadi modal investor."},
+  opts:[
+   {t:"Bentuk PT dengan harga jasa wajar dan kunci misi", d:"Modal mencukupi, misi dikunci dalam anggaran dasar dan diawasi DPS.", fx:{kas:3,pt:0.25,drift:6,comp:2,growth:2}, flag:"pt",
+    lens:{akad:"Investor masuk melalui Syirkah di PT, sedangkan yayasan membayar Ijarah jasa platform dengan ujrah yang wajar.", reg:"Transaksi pihak berelasi (Related Party Transaction) perlu dinilai secara independen.", teori:"Lembaga bergerak menjadi organisasi hibrida, di mana skala meningkat namun Mission Drift perlu dijaga."}},
+   {t:"Bentuk PT dengan target pertumbuhan agresif", d:"Modal besar dengan target pendapatan 40% per tahun.", fx:{kas:5,pt:0.4,drift:14,growth:5}, flag:"ptAggressive",
+    lens:{akad:"Dana umat tetap berada di yayasan, namun arah lembaga mulai ditentukan oleh target investor.", reg:"PT tunduk pada UU Perseroan Terbatas, sehingga disiplin pemisahan entitas menjadi kunci.", teori:"Merujuk pada Cornforth (2014), tekanan investor merupakan pemicu klasik Mission Drift."}},
+   {t:"Tetap satu yayasan dan bangun Karyawan AI", d:"Copywriting, desain video, dan pengelolaan iklan dikerjakan agen AI dengan persetujuan Leader, sehingga biaya operasional turun tanpa investor.", fx:{kas:-0.6,comp:1,growth:2}, flag:"ai",
+    lens:{akad:"Tidak ada akad baru dengan investor. Biaya pengembangan AI dibiayai dari ujrah operasional yang telah disepakati melalui Wakalah bil Ujrah.", reg:"Penggunaan data donatur oleh agen AI tetap tunduk pada UU No. 27 Tahun 2022, dan konten yang dihasilkan AI tetap menjadi tanggung jawab lembaga.", teori:"Disruptive Innovation dari sisi biaya: tim kecil mampu melayani skala besar, sehingga lembaga dapat fokus pada inti layanan tanpa bergantung pada investor."}},
+   {t:"Tetap satu yayasan dan perkuat jejaring mitra", d:"Fokus dan sederhana, pertumbuhan melalui orkestrasi mitra.", fx:{drift:-3,trust:2,growth:-1},
+    lens:{akad:"Tidak ada akad baru yang timbul.", reg:"Kegiatan tetap berada dalam izin PUB.", teori:"Kemurnian misi terjaga dengan skala yang terbatas, sebagaimana model orkestrasi mitra."}}
+  ]},
+ {stage:"L", risks:["internal","kepatuhan"], kind:["Tata Kelola","Pasal 5 UU Yayasan"], title:"Pendiri yang Menjadi Pembina Ingin Bekerja Penuh dan Digaji",
+  story:"Pendiri duduk sebagai Pembina yayasan dan ingin memimpin operasional harian. Bagian SDM kemudian menanyakan sumber pembayaran gajinya.",
+  quiz:{q:"Merujuk pada Pasal 5 UU No. 28 Tahun 2004 tentang Yayasan, organ mana yang tidak boleh menerima gaji dari yayasan?", o:["Pelaksana kegiatan","Pembina","Karyawan PT terafiliasi"], a:1,
+   e:"Pembina dan Pengawas dilarang menerima gaji dari yayasan. Lain halnya dengan Pengurus, yang dapat digaji apabila bukan pendiri, tidak terafiliasi, dan bekerja penuh. Pengurus juga dapat mengangkat pelaksana kegiatan."},
+  opts:[
+   {t:"Gaji dibayarkan dari kas yayasan", d:"Pendiri bekerja untuk yayasan sehingga dianggap wajar digaji yayasan.", fx:{kas:-0.8,comp:-18,trust:-6},
+    lens:{akad:"Mengambil ujrah dari dana umat di luar ketentuan yang berlaku.", reg:"Pembina dilarang menerima gaji dari yayasan berdasarkan Pasal 5 UU No. 28 Tahun 2004, dengan ancaman pidana hingga 5 tahun pada Pasal 70.", teori:"Pelajaran dari ACT menunjukkan gaji pimpinan dari dana umat pada akhirnya meruntuhkan kepercayaan."}},
+   {t:"Pendiri berkarya dan digaji di PT", d:"Pendiri tetap menjadi Pembina yayasan dan bekerja sebagai eksekutif PT.", fx:{pt:-0.05,comp:4}, req:"pt",
+    lens:{akad:"Upah kerja di PT merupakan Ijarah yang lazim.", reg:"Skema ini sah selama yayasan tidak membayar PT dengan harga yang tidak wajar.", teori:"Skema ini merupakan keunggulan struktur yayasan dan PT."}},
+   {t:"Angkat CEO pelaksana yang bukan pendiri", d:"Pengurus mengangkat pelaksana kegiatan, sedangkan pendiri tetap menjadi Pembina secara sukarela.", fx:{kas:-0.2,comp:6,trust:3}, req:"nopt",
+    lens:{akad:"Pelaksana digaji secara wajar dari biaya administrasi.", reg:"Skema ini sesuai dengan struktur organ yayasan.", teori:"Dalam model orkestrasi, organ berlapis dijalankan dalam satu yayasan."}}
+  ]},
+ {stage:"L", risks:["kepatuhan","syariah"], kind:["Proteksi","Spontaneous Deregulation"], title:"Tim Produk Ingin Meluncurkan Proteksi Gotong Royong",
+  story:"Dalam program ini anggota saling menanggung biaya rumah sakit dengan iuran kecil. Pengguna menyambut baik, namun izin usaha asuransi dari OJK belum dimiliki.",
+  quiz:{q:"Iuran anggota yang saling menanggung biaya sakit menggunakan akad apa?", o:["Sedekah biasa","Tabarru' dalam asuransi syariah","Jual beli polis"], a:1,
+   e:"Iuran yang menjamin manfaat bagi peserta merupakan Tabarru', merujuk pada Fatwa DSN-MUI No. 21/DSN-MUI/X/2001 dan No. 52/DSN-MUI/III/2006. Karena termasuk asuransi, produk ini wajib berizin OJK."},
+  opts:[
+   {t:"Luncurkan sekarang sebagai program donasi", d:"Tumbuh terlebih dahulu, izin menyusul kemudian.", fx:{kas:1.5,growth:5,drift:6}, flag:"noLicense",
+    lens:{akad:"Iuran yang menjamin manfaat termasuk Tabarru' asuransi, bukan sedekah biasa.", reg:"Praktik asuransi tanpa izin dapat dihentikan oleh Satgas dan OJK, sebagaimana pernah terjadi pada 2021.", teori:"Spontaneous Deregulation (Edelman dan Geradin, 2016): bisnis berjalan mendahului aturan sampai regulator bertindak."}},
+   {t:"PT mengakuisisi perusahaan asuransi syariah berizin", d:"Biaya besar di awal, namun sah dan berkelanjutan.", fx:{kas:-3,pt:0.3,drift:8,comp:5}, flag:"insurer", req:"pt",
+    lens:{akad:"Tabarru' dan Wakalah bil Ujrah dijalankan oleh perusahaan asuransi syariah berizin.", reg:"Izin usaha diperoleh melalui akuisisi perusahaan berizin, sesuai UU No. 40 Tahun 2014 tentang Perasuransian.", teori:"Ekosistem bertambah satu pintu pendapatan melalui Bundling."}},
+   {t:"Bermitra dengan perusahaan asuransi syariah berizin", d:"Yayasan hanya melakukan edukasi, sedangkan produk dipasarkan oleh mitra berizin.", fx:{kas:0.3,comp:3,drift:2}, req:"nopt",
+    lens:{akad:"Akad asuransi terjadi antara peserta dan perusahaan, sehingga yayasan tidak menerima iuran.", reg:"Yayasan tetap berada di bawah Kemensos, sedangkan mitra diawasi OJK.", teori:"Orkestrasi mitra juga dapat diterapkan pada produk proteksi."}},
+   {t:"Tidak masuk ke produk proteksi", d:"Fokus pada penggalangan dana.", fx:{drift:-2},
+    lens:{akad:"Tidak ada akad baru yang timbul.", reg:"Kegiatan tetap berada di wilayah Kemensos.", teori:"Misi terjaga, namun peluang Bundling dilepas."}}
+  ]},
+ {stage:3, risks:["data","syariah"], kind:["Charity Run","Bundling"], title:"Merancang Charity Run Akhir Tahun",
+  story:"Tiket lari dijual Rp 225 ribu hingga Rp 350 ribu. Tim pemasaran ingin menggabungkan pendaftaran, donasi beasiswa, asuransi kecelakaan selama setahun, serta data pelari dalam satu paket.",
+  quiz:{q:"Paket tiket lari, donasi, dan asuransi dapat dibenarkan apabila memenuhi syarat apa?", o:["Cukup satu akad jual beli tiket","Setiap akad terpisah, jelas, dan tidak saling mensyaratkan","Boleh digabung selama harganya terjangkau"], a:1,
+   e:"Jual beli tiket, sedekah, dan Tabarru' merupakan akad yang berbeda. Ketiganya tidak boleh saling mensyaratkan, dan data peserta hanya dapat digunakan atas persetujuan yang bersangkutan."},
+  opts:[
+   {t:"Bundling dengan akad terpisah dan persetujuan data", d:"Tiket, donasi, dan asuransi dijelaskan masing-masing, sedangkan data digunakan apabila pelari menyetujui.", fx:{kas:1,trust:4,drift:5,growth:3}, flag:"bundle",
+    lens:{akad:"Jual beli tiket, sedekah, dan Tabarru' dijalankan sebagai akad yang berdiri sendiri.", reg:"Persetujuan eksplisit sejalan dengan UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi.", teori:"Biaya menjangkau donatur cukup dikeluarkan sekali, sedangkan pendapatan dapat diperoleh berulang kali."}},
+   {t:"Data pelari otomatis digunakan untuk Cross Selling", d:"Setiap pelari langsung masuk daftar pemasaran produk.", fx:{kas:2,comp:-12,trust:-5,drift:10,growth:4}, flag:"bundle",
+    lens:{akad:"Akad yang saling mensyaratkan dan penggunaan data tanpa izin bersinggungan dengan Tadlis.", reg:"Praktik ini bertentangan dengan prinsip persetujuan dalam UU Pelindungan Data Pribadi.", teori:"Donatur menjadi sasaran Cross Selling, yang merupakan tanda Mission Drift."}},
+   {t:"Charity Run murni tanpa produk lain", d:"Seluruh selisih harga tiket dialokasikan untuk beasiswa.", fx:{trust:5,drift:-3,kas:-0.2},
+    lens:{akad:"Satu akad untuk satu tujuan.", reg:"Skema sederhana dan minim risiko kepatuhan.", teori:"Misi terjaga, namun peluang ekosistem tidak dimanfaatkan."}}
+  ]},
+ // November: bergantung pada struktur yang dipilih
+ {stage:"L", req:"pt", risks:["internal","kepatuhan"], kind:["Pihak Berelasi","UU Yayasan"], title:"PT Menaikkan Harga Sewa Platform kepada Yayasan",
+  story:"Biaya teknologi meningkat sehingga direksi PT mengusulkan tarif jasa platform kepada yayasan dinaikkan dua kali lipat.",
+  quiz:{q:"Yayasan membayar PT atas jasa platform. Akad apa yang digunakan dan apa syaratnya?", o:["Ijarah jasa dengan ujrah yang wajar","Hibah tanpa batas","Qardh yang dibayar dari donasi"], a:0,
+   e:"Ijarah jasa dapat dibenarkan selama ujrahnya wajar. Harga yang dilebihkan pada akhirnya menjadi pengalihan kekayaan yayasan secara tidak langsung sebagaimana dilarang Pasal 5 UU No. 28 Tahun 2004."},
+  opts:[
+   {t:"Setujui kenaikan tanpa penilaian", d:"Yayasan dan PT dianggap satu keluarga besar.", fx:{kas:-1.5,pt:0.2,comp:-14,drift:10},
+    lens:{akad:"Harga yang tidak wajar memindahkan dana umat kepada pemegang saham.", reg:"Pasal 5 UU No. 28 Tahun 2004 melarang pengalihan kekayaan yayasan, baik langsung maupun tidak langsung.", teori:"Related Party Transaction merupakan titik kritis struktur yayasan dan PT."}},
+   {t:"Gunakan penilai independen dan publikasikan tarif", d:"Tarif mengikuti harga pasar.", fx:{kas:-0.4,comp:8,trust:4},
+    lens:{akad:"Ijarah atas jasa platform dengan ujrah yang wajar.", reg:"Harga wajar menjaga kepatuhan terhadap UU Yayasan.", teori:"Pemisahan entitas hanya sehat apabila transaksi di antara keduanya transparan."}},
+   {t:"PT memberikan platform secara cuma-cuma", d:"PT menanggung biaya sebagai bentuk CSR.", fx:{kas:0.8,pt:-0.1,drift:-4,trust:3},
+    lens:{akad:"Hibah jasa dari PT kepada yayasan.", reg:"Skema ini aman dari sisi UU Yayasan.", teori:"Di sisi lain, investor PT berpotensi keberatan karena imbal hasilnya berkurang."}}
+  ]},
+ {stage:6, req:"nopt", risks:["penipuan","apu"], kind:["Penyaluran","Wakil Kedua"], title:"Mitra Penyalur Terlambat Melapor Tiga Bulan",
+  story:"Salah satu mitra di daerah belum mengirimkan bukti penyaluran. Donatur mulai mempertanyakan hal tersebut di kolom komentar kampanye.",
+  quiz:{q:"Dalam fikih akad, mitra penyalur di daerah berkedudukan sebagai apa?", o:["Mudharib yang mengelola modal","Wakil kedua melalui Taukil","Penjamin (Kafil) atas dana"], a:1,
+   e:"Platform mewakilkan kembali penyaluran kepada mitra melalui Taukil. Dengan kata lain, tanggung jawab kepada donatur tetap berada pada wakil pertama, yaitu platform."},
+  opts:[
+   {t:"Biarkan karena mitra sudah lama dipercaya", d:"Menjaga hubungan baik dengan mitra.", fx:{trust:-9,comp:-6},
+    lens:{akad:"Mitra merupakan wakil kedua, sedangkan wakil pertama tetap bertanggung jawab kepada donatur.", reg:"Laporan penggunaan dana merupakan tahap ketujuh alur DBCF.", teori:"Dalam model orkestrasi, reputasi platform bergantung pada mitra yang paling lemah."}},
+   {t:"Audit lapangan dan bekukan pencairan berikutnya", d:"Tim dikirim ke lapangan dan hasilnya dipublikasikan.", fx:{trust:6,comp:6,kas:-0.3},
+    lens:{akad:"Wakil berhak menahan pencairan apabila syarat peruntukan belum terbukti.", reg:"Pencairan bertahap disertai bukti merupakan titik kontrol pada tahap keenam.", teori:"Orkestrasi mitra membutuhkan standar dan sanksi yang jelas."}}
+  ]},
+ {stage:3, req:"ai", risks:["syariah","reputasi"], kind:["Karyawan AI","Tadlis"], title:"Karyawan AI Menulis Copy Kampanye yang Terlalu Dramatis",
+  story:"Agen copywriting menghasilkan naskah dengan sudut pandang Urgent untuk kampanye pengobatan. Uji coba iklan menunjukkan klik meningkat tajam, namun beberapa detail kisah ternyata dilebih-lebihkan dari dokumen aslinya.",
+  quiz:{q:"Dramatisasi kisah penerima manfaat yang tidak sesuai fakta dalam promosi kampanye termasuk unsur apa?", o:["Tadlis, yaitu penyembunyian atau pemalsuan informasi","Gharar dalam jual beli","Riba Fadhl"], a:0,
+   e:"Promosi yang melebihi fakta termasuk Tadlis karena donatur mengambil keputusan atas informasi yang tidak benar. Dalam hal ini lembaga tetap bertanggung jawab meskipun naskah ditulis oleh AI."},
+  opts:[
+   {t:"Tayangkan, AI terbukti meningkatkan klik", d:"Efisiensi dan konversi menjadi prioritas.", fx:{growth:5,comp:-10,drift:6}, flag:"aiRisk",
+    lens:{akad:"Informasi yang tidak sesuai fakta merusak kerelaan donatur dalam akad Wakalah.", reg:"Konten AI tetap menjadi tanggung jawab penyelenggara PUB.", teori:"Efisiensi tanpa kendali pada akhirnya menggeser ukuran kinerja dari dampak ke klik, yang merupakan tanda Mission Drift."}},
+   {t:"Leader merevisi, lalu menjadikannya aturan", d:"Copy wajib sesuai dokumen, dan aturan tersebut disimpan untuk agen ke depan.", fx:{trust:5,comp:6,kas:-0.1},
+    lens:{akad:"Kejujuran informasi menjaga kerelaan donatur sebagai pemberi kuasa.", reg:"Human in the Loop menjadi titik kontrol pada tahap ketiga alur DBCF.", teori:"Disrupsi berbasis AI tetap memerlukan tata kelola, sehingga efisiensi dan amanah berjalan bersamaan."}},
+   {t:"Matikan agen copywriting, kembali manual", d:"Risiko konten hilang, namun biaya kembali naik.", fx:{kas:-0.8,trust:1}, flag:"aiOff",
+    lens:{akad:"Tidak ada perubahan akad.", reg:"Aman dari sisi konten.", teori:"Keunggulan biaya dari AI dilepas, sehingga lembaga kembali pada struktur biaya konvensional."}}
+  ]},
+ {stage:7, risks:["reputasi","internal"], kind:["Transparansi","Reputasi"], title:"Wartawan Investigasi Meminta Laporan Keuangan",
+  story:"Sebuah majalah sedang menyiapkan liputan mengenai gaji pengelola lembaga filantropi. Redaksi meminta laporan keuangan beserta rincian potongan operasional lembaga.",
+  quiz:{q:"Kewajiban melaporkan penggunaan dana kepada donatur bersumber dari karakter akad apa?", o:["Wakalah, di mana wakil bertanggung jawab kepada pemberi kuasa","Ijarah, di mana penyewa wajib membayar sewa","Jual beli, di mana penjual wajib menyerahkan barang"], a:0,
+   e:"Dalam Wakalah, wakil memegang amanah dan wajib mempertanggungjawabkannya kepada muwakkil, dalam hal ini para donatur."},
+  opts:[
+   {t:"Tunda jawaban dan fokus pada kampanye", d:"Tim komunikasi menyarankan untuk tidak menanggapi.", fx:{trust:-8},
+    lens:{akad:"Wakil wajib memberikan pertanggungjawaban kepada pemberi kuasa.", reg:"Laporan PUB wajib disampaikan dan diumumkan kepada publik.", teori:"Kasus ACT terungkap melalui jurnalisme, bukan audit, sehingga sikap diam justru memperbesar kecurigaan."}},
+   {t:"Publikasikan audit KAP dan opini DPS", d:"Termasuk rincian gaji pelaksana dan potongan operasional.", fx:{trust:10,comp:4,kas:-0.2},
+    lens:{akad:"Amanah ditunjukkan melalui keterbukaan.", reg:"Audit dan opini DPS merupakan mitigasi atas risiko penyalahgunaan internal.", teori:"Pada akhirnya transparansi merupakan inti manajemen risiko DBCF."}}
+  ]}
+];
+
+const SLIDES = ["8, 10, dan 11","10 dan 12","10","8, 10, dan 17","10 dan 17","4 dan 10","7, 14, 16, dan 18","14","12 dan 19","10 dan 17","14","8 dan 11","10 dan 18","4 dan 11"];
+EVENTS.forEach((e,i) => e.sl = SLIDES[i]);
+
+// ---------- state ----------
+let S = null, introSel = 1, gameSel = null;
+const $ = id => document.getElementById(id);
+const clamp = (v,a=0,b=100) => Math.max(a,Math.min(b,v));
+const rp = v => (Math.abs(v)>=10? v.toLocaleString("id-ID",{maximumFractionDigits:1}) : v.toLocaleString("id-ID",{minimumFractionDigits:2,maximumFractionDigits:2}));
+const rng = () => 0.93 + Math.random()*0.14;
+
+function newGame(){
+  S = {month:0, trust:BASE.trust, comp:BASE.comp, drift:BASE.drift, kas:BASE.kas, fee:BASE.fee, pt:BASE.pt, growth:1,
+       hist:[], total:0, pen:0, deficit:0, pending:[], log:[], qlog:[], chosen:null, qa:null, quizScore:0, quizN:0, risk:{},
+       hasPT:false, ai:false, aggressive:false, insurer:false, bundle:false, over:null, t0:Date.now(), m0:Date.now(), late:0, forced:false};
+  gameSel = null;
+  $("fee").value = S.fee;
+  show("game");
+  render();
+  startTimer();
+}
+
+// ---------- kotak panduan ----------
+let gTarget = null, gKey = "";
+function setGuide(step, dots, title, html, sel){
+  $("gStep").textContent = step;
+  $("gDots").innerHTML = dots ? [1,2,3].map(i => `<i class="${i<=dots?'on':''}"></i>`).join("") : "";
+  $("gTitle").textContent = title;
+  $("gText").innerHTML = html;
+  const tgt = sel ? document.querySelector(sel) : null;
+  const key = step + title;
+  if (key !== gKey){
+    document.querySelectorAll(".hl").forEach(e => e.classList.remove("hl"));
+    if (tgt){ void tgt.offsetWidth; tgt.classList.add("hl"); }
+    gKey = key;
+  } else if (tgt && !tgt.classList.contains("hl")) {
+    document.querySelectorAll(".hl").forEach(e => e.classList.remove("hl"));
+    tgt.classList.add("hl");
+  }
+  gTarget = tgt;
+  $("gGo").hidden = !tgt;
+}
+function guide(){
+  if (!$("intro").hidden){
+    return setGuide("Panduan", 0, "Selamat datang di simulasi",
+      `<ol><li>Baca capaian pembelajaran dan cara bermain.</li><li>Klik beberapa tahap pada peta alur DBCF untuk mengenal akad dan risikonya.</li><li>Klik <b>Mulai memimpin Lumbung Amanah</b>. Jam 10 menit berjalan sejak tombol diklik.</li></ol>`, "#startBtn");
+  }
+  if (!$("end").hidden){
+    return setGuide("Langkah terakhir", 0, "Isi refleksi, unduh PDF, unggah ke SMILE",
+      `<ol><li>Cek nilai dan rinciannya di bagian atas.</li><li>Isi nama, NIM, kelas, dan empat refleksi (minimal 40 kata per jawaban).</li><li>Klik <b>Unduh PDF untuk SMILE</b>, setujui penyimpanan berkas, lalu unggah PDF tersebut ke SMILE.</li></ol>`, "#reflForm");
+  }
+  if (!S) return;
+  const tip = S.month===0 ? `<p style="margin:6px 0 0;font-size:12.5px">Tips: slider <b>Potongan operasional</b> di panel kiri dapat diatur kapan saja. Batas legalnya 10%.</p>` : "";
+  if (S.qa===null){
+    return setGuide("Bulan " + MONTHS[S.month] + " · Langkah 1 dari 3", 1, "Jawab kuis akad",
+      `<p style="margin:0">Baca kasus bulan ini, diskusikan dengan kelompok, lalu pilih jawaban <b>a, b, atau c</b> pada kotak <b>Kuis akad</b>. Pilihan keputusan terbuka setelah kuis dijawab.</p>${tip}`, ".quiz");
+  }
+  if (S.chosen===null){
+    return setGuide("Bulan " + MONTHS[S.month] + " · Langkah 2 dari 3", 2, "Ambil keputusan",
+      `<p style="margin:0">Baca penjelasan kuis, lalu pilih satu keputusan <b>A, B, atau C</b>. Perhatikan jam bulan di kanan atas: bila habis sebelum memilih, kepercayaan dan kepatuhan turun.</p>${tip}`, ".opts");
+  }
+  return setGuide("Bulan " + MONTHS[S.month] + " · Langkah 3 dari 3", 3, "Baca dampak dan lensa",
+    `<ol><li>Lihat perubahan indikator dan empat lensa: akad, regulasi, teori, risiko.</li><li>Cek panel kiri: indikator, model bisnis, dan register risiko.</li><li>Tunggu, bulan berikutnya dimulai otomatis. Tidak perlu menekan tombol.</li></ol>`, "#lensBox");
+}
+$("gGo").addEventListener("click", () => { if (gTarget){ gTarget.scrollIntoView({behavior:"smooth", block:"center"}); gTarget.classList.remove("hl"); void gTarget.offsetWidth; gTarget.classList.add("hl"); } });
+const gToggle = (min) => { $("guide").classList.toggle("min", min); $("gMin").textContent = min ? "Buka panduan" : "Sembunyikan"; try { localStorage.setItem("ifg-guide-min", min ? "1" : "0"); } catch(e){} };
+$("gMin").addEventListener("click", (e) => { e.stopPropagation(); gToggle(!$("guide").classList.contains("min")); });
+$("guide").addEventListener("click", () => { if ($("guide").classList.contains("min")) gToggle(false); });
+try { if (localStorage.getItem("ifg-guide-min")==="1") gToggle(true); } catch(e){}
+
+// ---------- jam simulasi: 10 menit = 12 bulan ----------
+const MONTH_MS = (location.hash === "#uji" ? 10 : 50) * 1000;
+let timerId = null;
+const fmt = ms => { const s = Math.ceil(ms/1000); return Math.floor(s/60) + ":" + String(s%60).padStart(2,"0"); };
+function startTimer(){ if (timerId) clearInterval(timerId); timerId = setInterval(clockTick, 500); clockTick(); }
+function clockTick(){
+  if (!S || S.over) { if (timerId) clearInterval(timerId); return; }
+  const el = Date.now() - S.m0;
+  if (el >= MONTH_MS) { timeUp(); return; }
+  updateClock(el);
+}
+function updateClock(el){
+  if (!S || S.month>11) return;
+  el = Math.max(0, Math.min(el, MONTH_MS));
+  const left = MONTH_MS - el;
+  const totLeft = Math.max(0, (12 - S.month) * MONTH_MS - el);
+  $("clkTot").textContent = fmt(totLeft);
+  $("clkMon").textContent = fmt(left);
+  $("clkDay").textContent = "Hari ke-" + Math.min(30, Math.floor(el / MONTH_MS * 30) + 1) + " " + MONTHS[S.month];
+  $("clkMonBox").classList.toggle("warn", left <= MONTH_MS * 0.2 && S.chosen === null);
+  $("clkBar").style.width = (el / MONTH_MS * 100) + "%";
+  const w = $("waitMsg");
+  if (w) w.textContent = S.month===11
+    ? "Keputusan tercatat. Buku 2026 ditutup otomatis dalam " + fmt(left) + ". Gunakan waktu ini untuk membaca lensa dan berdiskusi."
+    : "Keputusan tercatat. Bulan " + MONTHS[S.month+1] + " dimulai otomatis dalam " + fmt(left) + ". Gunakan waktu ini untuk membaca lensa dan berdiskusi.";
+}
+function timeUp(){
+  const ev = eventFor(S.month);
+  if (S.qa === null){ S.quizN++; S.qlog.push({mo:MONTHS[S.month], q:ev.quiz.q, a:ev.quiz.o[ev.quiz.a], ok:false, e:ev.quiz.e}); S.qa = -1; }
+  if (S.chosen === null){
+    S.trust = clamp(S.trust-5); S.comp = clamp(S.comp-3); S.late++; S.forced = true;
+    S.log.push({mo:MONTHS[S.month], t:"Tidak ada keputusan hingga akhir bulan, sehingga persoalan dibiarkan berlarut", lens:null});
+  }
+  tick();
+}
+
+function show(id){ ["intro","game","end"].forEach(x => $(x).hidden = x!==id); window.scrollTo({top:0}); setTimeout(guide, 0); }
+
+// peristiwa bulan berjalan (kartu November bergantung pada struktur)
+function eventFor(m){
+  if (m<10) return EVENTS[m];
+  if (m===10) return S.hasPT ? EVENTS[10] : S.ai ? EVENTS[12] : EVENTS[11];
+  return EVENTS[13];
+}
+function visOpts(ev){ return ev.opts.filter(o => !o.req || (o.req==="pt" ? S.hasPT : !S.hasPT)); }
+const opsCost = () => BASE.ops * (S.ai ? 0.7 : 1);
+
+function modelShape(){
+  if (S.hasPT && (S.insurer || S.bundle)) return ["Ekosistem Bundling","Yayasan ditopang PT dan beberapa pintu pendapatan. Skala lembaga kuat, namun Mission Drift dan Related Party Transaction perlu diwaspadai."];
+  if (S.ai && !S.hasPT) return ["Orkestrasi Mitra Berbasis AI","Lembaga tetap satu yayasan, sedangkan produksi kampanye dikerjakan Karyawan AI dengan persetujuan Leader. Biaya operasional turun sekitar 30% (angka simulasi), sehingga tim dapat fokus pada kemitraan dan program."];
+  if (S.hasPT) return ["Hibrida Yayasan dan PT","Dana publik dikelola yayasan, sedangkan teknologi dan bisnis dijalankan PT. Kunci keberhasilannya terletak pada harga jasa yang wajar."];
+  if (S.month>=7) return ["Orkestrasi Mitra","Lembaga tetap satu yayasan dan menjalankan program bersama mitra. Fokus misi terjaga, namun kas perlu dikelola dengan cermat."];
+  return ["Belum terbentuk","Model bisnis lembaga akan terbentuk dari keputusan terkait investor, pendirian PT, produk proteksi, dan Charity Run."];
+}
+
+// ---------- tampilan ----------
+function procHTML(active, sel){
+  return STAGES.map(s => `<button type="button" class="step ${s.k==="L"?"gov":""} ${s.k===active?"on":""} ${s.k===sel?"sel":""}" data-k="${s.k}"><span class="n">${s.k==="L"?"TK":s.k}</span><span class="t">${s.t}</span><span class="a">${s.s}</span></button>`).join("");
+}
+function detailHTML(k){
+  const s = STAGES.find(x => x.k===k);
+  return `<div><b style="color:var(--gold)">Akad · ${s.t}</b>${s.akad}</div><div><b style="color:var(--red)">Risiko utama</b>${s.risk}</div>`;
+}
+function bindProc(boxId, detId, active, getSel, setSel){
+  const box = $(boxId);
+  box.innerHTML = procHTML(active, getSel());
+  $(detId).innerHTML = detailHTML(getSel());
+  box.querySelectorAll(".step").forEach(b => b.addEventListener("click", () => {
+    setSel(b.dataset.k==="L" ? "L" : +b.dataset.k);
+    bindProc(boxId, detId, active, getSel, setSel);
+  }));
+}
+function introProc(){ bindProc("procIntro","procIntroD", null, () => introSel, v => introSel = v); }
+function gameProc(){
+  const ev = eventFor(S.month);
+  if (gameSel===null) gameSel = ev.stage;
+  bindProc("procGame","procGameD", ev.stage, () => gameSel, v => gameSel = v);
+}
+function riskStatus(k){ const v = S.risk[k]; return v===1 ? ["ok","termitigasi"] : v===-1 ? ["bad","terjadi"] : ["","belum diuji"]; }
+function riskUI(){
+  const ev = S.month<12 ? eventFor(S.month) : null;
+  $("riskList").innerHTML = Object.entries(RISKS).map(([k,n]) => {
+    const [c,l] = riskStatus(k); const hot = ev && ev.risks.includes(k) ? "hot" : "";
+    return `<li class="${c} ${hot}"><i></i><span>${n}</span><em>${l}</em></li>`;
+  }).join("");
+  $("qScore").textContent = S.quizScore + "/" + S.quizN;
+}
+
+function render(){
+  $("months").innerHTML = MONTHS.map((x,i)=>`<i class="${i<S.month?'done':i===S.month?'now':''}">${x}</i>`).join("");
+  const last = S.hist.length ? S.hist[S.hist.length-1] : 0;
+  $("mDon").textContent = rp(last);
+  $("mKas").textContent = rp(S.kas); $("mKas").classList.toggle("neg", S.kas<0);
+  $("mTot").textContent = rp(S.total);
+  $("mPen").textContent = Math.round(S.pen).toLocaleString("id-ID");
+  bar("Trust", S.trust); bar("Comp", S.comp); bar("Mis", 100-S.drift);
+  feeUI(); spark(); gameProc(); riskUI();
+  const [mh, mb] = modelShape();
+  $("shape").innerHTML = `<b>Model bisnis: ${mh}</b>${mb}`;
+  $("log").innerHTML = S.log.map(l=>`<li><b>${l.mo}</b> · ${l.t}</li>`).join("") || "<li>Belum ada keputusan.</li>";
+  renderEvent();
+}
+
+function bar(k,v){
+  v = Math.round(v);
+  $("v"+k).textContent = v;
+  const b = $("b"+k);
+  b.style.width = clamp(v)+"%";
+  b.style.background = v>=60 ? "var(--green)" : v>=35 ? "var(--gold)" : "var(--red)";
+}
+
+function feeUI(){
+  $("feeVal").textContent = S.fee + "%";
+  const w = $("feeWarn");
+  if (S.fee>10){ w.textContent = "Melampaui batas 10% dalam PP No. 29 Tahun 1980, sehingga kepatuhan dan kepercayaan turun setiap bulan."; w.style.color="var(--red)"; }
+  else if (S.fee===0){ w.textContent = "Tanpa potongan, kas hanya bertumpu pada subsidi dan dana operasional yang dihimpun terpisah."; w.style.color="var(--gold)"; }
+  else { w.textContent = "Masih dalam batas, dengan akad Wakalah bil Ujrah. Potongan yang lebih rendah sedikit menambah kepercayaan."; w.style.color="var(--muted)"; }
+}
+
+function spark(){
+  const h = S.hist, svg = $("spark");
+  if (!h.length){ svg.innerHTML = `<text x="150" y="40" text-anchor="middle" fill="#7487a3" font-size="11" font-family="Plus Jakarta Sans, sans-serif">Grafik donasi muncul setelah bulan pertama</text>`; return; }
+  const mx = Math.max(...h)*1.15, bw = 300/12;
+  svg.innerHTML = h.map((v,i)=>{ const hh = Math.max(2, v/mx*62); return `<rect x="${i*bw+3}" y="${68-hh}" width="${bw-6}" height="${hh}" rx="2" fill="${i===h.length-1?'#f2c200':'#2b4a78'}"/>`; }).join("");
+}
+
+function renderEvent(){
+  const ev = eventFor(S.month), opts = visOpts(ev);
+  const st = STAGES.find(x => x.k===ev.stage);
+  const q = ev.quiz, qa = S.qa;
+  const qcls = i => qa===null ? "" : i===q.a ? "right" : i===qa ? "wrong" : "";
+  $("eventBox").innerHTML = `
+    ${S.pendingMsg || ""}
+    <div class="kind"><span>${MONTHS[S.month]} 2026</span><span class="stg">${st.k==="L" ? "Tata kelola" : "Tahap " + st.k + " · " + st.t}</span>${ev.kind.map(k=>`<span>${k}</span>`).join("")}</div>
+    <h2>${ev.title}</h2>
+    <p class="story">${ev.story}</p>
+    <div class="quiz">
+      <div class="qh"><b>Kuis akad</b><span>Dijawab terlebih dahulu sebelum mengambil keputusan</span></div>
+      <p>${q.q}</p>
+      <div class="qopts">${q.o.map((o,i)=>`<button class="qo ${qcls(i)}" type="button" data-q="${i}" ${qa!==null?"disabled":""}>${"abc"[i]}. ${o}</button>`).join("")}</div>
+      ${qa!==null ? `<div class="qexp ${qa===q.a?"ok":"no"}"><b>${qa===q.a?"Jawaban tepat.":"Jawaban belum tepat."}</b> ${q.e}</div>` : ""}
+    </div>
+    ${qa===null ? `<p class="locked">Pilihan keputusan akan terbuka setelah kuis dijawab.</p>` : ""}
+    <div class="opts">${opts.map((o,i)=>`<button class="opt" type="button" data-i="${i}" ${(S.chosen!==null||qa===null)?"disabled":""}><span class="k">${"ABCD"[i]}</span><span><b>${o.t}</b><span>${o.d}</span></span></button>`).join("")}</div>
+    <div id="lensBox"></div>`;
+  $("eventBox").querySelectorAll(".qo").forEach(b => b.addEventListener("click", () => answer(+b.dataset.q)));
+  $("eventBox").querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => choose(+b.dataset.i)));
+  if (S.chosen!==null) showLens();
+  guide();
+}
+
+function answer(i){
+  if (S.qa!==null) return;
+  const q = eventFor(S.month).quiz;
+  S.qa = i; S.quizN++; if (i===q.a) S.quizScore++;
+  S.qlog.push({mo:MONTHS[S.month], q:q.q, a:q.o[q.a], ok:i===q.a, e:q.e});
+  riskUI(); renderEvent();
+}
+
+function choose(i){
+  if (S.chosen!==null || S.qa===null) return;
+  const ev = eventFor(S.month), o = visOpts(ev)[i], fx = o.fx;
+  S.chosen = i;
+  S.before = {trust:S.trust, comp:S.comp, drift:S.drift, kas:S.kas};
+  if (fx.trust) S.trust = clamp(S.trust+fx.trust);
+  if (fx.comp) S.comp = clamp(S.comp+fx.comp);
+  if (fx.drift) S.drift = clamp(S.drift+fx.drift);
+  if (fx.kas) S.kas += fx.kas*BASE.ops;
+  if (fx.pt) S.pt = Math.max(0, S.pt+fx.pt);
+  if (fx.growth) S.growth *= 1+fx.growth/100;
+  const pend = (at, p, msg, f) => S.pending.push({at, p, msg, fx:f, risks:ev.risks});
+  if (o.flag==="pt") S.hasPT = true;
+  if (o.flag==="ptAggressive"){ S.hasPT = true; S.aggressive = true; }
+  if (o.flag==="insurer") S.insurer = true;
+  if (o.flag==="bundle") S.bundle = true;
+  if (o.flag==="ai") S.ai = true;
+  if (o.flag==="aiOff") S.ai = false;
+  if (o.flag==="aiRisk") pend(S.month+1, 0.7, "Keluarga penerima manfaat memprotes kisah yang dilebih-lebihkan dalam iklan, dan tangkapan layarnya tersebar di media sosial.", {trust:-13,comp:-5});
+  if (o.flag==="unverified") pend(S.month+2, 0.7, "Kampanye viral pada Januari ternyata bermasalah, di mana dana digunakan di luar kebutuhan medis. Media kemudian menyoroti proses verifikasi lembaga.", {trust:-15,comp:-6});
+  if (o.flag==="noLicense") pend(S.month+2, 1, "Satgas dan OJK menilai program proteksi tersebut sebagai praktik asuransi tanpa izin, sehingga program dihentikan.", {trust:-8,comp:-22,kas:-1});
+  if (o.flag==="partnerRisk") pend(S.month+3, 0.6, "Mitra yang menerima pencairan penuh belum juga membangun panti, sehingga donatur menuntut kejelasan.", {trust:-12,comp:-5});
+  if (o.flag==="qurbanRisk") pend(S.month+1, 0.65, "Foto penyembelihan dari vendor ternyata merupakan foto tahun sebelumnya, dan hal tersebut terungkap oleh warganet.", {trust:-14,comp:-6});
+  const dd = (S.trust-S.before.trust) + (S.comp-S.before.comp);
+  ev.risks.forEach(k => { if (dd<0) S.risk[k] = -1; else if (dd>0 && S.risk[k]!==-1) S.risk[k] = 1; });
+  S.log.push({mo:MONTHS[S.month], t:o.t, lens:o.lens, stage:ev.stage});
+  render();
+}
+
+function fxChips(){
+  const b = S.before, out = [];
+  const add = (lab, d) => { if (Math.abs(d)<0.5) return; out.push(`<span class="${d>0?'up':'dn'}">${lab} ${d>0?'+':''}${Math.round(d)}</span>`); };
+  add("Kepercayaan", S.trust-b.trust); add("Kepatuhan", S.comp-b.comp); add("Misi", -(S.drift-b.drift));
+  const dk = S.kas-b.kas; if (Math.abs(dk)>1e-6) out.push(`<span class="${dk>0?'up':'dn'}">Kas ${dk>0?'+':''}${rp(dk)}</span>`);
+  return out.join("") || "<span>Tidak ada perubahan secara langsung</span>";
+}
+
+function showLens(){
+  const ev = eventFor(S.month), o = visOpts(ev)[S.chosen];
+  document.querySelectorAll(".opt").forEach(b => { if (+b.dataset.i===S.chosen) b.classList.add("chosen"); });
+  const rk = ev.risks.map(k => RISKS[k] + ": " + riskStatus(k)[1]).join("; ");
+  $("lensBox").innerHTML = `<div class="lens">
+    <div class="fx">${fxChips()}</div>
+    <div class="why">
+      <div><b style="color:var(--gold)">Lensa Akad</b>${o.lens.akad}</div>
+      <div><b style="color:var(--blue)">Lensa Regulasi</b>${o.lens.reg}</div>
+      <div><b style="color:var(--green)">Lensa Teori</b>${o.lens.teori}</div>
+      <div><b style="color:var(--red)">Lensa Risiko</b>${rk}. Status lengkap dapat dilihat pada register risiko di panel kiri.</div>
+    </div>
+    <p class="ref"><b>Rujukan materi:</b> deck DBCF slide ${ev.sl}.</p>
+    <div class="wait" id="waitMsg"></div>
+  </div>`;
+  updateClock(Date.now() - S.m0);
+}
+
+function tick(){
+  const ev = eventFor(S.month), o = S.chosen===null ? {} : visOpts(ev)[S.chosen];
+  const trustMult = 0.5 + S.trust/100;
+  const don = BASE.base * S.growth * trustMult * SEASON[S.month] * rng();
+  const fullDisaster = ev.disaster && !o.cut;
+  const feeIncome = fullDisaster ? 0 : don*S.fee/100;
+  S.kas += feeIncome + S.pt*BASE.ops - opsCost()*(1+(S.growth-1)*0.5);
+  S.total += don - feeIncome;
+  S.pen += (don - feeIncome) / 0.002;
+  S.hist.push(don);
+  if (S.fee>10){ S.comp = clamp(S.comp-7); S.trust = clamp(S.trust-4); S.risk.kepatuhan = -1; }
+  else if (S.fee===0) S.trust = clamp(S.trust+2);
+  else if (S.fee<=5) S.trust = clamp(S.trust+1);
+  if (S.aggressive){ S.drift = clamp(S.drift+2); S.growth *= 1.02; }
+  S.deficit = S.kas<0 ? S.deficit+1 : 0;
+  S.pendingMsg = "";
+  if (S.forced){ S.pendingMsg += `<div class="alert"><b>Waktu bulan ${MONTHS[S.month]} habis.</b> Tidak ada keputusan yang diambil, sehingga kepercayaan dan kepatuhan lembaga menurun.</div>`; S.forced = false; }
+  if (S.deficit===1) S.pendingMsg += `<div class="alert info"><b>Kas mengalami defisit.</b> Apabila bulan depan masih defisit, lembaga berhenti beroperasi.</div>`;
+  S.month++;
+  const due = S.pending.filter(p => p.at===S.month);
+  S.pending = S.pending.filter(p => p.at!==S.month);
+  due.forEach(p => {
+    if (Math.random()<p.p){
+      S.trust = clamp(S.trust+(p.fx.trust||0)); S.comp = clamp(S.comp+(p.fx.comp||0));
+      if (p.fx.kas) S.kas += p.fx.kas*BASE.ops;
+      p.risks.forEach(k => S.risk[k] = -1);
+      S.pendingMsg += `<div class="alert"><b>Dampak keputusan sebelumnya.</b> ${p.msg}</div>`;
+      S.log.push({mo:MONTHS[Math.min(S.month,11)], t:"Dampak tertunda: "+p.msg, lens:null});
+    } else {
+      S.pendingMsg += `<div class="alert good"><b>Risiko tidak terjadi kali ini.</b> Namun demikian, celah dari keputusan sebelumnya tetap terbuka.</div>`;
+    }
+  });
+  S.chosen = null; S.qa = null; gameSel = null; S.m0 = Date.now();
+  if (S.trust<=15) return finish("trust");
+  if (S.comp<=15) return finish("comp");
+  if (S.deficit>=2) return finish("kas");
+  if (S.month>=12) return finish(null);
+  render();
+}
+
+function verdict(reason){
+  const mis = 100-S.drift;
+  if (reason==="trust") return ["Izin PUB Dicabut","Kepercayaan publik runtuh, sehingga Kemensos mencabut izin penghimpunan sebagaimana terjadi pada ACT di bulan Juli 2022. Dalam hal ini persoalannya terletak pada sekat antara dana umat dan kepentingan pengelola yang tidak terjaga, bukan pada teknologi yang digunakan.","var(--red)"];
+  if (reason==="comp") return ["Dihentikan Regulator","Pelanggaran akad dan regulasi terus menumpuk, sehingga kegiatan lembaga dihentikan sebelum tahun berakhir. Pada akhirnya DBCF memerlukan izin dan kepatuhan, tidak cukup hanya niat baik.","var(--red)"];
+  if (reason==="kas") return ["Kehabisan Napas","Kas mengalami defisit selama dua bulan berturut-turut. Dengan kata lain, misi yang murni tetap membutuhkan model operasional yang berkelanjutan.","var(--red)"];
+  if (S.trust>=60 && S.comp>=60 && mis>=60) return ["Amanah dan Berkelanjutan","Lembaga tumbuh tanpa kehilangan arah, di mana misi tetap memimpin dan bisnis berperan sebagai penopang. Kondisi ini mencerminkan organisasi hibrida yang sehat.","var(--green)"];
+  if (mis<50 && S.trust>=40) return ["Tumbuh namun Bergeser","Donasi dan kas lembaga kuat, namun logika bisnis mulai memimpin arah lembaga. Mission Drift sudah terasa, sehingga perlu ditinjau kembali pihak yang sesungguhnya dimaksimalkan, penerima manfaat atau investor.","var(--gold)"];
+  if (S.kas<BASE.ops) return ["Murni namun Rapuh","Kepatuhan dan misi terjaga, namun kas lembaga tipis. Lembaga memerlukan sumber pendanaan operasional yang tidak menyentuh dana umat.","var(--gold)"];
+  return ["Bertahan dengan Catatan","Lembaga mampu bertahan, namun beberapa keputusan masih meninggalkan celah. Jejak keputusan di bawah dapat menjadi bahan evaluasi.","var(--gold)"];
+}
+
+const REFL = [
+  "Pada bulan apa model bisnis lembaga mulai terbentuk, dan keputusan mana yang menentukannya?",
+  "Keputusan mana yang paling menggeser misi lembaga, dan pertimbangan apa yang membuatnya terasa wajar pada saat itu?",
+  "Akad mana yang keliru dijawab, dan bagaimana keterkaitannya dengan risiko yang terjadi dalam permainan?",
+  "Pelajaran apa yang dapat diterapkan pada platform DBCF dalam studi kasus di kelas, terutama terkait Mission Drift?"
+];
+const MINW = 40;
+function scoreOf(){
+  const q = S.quizN ? S.quizScore/S.quizN : 0;
+  const parts = [
+    ["Literasi akad (kuis)", 35, q*35],
+    ["Kepatuhan syariah dan hukum", 20, S.comp/100*20],
+    ["Kepercayaan publik", 15, S.trust/100*15],
+    ["Misi sosial (tanpa Mission Drift)", 15, (100-S.drift)/100*15],
+    ["Keberlanjutan lembaga", 15, Math.min(S.month,12)/12*10 + (S.kas>=0 ? 5 : 0)]
+  ].map(([n,max,v]) => [n, max, Math.round(v*10)/10]);
+  const total = Math.round(parts.reduce((a,x) => a+x[2], 0));
+  const L = total>=85?"A":total>=80?"A-":total>=75?"B+":total>=70?"B":total>=65?"B-":total>=60?"C+":total>=55?"C":total>=40?"D":"E";
+  return {parts, total, letter:L};
+}
+function vcode(str){ let h = 2166136261; for (let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h>>>0).toString(36).toUpperCase().padStart(7,"0"); }
+const words = s => (s.trim().match(/\S+/g) || []).length;
+
+function finish(reason){
+  if (timerId) { clearInterval(timerId); timerId = null; }
+  const [h, p, col] = verdict(reason);
+  const [mh, mb] = modelShape();
+  const sc = scoreOf();
+  const res = {model:mh, verdict:h, trust:Math.round(S.trust), comp:Math.round(S.comp), mis:Math.round(100-S.drift), total:S.total, months:S.month, quiz:S.quizScore+"/"+S.quizN};
+  try { const all = JSON.parse(localStorage.getItem("ifg-dbcf")||"[]"); all.unshift(res); localStorage.setItem("ifg-dbcf", JSON.stringify(all.slice(0,4))); } catch(e){}
+  const stLabel = k => { const s = STAGES.find(x => x.k===k); return s ? (s.k==="L" ? "Tata kelola" : "Tahap "+s.k+" · "+s.t) : ""; };
+  $("end").innerHTML = `
+    <div class="verdict" style="border-color:${col}">
+      <div class="eyebrow">Laporan akhir Lumbung Amanah · ${S.month} bulan berjalan</div>
+      <h2 style="color:${col}">${h}</h2>
+      <p>${p}</p>
+    </div>
+    <div class="shape" style="font-size:14px"><b>Model bisnis yang terbentuk: ${mh}</b>${mb}</div>
+    <div class="panel grade">
+      <div class="big"><small>Nilai permainan</small><b>${sc.total}</b><span>${sc.letter}</span><small>dari 100</small></div>
+      <div class="rub">${sc.parts.map(([n,max,v]) => `<div><span>${n}</span><b>${String(v).replace(".",",")} / ${max}</b></div>`).join("")}
+        <p class="note" style="margin:4px 0 0">Nilai permainan menjadi salah satu komponen penilaian. Refleksi di bawah dinilai terpisah oleh dosen.</p></div>
+    </div>
+    <div class="scores">
+      <div><small>Kepercayaan publik</small><b>${res.trust}</b></div>
+      <div><small>Kepatuhan syariah dan hukum</small><b>${res.comp}</b></div>
+      <div><small>Misi sosial</small><b>${res.mis}</b></div>
+      <div><small>Literasi akad</small><b>${res.quiz}</b></div>
+      <div><small>Bulan tanpa keputusan</small><b>${S.late||0}</b></div>
+      <div><small>Total tersalur (Rp miliar)</small><b>${rp(S.total)}</b></div>
+      <div><small>Kas akhir (Rp miliar)</small><b>${rp(S.kas)}</b></div>
+    </div>
+    <div class="panel"><b>Register risiko akhir tahun</b>
+      <div class="risks" style="margin-top:8px"><ul>${Object.entries(RISKS).map(([k,n]) => { const [c,l] = riskStatus(k); return `<li class="${c}"><i></i><span>${n}</span><em>${l}</em></li>`; }).join("")}</ul></div>
+    </div>
+    <div class="panel recap">
+      <b>Jejak keputusan pada alur DBCF</b>
+      <table><thead><tr><th>Bulan</th><th>Tahap</th><th>Keputusan</th><th>Lensa akad dan regulasi</th></tr></thead>
+      <tbody>${S.log.map(l=>`<tr><td>${l.mo}</td><td>${l.lens? stLabel(l.stage) : "Peristiwa"}</td><td>${l.t}</td><td>${l.lens? l.lens.akad+" "+l.lens.reg : "Konsekuensi dari keputusan sebelumnya."}</td></tr>`).join("")}</tbody></table>
+    </div>
+    <div class="panel recap">
+      <b>Tinjauan kuis akad</b>
+      <table><thead><tr><th>Bulan</th><th>Pertanyaan</th><th>Jawaban yang tepat</th><th>Hasil</th></tr></thead>
+      <tbody>${(S.qlog||[]).map(x=>`<tr><td>${x.mo}</td><td>${x.q}</td><td>${x.a}</td><td style="color:${x.ok?'var(--green)':'var(--red)'};font-weight:700">${x.ok?'Tepat':'Perlu diulang'}</td></tr>`).join("")}</tbody></table>
+    </div>
+    <div id="cmpBox"></div>
+    <div class="panel form" id="reflForm">
+      <div><b style="font-family:var(--display);font-weight:400;font-size:22px;color:var(--gold-soft)">Lembar refleksi dan unggah ke SMILE</b>
+      <p class="note" style="margin:4px 0 0">Lengkapi identitas dan jawab keempat pertanyaan refleksi, masing-masing minimal ${MINW} kata. Setelah itu unduh PDF dan unggah berkas tersebut ke SMILE.</p></div>
+      <div class="ids">
+        <label for="fNama">Nama lengkap<input id="fNama" type="text" autocomplete="name"></label>
+        <label for="fNim">NIM<input id="fNim" type="text" inputmode="numeric"></label>
+        <label for="fKelas">Kelas<input id="fKelas" type="text"></label>
+        <label for="fKel">Kelompok dan anggota (bila bermain berkelompok)<input id="fKel" type="text"></label>
+      </div>
+      ${REFL.map((q,i) => `<label for="fR${i}">${i+1}. ${q}<textarea id="fR${i}"></textarea><span class="wc" id="wc${i}">0 kata</span></label>`).join("")}
+      <div class="btns"><button class="next" type="button" id="pdfBtn">Unduh PDF untuk SMILE</button></div>
+      <div class="status" id="pdfStatus"></div>
+    </div>
+    <p style="margin:0;font-family:var(--display);font-size:18px;color:var(--gold-soft)">Wallahu a'lam.</p>
+    <div class="btns">
+      <button class="next" type="button" id="replay">Main kembali dengan strategi berbeda →</button>
+      <button class="ghost" type="button" id="home">Kembali ke awal</button>
+    </div>`;
+  $("cmpBox").innerHTML = compareHTML();
+  bindForm(h, mh, sc);
+  $("replay").addEventListener("click", newGame);
+  $("home").addEventListener("click", () => { introCompare(); introProc(); show("intro"); });
+  S.over = reason || "done";
+  show("end");
+}
+
+function bindForm(verdictTitle, modelTitle, sc){
+  const ids = ["fNama","fNim","fKelas","fKel"].concat(REFL.map((_,i) => "fR"+i));
+  let draft = {};
+  try { draft = JSON.parse(localStorage.getItem("ifg-dbcf-draft")||"{}"); } catch(e){}
+  ids.forEach(id => { if (draft[id]) $(id).value = draft[id]; });
+  const upd = () => {
+    REFL.forEach((_,i) => { const n = words($("fR"+i).value); const el = $("wc"+i); el.textContent = n + " kata" + (n<MINW ? " (minimal " + MINW + ")" : ""); el.classList.toggle("ok", n>=MINW); });
+    const d = {}; ids.forEach(id => d[id] = $(id).value);
+    try { localStorage.setItem("ifg-dbcf-draft", JSON.stringify(d)); } catch(e){}
+  };
+  ids.forEach(id => $(id).addEventListener("input", upd));
+  upd();
+  $("pdfBtn").addEventListener("click", () => makePdf(verdictTitle, modelTitle, sc));
+}
+
+async function makePdf(verdictTitle, modelTitle, sc){
+  const st = $("pdfStatus");
+  const nama = $("fNama").value.trim(), nim = $("fNim").value.trim(), kelas = $("fKelas").value.trim(), kel = $("fKel").value.trim();
+  const ans = REFL.map((_,i) => $("fR"+i).value.trim());
+  if (!nama || !nim){ st.style.color = "var(--red)"; st.textContent = "Nama lengkap dan NIM wajib diisi."; return; }
+  const short = ans.findIndex(a => words(a) < MINW);
+  if (short>=0){ st.style.color = "var(--red)"; st.textContent = "Jawaban refleksi nomor " + (short+1) + " belum mencapai " + MINW + " kata."; $("fR"+short).focus(); return; }
+  if (!window.jspdf){ st.style.color = "var(--red)"; st.textContent = "Pembuat PDF belum termuat. Periksa koneksi internet, lalu muat ulang halaman."; return; }
+  st.style.color = "var(--muted)"; st.textContent = "Menyiapkan PDF...";
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:"mm", format:"a4"});
+  const W = 210, M = 16, CWm = W - 2*M;
+  let y = 18;
+  const NAVYc = [16,36,63], GOLDc = [190,145,0], GREY = [90,98,110];
+  const need = h => { if (y + h > 282){ doc.addPage(); y = 18; } };
+  const head = (txt) => { need(12); doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.setTextColor(...NAVYc); doc.text(txt, M, y); y += 2; doc.setDrawColor(...GOLDc); doc.setLineWidth(0.6); doc.line(M, y, M+30, y); y += 6; };
+  const para = (txt, size=10, color=[30,30,30], bold=false) => { doc.setFont("helvetica", bold ? "bold" : "normal"); doc.setFontSize(size); doc.setTextColor(...color); const lines = doc.splitTextToSize(txt, CWm); lines.forEach(l => { need(size*0.45+1); doc.text(l, M, y); y += size*0.45+0.8; }); y += 1.5; };
+  const row = (k, v) => { need(6); doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(...GREY); doc.text(k, M, y); doc.setTextColor(30,30,30); doc.setFont("helvetica","bold"); const lines = doc.splitTextToSize(v, CWm-50); doc.text(lines, M+50, y); y += Math.max(1, lines.length)*5.2; };
+  const now = new Date();
+  const tgl = now.toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"}) + ", " + now.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+  const code = vcode([nama,nim,sc.total,S.quizScore,S.quizN,Math.round(S.trust),Math.round(S.comp),Math.round(S.drift),S.month,modelTitle].join("|"));
+  // kop
+  doc.setFillColor(...NAVYc); doc.rect(0,0,W,30,"F");
+  doc.setTextColor(242,194,0); doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.text("DONATION BASED CROWDFUNDING SIMULATION", M, 11);
+  doc.setTextColor(255,255,255); doc.setFontSize(17); doc.text("Lembar Hasil Belajar: Amanah atau Margin?", M, 20);
+  doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.text("Teknologi Keuangan Islam  -  Dosen Pengampu: Dr. Yaser Taufik Syamlan, ME, CIFP", M, 26);
+  y = 40;
+  head("Identitas");
+  row("Nama", nama); row("NIM", nim); if (kelas) row("Kelas", kelas); if (kel) row("Kelompok", kel);
+  row("Waktu penyelesaian", tgl); row("Kode verifikasi", code);
+  y += 2;
+  head("Nilai Permainan");
+  need(24);
+  doc.setFillColor(247,245,240); doc.rect(M, y-4, 44, 24, "F");
+  doc.setTextColor(...NAVYc); doc.setFont("helvetica","bold"); doc.setFontSize(26); doc.text(String(sc.total), M+22, y+8, {align:"center"});
+  doc.setFontSize(12); doc.text("Huruf: " + sc.letter, M+22, y+16, {align:"center"});
+  let yy = y;
+  sc.parts.forEach(([n,max,v]) => { doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(30,30,30); doc.text(n, M+50, yy); doc.setFont("helvetica","bold"); doc.text(String(v).replace(".",",") + " / " + max, W-M, yy, {align:"right"}); yy += 5; });
+  y = Math.max(y+24, yy) + 2;
+  row("Vonis", verdictTitle); row("Model bisnis terbentuk", modelTitle);
+  row("Bulan berjalan", S.month + " dari 12"); row("Literasi akad", S.quizScore + " dari " + S.quizN + " kuis tepat");
+  row("Indikator akhir", "Kepercayaan " + Math.round(S.trust) + ", kepatuhan " + Math.round(S.comp) + ", misi sosial " + Math.round(100-S.drift));
+  y += 2;
+  head("Register Risiko Akhir Tahun");
+  para(Object.entries(RISKS).map(([k,n]) => n + ": " + riskStatus(k)[1]).join("; ") + ".");
+  head("Tinjauan Kuis Akad");
+  (S.qlog||[]).forEach(x => para(x.mo + " - " + (x.ok ? "Tepat" : "Perlu diulang") + ". " + x.q + " Jawaban yang tepat: " + x.a + ".", 9.5));
+  head("Jejak Keputusan");
+  S.log.forEach(l => para(l.mo + " - " + l.t, 9.5));
+  head("Refleksi");
+  REFL.forEach((q,i) => { para((i+1) + ". " + q, 10, NAVYc, true); para(ans[i], 10); });
+  need(14);
+  y += 2; doc.setDrawColor(200,200,200); doc.setLineWidth(0.2); doc.line(M, y, W-M, y); y += 5;
+  para("Berkas ini dihasilkan otomatis oleh Donation Based Crowdfunding Simulation dan diunggah mahasiswa ke SMILE. Kode verifikasi dihitung dari identitas dan hasil permainan. Wallahu a'lam.", 8.5, GREY);
+  const pages = doc.getNumberOfPages();
+  for (let i=1;i<=pages;i++){ doc.setPage(i); doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(...GREY); doc.text("Halaman " + i + " dari " + pages + "  -  " + nim, W-M, 292, {align:"right"}); }
+  const blob = doc.output("blob");
+  const fname = ("DBCF-Simulation_" + nim + "_" + nama).replace(/[^A-Za-z0-9_-]+/g, "_").slice(0,80) + ".pdf";
+  let dl = null;
+  try { dl = await window.claude?.use?.("downloads"); } catch(e){}
+  if (!dl){ doc.save(fname); st.style.color = "var(--green)"; st.textContent = "PDF tersimpan sebagai " + fname + ". Silakan unggah berkas tersebut ke SMILE."; return; }
+  try {
+    await dl.save({filename:fname, data:blob});
+    st.style.color = "var(--green)"; st.textContent = "PDF tersimpan sebagai " + fname + ". Silakan unggah berkas tersebut ke SMILE.";
+  } catch(e){
+    const c = e && e.code;
+    st.style.color = "var(--red)";
+    st.textContent = c==="declined" ? "Penyimpanan dibatalkan. Klik tombol unduh kembali bila ingin menyimpan." : c==="rate_limited" ? "Masih ada konfirmasi unduhan yang terbuka. Selesaikan dahulu, lalu coba kembali." : "PDF belum dapat disimpan pada tampilan ini (" + (c||"tidak diketahui") + ").";
+  }
+}
+
+function compareHTML(){
+  let all = [];
+  try { all = JSON.parse(localStorage.getItem("ifg-dbcf")||"[]"); } catch(e){}
+  if (!all.length) return "";
+  return `<div><div class="eyebrow" style="margin-bottom:8px">Hasil putaran terakhir di perangkat ini</div><div class="cmp">${all.map((r,i)=>`<div class="c"><h3>${i===0?"Putaran terbaru":"Putaran sebelumnya"}</h3><p style="margin:0 0 8px;color:var(--gold);font-weight:700">${r.verdict}</p><dl><dt>Model terbentuk</dt><dd>${r.model}</dd><dt>Kepercayaan</dt><dd>${r.trust}</dd><dt>Kepatuhan</dt><dd>${r.comp}</dd><dt>Misi sosial</dt><dd>${r.mis}</dd><dt>Literasi akad</dt><dd>${r.quiz}</dd><dt>Bulan bertahan</dt><dd>${r.months}</dd></dl></div>`).join("")}</div></div>`;
+}
+function introCompare(){ const h = compareHTML(); $("introCompare").innerHTML = h; $("introCompare").hidden = !h; }
+
+$("fee").addEventListener("input", e => { if (!S) return; S.fee = +e.target.value; feeUI(); });
+$("startBtn").addEventListener("click", newGame);
+
+function start(data){
+  introCompare(); introProc(); guide();
+  if (data && data.S && data.S.risk && !data.S.over){ S = data.S; $("fee").value = S.fee; show("game"); render(); startTimer(); }
+}
+window.claude?.hot?.snapshot?.(() => ({S}));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+
+</body>
+</html>
