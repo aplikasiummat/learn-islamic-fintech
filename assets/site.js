@@ -74,7 +74,8 @@ const T = {
   cntEyebrow:"Capaian", cntTitle:"Belajar tanpa biaya, kapan saja",
   newsEyebrow:"Bahan Ajar Terbaru", newsTitle:"Deck kuliah terbaru", seeAll:"Selengkapnya",
   footRel:"Situs Terkait", footAddr:"Universitas Tazkia · Sentul City, Bogor, Jawa Barat",
-  baCrumb:"Bahan Ajar"
+  baCrumb:"Bahan Ajar",
+  cr1:"Universitas Tazkia", cr4:"Sertifikasi keuangan Islam"
  },
  en:{
   topbar:"<b>A knowledge waqf</b> from Dr. Yaser Taufik Syamlan, ME, CIFP",
@@ -144,7 +145,8 @@ const T = {
   cntEyebrow:"Milestones", cntTitle:"Learn at no cost, anytime",
   newsEyebrow:"Latest Materials", newsTitle:"Latest lecture decks", seeAll:"See all",
   footRel:"Related Sites", footAddr:"Universitas Tazkia · Sentul City, Bogor, West Java",
-  baCrumb:"Learning Materials"
+  baCrumb:"Learning Materials",
+  cr1:"Universitas Tazkia", cr4:"Islamic finance certifications"
  }
 };
 

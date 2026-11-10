@@ -348,3 +348,8 @@ footer .bottom{grid-column:1/-1;border-top:1px solid rgba(201,162,74,.2);padding
 .menu{gap:18px}
 .menu a{white-space:nowrap;font-size:11.5px}
 @media (max-width:1180px) and (min-width:981px){.logo small{display:none}.menu{gap:14px}.menu a{font-size:10.5px;letter-spacing:.1em}}
+
+.creds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;border-top:1px solid var(--gold);border-left:1px solid var(--line);margin:22px 0 8px}
+.creds div{padding:14px 16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--paper)}
+.creds b{display:block;font-family:var(--cinzel);font-size:13.5px;letter-spacing:.08em;color:var(--em)}
+.creds span{font-size:13.5px;color:var(--muted)}
