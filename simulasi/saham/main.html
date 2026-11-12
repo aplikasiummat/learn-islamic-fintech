@@ -144,6 +144,20 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
 .ipo p{margin:0;font-size:.85rem}
 .news{list-style:none;margin:0;padding:0;max-height:220px;overflow:auto;font-size:.85rem}
 .news li{padding:6px 12px;border-bottom:1px solid var(--line)}
+.newsbar{position:relative;display:flex;align-items:center;gap:0;background:#13294a;margin-inline:-16px;border-top:1px solid #2a4570;color:#eef2f8;font-size:.88rem}
+.newsbar .lbl{flex:none;background:var(--gold);color:#10243f;font-weight:800;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:7px 12px;align-self:stretch;display:flex;align-items:center}
+.nb-view{flex:1;overflow:hidden;white-space:nowrap;min-width:0}
+.nb-in{display:inline-block;padding-left:100%;animation:nbrun var(--nbdur,40s) linear infinite}
+.nb-in .it{margin-right:42px}.nb-in .it::before{content:"◆";color:var(--gold);margin-right:10px}
+.nb-in .it time{font-family:var(--mono);font-size:.75rem;color:#9fb0c8;margin-right:6px}
+.nb-in .it.new{color:#ffe082;font-weight:700}
+.nb-in b{color:#fff}
+.newsbar:hover .nb-in{animation-play-state:paused}
+@keyframes nbrun{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+#news-more{flex:none;align-self:stretch;border:0;border-left:1px solid #2a4570;background:#0f2140;color:#fff;font-size:.78rem;font-weight:700;padding:0 12px}
+.news-drop{position:absolute;right:0;top:100%;z-index:25;width:min(520px,100%);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:0 0 8px 8px;box-shadow:0 16px 40px rgba(5,15,35,.3)}
+.news-drop .news{max-height:360px}
+@media (prefers-reduced-motion: reduce){.nb-in{padding-left:0}}
 .news time{font-family:var(--mono);color:var(--muted);font-size:.75rem;margin-right:6px}
 
 /* tabs */
@@ -358,6 +372,12 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
     </div>
   </div>
   <div class="tape" aria-hidden="true"><div class="tape-in" id="tape"></div></div>
+  <div class="newsbar">
+    <span class="lbl">Market news</span>
+    <div class="nb-view" aria-live="off"><div class="nb-in" id="newsrun"></div></div>
+    <button type="button" id="news-more" aria-expanded="false" aria-controls="news-drop">All news ▾</button>
+    <div class="news-drop" id="news-drop" hidden><ul class="news" id="news"></ul></div>
+  </div>
 
   <div class="macro" id="macro" aria-live="polite"></div>
 
@@ -446,10 +466,6 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
       <section class="panel">
         <header><h2>Open orders</h2></header>
         <div class="pad scroll"><table class="hold"><thead><tr><th>Order</th><th>Price</th><th>Lot</th><th></th></tr></thead><tbody id="orders"></tbody></table></div>
-      </section>
-      <section class="panel">
-        <header><h2>Market news</h2></header>
-        <ul class="news" id="news"></ul>
       </section>
     </aside>
   </div>
@@ -926,7 +942,7 @@ const MISSIONS=[
 ];
 
 // ---------------------------------------------------------------- render
-const lastPx={};
+const lastPx={};let newsSig='';
 function renderTape(){const el=$('tape');if(!el.firstChild){const one=STOCKS.map(s=>`<span data-tp="${s.tk}"></span>`).join('');el.innerHTML=one+one}
   el.querySelectorAll('[data-tp]').forEach(sp=>{const tk=sp.dataset.tp,q=S.mk[tk];if(!q.listed){sp.textContent=tk+' IPO';sp.className='';return}const c=pct(q.p,q.pc);
     sp.textContent=`${tk} ${num(q.p)} ${c>0?'▲':c<0?'▼':'■'} ${fpct(c)}`;sp.className=sgn(c)})}
@@ -982,6 +998,11 @@ function render(){
   $('orders').innerHTML=S.orders.length?S.orders.map(o=>`<tr><td><span class="${o.side==='buy'?'up':'down'}">${o.side==='buy'?'Buy':'Sell'}</span> ${o.tk}</td><td>${num(o.price)}</td><td>${num(o.lots)}</td><td><button class="cancel" data-cancel="${o.id}">Cancel</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">No open orders.</td></tr>';
   renderIPO();renderMacro();renderTape();
   $('news').innerHTML=S.news.map(n=>`<li><time>${n.at}</time>${n.text}</li>`).join('');
+  const nsig=S.news.length?S.news[0].at+S.news[0].text:'';
+  if(nsig!==newsSig){newsSig=nsig;const items=S.news.slice(0,8);const el=$('newsrun');
+    el.innerHTML=items.map((n,i)=>`<span class="it${i===0?' new':''}"><time>${n.at.slice(-5)}</time>${n.text}</span>`).join('');
+    const len=items.reduce((a,n)=>a+n.text.replace(/<[^>]+>/g,'').length,0);el.style.setProperty('--nbdur',Math.max(25,Math.round(len*.11))+'s');
+    el.style.animation='none';void el.offsetWidth;el.style.animation=''}
   const nDone=MISSIONS.filter(m=>S.missions[m.id]).length;
   $('report').innerHTML=`<div class="t"><h3>Student report card</h3><span class="est">Screenshot this card to submit your progress.</span></div>
     <div><span>Name</span><b style="font-family:var(--body)">${esc(USER.name)}</b></div><div><span>NIM</span><b>${esc(USER.nim)}</b></div>
@@ -1085,6 +1106,8 @@ $('px-best').onclick=()=>{const q=quotes(S.sel);$('o-price').value=side==='buy'?
 $('lot-max').onclick=()=>{const p=Number($('o-price').value)||S.mk[S.sel].p;
   $('o-lots').value=side==='buy'?Math.max(1,Math.floor((S.cash+marginCap())/(p*100*(1+BUY_FEE)))):Math.max(1,Math.floor(((S.hold[S.sel]?.sh||0)-lockedSell(S.sel))/100));updateEst()};
 $('o-price').oninput=updateEst;$('o-lots').oninput=updateEst;
+$('news-more').onclick=()=>{const d=$('news-drop'),o=d.hidden;d.hidden=!o;$('news-more').setAttribute('aria-expanded',o);$('news-more').textContent=o?'Close ▴':'All news ▾'};
+document.addEventListener('click',e=>{if(!$('news-drop').hidden&&!e.target.closest('.newsbar')){$('news-drop').hidden=true;$('news-more').setAttribute('aria-expanded','false');$('news-more').textContent='All news ▾'}});
 $('lot-chips').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.lots)$('o-lots').value=b.dataset.lots;else{$('lot-max').click();$('o-lots').value=Math.max(1,Math.floor(Number($('o-lots').value)*Number(b.dataset.frac)))}updateEst()});
 document.addEventListener('keydown',e=>{if(!S||!USER||e.ctrlKey||e.metaKey||e.altKey)return;const tag=(e.target.tagName||'').toLowerCase();
