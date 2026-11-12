@@ -74,6 +74,34 @@ const T = {
   cntEyebrow:"Capaian", cntTitle:"Belajar tanpa biaya, kapan saja",
   newsEyebrow:"Bahan Ajar Terbaru", newsTitle:"Deck kuliah terbaru", seeAll:"Selengkapnya",
   footRel:"Situs Terkait", footAddr:"Universitas Tazkia · Sentul City, Bogor, Jawa Barat",
+  mSimDbcf:"Simulasi Donasi (DBCF)", mSimSaham:"Simulasi Saham Syariah",
+  ssCrumb:"Saham Syariah", ssTitle:"Bursa Syariah", ssStart:"Mulai Simulasi", ssHow:"Cara Bermain",
+  ssLead:"Rasakan jual beli saham seperti di Bursa Efek Indonesia, dengan aturan syariah yang benar-benar bekerja. Dua puluh menit, sepuluh hari bursa, dan modal virtual Rp100 juta di akun SOTS.",
+  ssF1:"menit untuk satu sesi", ssF2:"hari bursa simulasi", ssF3:"modal virtual awal", ssF4:"misi pembelajaran",
+  ssLearnEyebrow:"Yang Anda Pelajari", ssLearnTitle:"Belajar pasar modal syariah dengan tangan sendiri",
+  ssL1:"Akad di balik setiap transaksi: wakalah kepada broker, bay' al-musawamah di bursa, musyarakah sebagai pemegang saham",
+  ssL2:"Screening saham syariah: sektor usaha, utang berbunga maksimal 45%, pendapatan nonhalal maksimal 10%",
+  ssL3:"Transaksi terlarang menurut Fatwa DSN-MUI 40/2003: margin trading dan short selling diblokir di akun SOTS",
+  ssL4:"Mekanisme BEI: lot, fraksi harga, ARA dan ARB, sesi perdagangan, biaya, dan penyelesaian T+2",
+  ssL5:"Pasar perdana lewat IPO dan purifikasi bagian nonhalal dari dividen",
+  ssBlocked:"Diblokir SOTS: BKNV tidak masuk Daftar Efek Syariah karena usaha intinya perbankan berbasis bunga.",
+  ssM1:"Purifikasi dividen SHJY", ssM2:"Dana hasil jual cair",
+  ssHowEyebrow:"Cara Bermain", ssHowTitle:"Empat langkah, dua puluh menit",
+  ssS1t:"Daftar", ssS1s:"Masukkan nama lengkap dan NIM. Kemajuan tersimpan di perangkat Anda dengan NIM tersebut.",
+  ssS2t:"Bertransaksi", ssS2s:"Beli dan jual saham fiktif di akun SOTS. Setiap hari bursa berlangsung dua menit.",
+  ssS3t:"Selesaikan misi", ssS3s:"Sembilan misi menuntun Anda: IPO, dividen, purifikasi, T+2, hingga membandingkan dengan akun reguler.",
+  ssS4t:"Kirim laporan", ssS4s:"Setelah hari ke-10, tangkap layar kartu laporan berisi nama dan NIM, lalu tulis refleksi singkat.",
+  ssMechEyebrow:"Meniru Bursa Sungguhan", ssMechTitle:"Mekanisme yang Anda temui di simulasi",
+  ssMechLead:"Emiten dan harga bersifat fiktif, tetapi aturan mainnya mengikuti praktik Bursa Efek Indonesia yang diajarkan di kelas.",
+  ssK1:"Satuan", ssK1t:"Lot dan fraksi harga", ssK1s:"1 lot = 100 lembar. Harga bergerak sesuai fraksi Rp1 sampai Rp25 menurut rentang harga.",
+  ssK2:"Batas harian", ssK2t:"ARA dan ARB", ssK2s:"Order di luar batas auto rejection langsung ditolak, lengkap dengan alasannya.",
+  ssK3:"Waktu", ssK3t:"Sesi perdagangan", ssK3s:"Pra-pembukaan, Sesi 1, istirahat, Sesi 2, dan pra-penutupan. Order di luar sesi masuk antrean.",
+  ssK4:"Uang", ssK4t:"Biaya dan T+2", ssK4s:"Biaya beli 0,15%, biaya jual 0,25%, dan dana hasil penjualan baru cair dua hari bursa kemudian.",
+  ssK5:"Syariah", ssK5t:"Akun SOTS dan DES", ssK5s:"Hanya saham dalam Daftar Efek Syariah yang bisa dibeli. Akun reguler tersedia sebagai pembanding.",
+  ssK6:"Pasar perdana", ssK6t:"IPO dan dividen", ssK6s:"Ikuti book building HALA, terima penjatahan, kumpulkan dividen, lalu sucikan bagian nonhalalnya.",
+  ssDosen:"Untuk dosen: simulasi ini disusun untuk mata kuliah Islamic Financial Market and Institution (pertemuan Pasar Modal Syariah). Antarmuka simulasi berbahasa Inggris. Mintalah mahasiswa mengirim tangkapan layar kartu laporan beserta refleksi tentang satu aturan syariah yang mengubah keputusan mereka.",
+  ssCta:"Dua puluh menit untuk merasakan bursa yang <em>adil</em>",
+  sim2CardT:"Bursa Syariah: Simulasi Saham", sim2CardD:"Simulasi 20 menit jual beli saham ala BEI di akun SOTS: screening DES, ARA/ARB, T+2, IPO, purifikasi dividen, dan kartu laporan bernama dan ber-NIM.", sim2Days:"hari bursa",
   baCrumb:"Bahan Ajar",
   cr1:"Universitas Tazkia", cr4:"Sertifikasi keuangan Islam"
  },
@@ -145,6 +173,34 @@ const T = {
   cntEyebrow:"Milestones", cntTitle:"Learn at no cost, anytime",
   newsEyebrow:"Latest Materials", newsTitle:"Latest lecture decks", seeAll:"See all",
   footRel:"Related Sites", footAddr:"Universitas Tazkia · Sentul City, Bogor, West Java",
+  mSimDbcf:"Donation Simulation (DBCF)", mSimSaham:"Islamic Stock Simulation",
+  ssCrumb:"Islamic Stocks", ssTitle:"Bursa Syariah", ssStart:"Start the Simulation", ssHow:"How to Play",
+  ssLead:"Trade stocks the way the Indonesia Stock Exchange works, with Shariah rules that actually bite. Twenty minutes, ten trading days, and Rp100 million of virtual capital in a SOTS account.",
+  ssF1:"minutes per session", ssF2:"simulated trading days", ssF3:"virtual starting capital", ssF4:"learning missions",
+  ssLearnEyebrow:"What You Learn", ssLearnTitle:"Learn the Islamic capital market by doing",
+  ssL1:"The contract behind every trade: wakalah with your broker, bay' al-musawamah on the exchange, musyarakah as a shareholder",
+  ssL2:"Shariah stock screening: line of business, interest-bearing debt up to 45%, non-halal income up to 10%",
+  ssL3:"Prohibited transactions under DSN-MUI Fatwa 40/2003: margin trading and short selling are blocked in SOTS",
+  ssL4:"IDX mechanics: lots, tick sizes, ARA and ARB limits, trading sessions, fees, and T+2 settlement",
+  ssL5:"The primary market through an IPO, and purifying the non-halal share of dividends",
+  ssBlocked:"Blocked by SOTS: BKNV is not in the Shariah securities list because its core business is interest-based banking.",
+  ssM1:"SHJY dividend purification", ssM2:"Sale proceeds settle",
+  ssHowEyebrow:"How to Play", ssHowTitle:"Four steps, twenty minutes",
+  ssS1t:"Register", ssS1s:"Enter your full name and student ID (NIM). Progress is saved on your device under that NIM.",
+  ssS2t:"Trade", ssS2s:"Buy and sell fictional stocks in a SOTS account. Each trading day lasts two minutes.",
+  ssS3t:"Complete missions", ssS3s:"Nine missions guide you through the IPO, dividends, purification, T+2, and a comparison with a regular account.",
+  ssS4t:"Submit your report", ssS4s:"After day 10, screenshot your report card with your name and NIM, then write a short reflection.",
+  ssMechEyebrow:"Mirrors the Real Exchange", ssMechTitle:"Mechanics you will meet in the simulation",
+  ssMechLead:"Issuers and prices are fictional, but the rules follow Indonesia Stock Exchange practice taught in class.",
+  ssK1:"Units", ssK1t:"Lots and tick sizes", ssK1s:"1 lot = 100 shares. Prices move in ticks of Rp1 to Rp25 depending on the price range.",
+  ssK2:"Daily limits", ssK2t:"ARA and ARB", ssK2s:"Orders outside the auto rejection band are refused, with the reason shown.",
+  ssK3:"Time", ssK3t:"Trading sessions", ssK3s:"Pre-opening, Session 1, break, Session 2, and pre-closing. Orders outside sessions wait in the queue.",
+  ssK4:"Money", ssK4t:"Fees and T+2", ssK4s:"A 0.15% buy fee, a 0.25% sell fee, and sale proceeds that settle two trading days later.",
+  ssK5:"Shariah", ssK5t:"SOTS account and DES", ssK5s:"Only stocks in the Shariah securities list can be bought. A regular account is available for comparison.",
+  ssK6:"Primary market", ssK6t:"IPO and dividends", ssK6s:"Join the HALA book building, receive an allotment, collect dividends, then purify the non-halal share.",
+  ssDosen:"For lecturers: this simulation supports the Islamic Financial Market and Institution course (Islamic capital market sessions). The simulator interface is in English. Ask students to submit a screenshot of their report card with a reflection on one Shariah rule that changed their decisions.",
+  ssCta:"Twenty minutes to feel a <em>fair</em> market",
+  sim2CardT:"Bursa Syariah: Stock Simulation", sim2CardD:"A 20-minute IDX-style stock trading simulation in a SOTS account: DES screening, ARA/ARB, T+2, IPO, dividend purification, and a report card with name and NIM.", sim2Days:"trading days",
   baCrumb:"Learning Materials",
   cr1:"Universitas Tazkia", cr4:"Islamic finance certifications"
  }
@@ -227,6 +283,14 @@ function simCard(){
     <h3 style="color:#fff">${L.simCardT}</h3><p style="color:#c3cec6">${L.simCardD}</p>
     <div class="acts"><a class="btn gold sm" href="${BASE}simulasi/dbcf/">${L.play}</a></div></div></article>`;
 }
+function simCard2(){
+  const L = T[lang];
+  return `<article class="mod corner reveal" style="background:radial-gradient(ellipse at 30% 0%,#1b3a63,#0a1730 70%);border-color:var(--gold);color:#e9e4d5">
+    <a class="thumb" href="${BASE}simulasi/saham/" style="display:grid;place-items:center;background:radial-gradient(ellipse at 50% 30%,#1b3a63,#06101f)"><span class="foil" style="font-family:var(--ar);font-size:60px;line-height:1">مُشَارَكَة</span><span class="tag m">${L.lvlSim}</span></a>
+    <div class="body"><div class="meta" style="color:#a9b4ab">20 ${L.minutes} · 10 ${L.sim2Days}</div>
+    <h3 style="color:#fff">${L.sim2CardT}</h3><p style="color:#c3cec6">${L.sim2CardD}</p>
+    <div class="acts"><a class="btn gold sm" href="${BASE}simulasi/saham/">${L.play}</a></div></div></article>`;
+}
 function renderMods(){
   const featBox = $("#featMods");
   if (featBox) featBox.innerHTML = MODS.slice().reverse().filter(m => !m.extra).slice(0,3).map(modCard).join("");
@@ -239,6 +303,8 @@ function renderMods(){
     const simOk = (filter==="all" || filter==="sim") && (!q || (T.id.simCardT+" "+T.id.simCardD+" "+T.en.simCardD+" dbcf donasi").toLowerCase().includes(q));
     if (filter==="sim") html = "";
     if (simOk) html += simCard();
+    const sim2Ok = (filter==="all" || filter==="sim") && (!q || (T.id.sim2CardT+" "+T.id.sim2CardD+" "+T.en.sim2CardD+" saham stock bursa").toLowerCase().includes(q));
+    if (sim2Ok) html += simCard2();
     cat.innerHTML = html || `<div class="empty">${T[lang].empty}</div>`;
   }
   const reads = $("#reads");

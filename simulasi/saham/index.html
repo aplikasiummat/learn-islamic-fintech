@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulasi Saham Syariah · Learn Islamic Fintech with Tazkia</title>
+<meta name="description" content="Simulasi jual beli saham syariah 20 menit yang meniru mekanisme Bursa Efek Indonesia: akun SOTS, Daftar Efek Syariah, ARA/ARB, T+2, IPO, dan purifikasi dividen.">
+<link rel="icon" href="../../assets/logo-tazkia.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="../../assets/site.css">
+<style>
+.facts4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:34px;max-width:900px}
+.facts4 div{border-top:1px solid var(--gold);padding-top:12px}
+.facts4 b{display:block;font-family:var(--serif);font-size:38px;line-height:1;color:#fff}
+.facts4 span{font-size:13.5px;color:#a9b4ab}
+@media (max-width:700px){.facts4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tick{display:grid;grid-template-columns:auto 1fr auto auto;gap:4px 12px;align-items:center;font-family:monospace;font-size:13px;color:#eef2f8;background:#1b2f52;border-radius:8px;padding:8px 12px}
+.tick small{font-family:var(--sans);color:#a9b7cc;font-size:11.5px}
+.tick .u{color:#3fb37f}.tick .d{color:#ff6b5e}
+.tick .des{font-family:var(--sans);font-size:10.5px;font-weight:700;background:#0f302e;color:#4fc7bf;border-radius:3px;padding:1px 5px}
+.tick .no{font-family:var(--sans);font-size:10.5px;font-weight:700;background:#3d1a18;color:#ff6b5e;border-radius:3px;padding:1px 5px}
+.blk{background:#3a2a10;color:#ffb54a;border-radius:8px;padding:8px 12px;font-size:12.5px}
+.mlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:30px}
+.mlist div{border:1px solid var(--line,#d8cfb8);padding:16px 18px;background:rgba(255,255,255,.55)}
+.mlist small{font-family:var(--cinzel);font-size:11px;letter-spacing:.16em;color:var(--gold3,#8a6520);text-transform:uppercase}
+.mlist b{display:block;font-family:var(--serif);font-size:21px;margin:4px 0 4px;line-height:1.15}
+.mlist span{font-size:14.5px;color:var(--muted)}
+.dosen{max-width:820px;margin:34px auto 0;border-left:3px solid var(--gold);padding:6px 0 6px 18px;color:var(--muted)}
+</style>
+</head>
+<body data-page="saham" data-base="../../">
+
+<div class="topbar"><div class="wrap">
+  <span><span data-i="topbar"></span> · <span data-i="topbar2"></span></span>
+  <span class="ar">رَبِّ زِدْنِيْ عِلْمًا</span>
+</div></div>
+
+<header class="nav"><div class="wrap">
+  <a class="logo" href="../../" aria-label="Learn Islamic Fintech with Tazkia">
+    <span class="chip"><img src="../../assets/logo-tazkia.png" alt="Universitas Tazkia" width="600" height="206"></span>
+    <span><b>LEARN ISLAMIC FINTECH</b><small>WITH TAZKIA</small></span>
+  </a>
+  <nav class="menu" aria-label="Menu">
+    <a href="../../" data-i="nav0"></a>
+    <div class="dd"><a href="../../#selayang"><span data-i="menuAbout"></span><span>▼</span></a>
+      <div class="sub"><a href="../../#selayang" data-i="mKisah"></a><a href="../../#tentang" data-i="mPenyusun"></a><a href="../../#cara" data-i="mCara"></a><a href="../../#kolom" data-i="mKolom"></a></div></div>
+    <a href="../../bahan-ajar/" data-i="nav1"></a>
+    <div class="dd"><a href="./" class="on"><span data-i="nav2"></span><span>▼</span></a>
+      <div class="sub"><a href="../dbcf/" data-i="mSimDbcf"></a><a href="./" data-i="mSimSaham"></a></div></div>
+    <a href="../../#peta" data-i="nav3"></a>
+  </nav>
+  <button class="icobtn" type="button" data-search aria-label="Cari">⌕</button>
+  <div class="lang" role="group" aria-label="Bahasa / Language"><button type="button" data-lang="id" aria-pressed="true">ID</button><button type="button" data-lang="en" aria-pressed="false">EN</button></div>
+  <button class="burger" type="button" aria-label="Menu" aria-expanded="false">☰</button>
+</div></header>
+
+<main>
+  <section class="dark pbanner">
+    <div class="wm">سُوْقُ الْأَوْرَاقِ</div>
+    <div class="wrap" style="position:relative">
+      <div class="crumb"><a href="../../" data-i="nav0"></a><i>◆</i><span data-i="nav2"></span><i>◆</i><span data-i="ssCrumb"></span></div>
+      <h1 class="foil" data-i="ssTitle"></h1>
+      <p class="lead" data-i="ssLead"></p>
+      <div class="cta" style="margin-top:26px"><a class="btn gold" href="main.html" data-i="ssStart"></a><a class="btn line" href="#cara-main" data-i="ssHow"></a></div>
+      <div class="facts4">
+        <div><b>20</b><span data-i="ssF1"></span></div>
+        <div><b>10</b><span data-i="ssF2"></span></div>
+        <div><b>Rp100 jt</b><span data-i="ssF3"></span></div>
+        <div><b>9</b><span data-i="ssF4"></span></div>
+      </div>
+    </div>
+  </section>
+  <div class="zellige thin"></div>
+
+  <section class="dark" id="belajar">
+    <div class="wrap simgrid">
+      <div class="reveal">
+        <div class="eyebrow" data-i="ssLearnEyebrow"></div>
+        <h2 class="h2" data-i="ssLearnTitle"></h2>
+        <ul><li data-i="ssL1"></li><li data-i="ssL2"></li><li data-i="ssL3"></li><li data-i="ssL4"></li><li data-i="ssL5"></li></ul>
+        <a class="btn gold" href="main.html" data-i="ssStart"></a>
+      </div>
+      <div class="browser reveal" aria-hidden="true">
+        <div class="bar"><i></i><i></i><i></i><span>learn-islamic-fintech / simulasi / saham</span></div>
+        <div class="scr">
+          <div class="row"><span>Sesi 1 · Hari 3 dari 10</span><span>14:20 left</span></div>
+          <div class="tick"><b>SHJY</b><small>Sehat Jaya Tbk</small><span>1.875</span><span class="u">+1,35%</span><span></span><span class="des">DES</span></div>
+          <div class="tick"><b>TMBG</b><small>Tambang Nusantara Tbk</small><span>4.410</span><span class="u">+2,08%</span><span></span><span class="des">DES</span></div>
+          <div class="tick"><b>BKNV</b><small>Bank Konvensional Raya Tbk</small><span>4.850</span><span class="d">−0,61%</span><span></span><span class="no">NON-DES</span></div>
+          <div class="blk" data-i="ssBlocked"></div>
+          <div class="m"><span data-i="ssM1"></span><b>Rp3.600</b><span data-i="ssM2"></span><b>T+2</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="cara-main">
+    <div class="wrap">
+      <div class="center reveal" style="margin-bottom:44px"><div class="eyebrow" data-i="ssHowEyebrow"></div><h2 class="h2" data-i="ssHowTitle"></h2></div>
+      <div class="steps">
+        <div class="step reveal"><div class="k">I</div><b data-i="ssS1t"></b><span data-i="ssS1s"></span></div>
+        <div class="step reveal"><div class="k">II</div><b data-i="ssS2t"></b><span data-i="ssS2s"></span></div>
+        <div class="step reveal"><div class="k">III</div><b data-i="ssS3t"></b><span data-i="ssS3s"></span></div>
+        <div class="step reveal"><div class="k">IV</div><b data-i="ssS4t"></b><span data-i="ssS4s"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sebka" id="mekanisme">
+    <div class="wrap">
+      <div class="secthead reveal"><div><div class="eyebrow" data-i="ssMechEyebrow"></div><h2 class="h2" data-i="ssMechTitle"></h2><p class="lead" style="margin:0" data-i="ssMechLead"></p></div></div>
+      <div class="mlist reveal">
+        <div><small data-i="ssK1"></small><b data-i="ssK1t"></b><span data-i="ssK1s"></span></div>
+        <div><small data-i="ssK2"></small><b data-i="ssK2t"></b><span data-i="ssK2s"></span></div>
+        <div><small data-i="ssK3"></small><b data-i="ssK3t"></b><span data-i="ssK3s"></span></div>
+        <div><small data-i="ssK4"></small><b data-i="ssK4t"></b><span data-i="ssK4s"></span></div>
+        <div><small data-i="ssK5"></small><b data-i="ssK5t"></b><span data-i="ssK5s"></span></div>
+        <div><small data-i="ssK6"></small><b data-i="ssK6t"></b><span data-i="ssK6s"></span></div>
+      </div>
+      <p class="dosen reveal" data-i="ssDosen"></p>
+    </div>
+  </section>
+
+  <div class="zellige"></div>
+  <section class="dark ctaband">
+    <div class="wrap">
+      <div class="center"><div class="eyebrow">Wakaf Ilmu</div></div>
+      <h2 data-i="ssCta"></h2>
+      <div class="cta"><a class="btn gold" href="main.html" data-i="ssStart"></a><a class="btn line" href="../dbcf/" data-i="mSimDbcf"></a></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="logo" href="../../"><span class="chip"><img src="../../assets/logo-tazkia.png" alt="Universitas Tazkia" width="600" height="206"></span><span><b>LEARN ISLAMIC FINTECH</b><small>WITH TAZKIA</small></span></a>
+      <p style="margin-top:18px" data-i="footAbout"></p>
+      <p data-i="footAddr" style="font-size:13.5px;color:#93a097"></p>
+      <div class="ar">وَلَا غَالِبَ إِلَّا اللّٰهُ</div>
+    </div>
+    <div>
+      <h4 data-i="footNav"></h4>
+      <ul><li><a href="../../bahan-ajar/" data-i="nav1"></a></li><li><a href="../dbcf/" data-i="mSimDbcf"></a></li><li><a href="./" data-i="mSimSaham"></a></li><li><a href="../../#peta" data-i="nav3"></a></li><li><a href="../../#tentang" data-i="nav4"></a></li></ul>
+    </div>
+    <div>
+      <h4 data-i="footRel"></h4>
+      <ul><li><a href="https://tazkia.ac.id/" target="_blank" rel="noopener">Universitas Tazkia</a></li><li><a href="https://dsnmui.or.id/" target="_blank" rel="noopener">DSN-MUI</a></li><li><a href="https://www.ojk.go.id/" target="_blank" rel="noopener">Otoritas Jasa Keuangan</a></li><li><a href="https://www.idx.co.id/" target="_blank" rel="noopener">Bursa Efek Indonesia</a></li></ul>
+      <h4 style="margin-top:22px" data-i="footLic"></h4>
+      <p style="font-size:13.5px;margin:0" data-i="footLicTxt"></p>
+    </div>
+    <div class="bottom"><span data-i="footBottom"></span><span data-i="topbar"></span></div>
+  </div>
+</footer>
+<button class="totop" type="button" aria-label="Ke atas">↑</button>
+
+<script src="../../assets/site.js"></script>
+</body>
+</html>

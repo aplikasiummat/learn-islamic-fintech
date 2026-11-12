@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="../../assets/logo-tazkia.png">
+<title>Bursa Syariah Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: trading-terminal grid (watchlist | stock desk | account), learning tabs below. FEB UI navy + gold, IDX green-up / red-down. */
+:root{
+  --bg:#eef1f6; --surface:#ffffff; --surface2:#f6f8fb; --ink:#14233a; --muted:#5d6b80; --line:#d9e0ea;
+  --navy:#10243f; --navy-ink:#ffffff; --gold:#c9960a; --gold-soft:#fbf1d0;
+  --up:#0f8a4f; --down:#c4362b; --flat:#7a8597; --up-soft:#e2f4ea; --down-soft:#fbe6e3;
+  --halal:#0f6e6a; --halal-soft:#dff1ef; --warn:#a15c00; --warn-soft:#fdf0db;
+  --display:"Archivo","Segoe UI",system-ui,sans-serif; --body:"Source Sans 3","Segoe UI",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0b1422; --surface:#122036; --surface2:#172843; --ink:#e7edf6; --muted:#9aa9be; --line:#25385a;
+  --navy:#0a1730; --navy-ink:#ffffff; --gold:#f2c200; --gold-soft:#3a3010;
+  --up:#3cc684; --down:#ff6b5e; --flat:#8d99ab; --up-soft:#103426; --down-soft:#3d1a18;
+  --halal:#4fc7bf; --halal-soft:#0f302e; --warn:#ffb54a; --warn-soft:#3a2a10; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1422; --surface:#122036; --surface2:#172843; --ink:#e7edf6; --muted:#9aa9be; --line:#25385a;
+  --navy:#0a1730; --navy-ink:#ffffff; --gold:#f2c200; --gold-soft:#3a3010;
+  --up:#3cc684; --down:#ff6b5e; --flat:#8d99ab; --up-soft:#103426; --down-soft:#3d1a18;
+  --halal:#4fc7bf; --halal-soft:#0f302e; --warn:#ffb54a; --warn-soft:#3a2a10; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;margin:0}
+.wrap{max-width:1440px;margin:0 auto;padding-inline:16px;padding-block:0 32px}
+.num,.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
+
+/* top bar */
+.top{background:var(--navy);color:var(--navy-ink);margin-inline:-16px;padding:12px 16px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.brand{display:flex;flex-direction:column;min-width:0}
+.brand h1{font-size:1.15rem;font-weight:800;letter-spacing:.01em}
+.brand small{color:#c7d2e2;font-size:.78rem}
+.clock{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.phase{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:#2a3d5c;color:#fff}
+.phase.open{background:#0f8a4f}.phase.queue{background:#a15c00}
+.clock .mono{font-size:.95rem}
+.idx{display:flex;gap:18px;flex-wrap:wrap}
+.idx div{display:flex;flex-direction:column;font-size:.75rem;color:#c7d2e2}
+.idx b{font-family:var(--mono);font-size:.95rem;color:#fff;font-weight:600}
+.ctrl{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.ctrl button{background:#203654;border:1px solid #344c70;color:#fff;border-radius:6px;padding:5px 10px;font-size:.85rem}
+.ctrl button[aria-pressed="true"]{background:var(--gold);color:#10243f;border-color:var(--gold);font-weight:700}
+
+/* mode strip */
+.mode{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:14px 0;padding:10px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:6px 12px;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--halal);color:#fff}
+.seg button.reg[aria-pressed="true"]{background:var(--warn);color:#fff}
+.mode p{margin:0;color:var(--muted);font-size:.9rem;flex:1 1 320px;min-width:0}
+.chk{display:flex;align-items:center;gap:6px;font-size:.9rem}
+
+/* grid */
+.grid{display:grid;grid-template-columns:290px minmax(0,1fr) 340px;gap:14px;align-items:start}
+@media (max-width:1180px){.grid{grid-template-columns:260px minmax(0,1fr)}.acct{grid-column:1/-1}}
+@media (max-width:760px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;min-width:0}
+.panel>header{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.panel>header h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.pad{padding:12px}
+
+/* watchlist */
+.wl{list-style:none;margin:0;padding:0}
+.wl li button{width:100%;display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:8px 12px;border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left}
+.wl li button:hover{background:var(--surface2)}
+.wl li button[aria-current="true"]{background:var(--gold-soft);box-shadow:inset 3px 0 0 var(--gold)}
+.wl .tk{font-family:var(--mono);font-weight:600}
+.wl .nm{font-size:.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wl .px{text-align:right;font-family:var(--mono)}
+.wl .ch{text-align:right;font-family:var(--mono);font-size:.8rem}
+.badge{display:inline-block;font-family:var(--body);font-size:.66rem;font-weight:700;letter-spacing:.04em;padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:1px}
+.b-des{background:var(--halal-soft);color:var(--halal)}
+.b-no{background:var(--down-soft);color:var(--down)}
+.b-ara{background:var(--up);color:#fff}.b-arb{background:var(--down);color:#fff}
+.b-ipo{background:var(--gold-soft);color:var(--warn)}
+
+/* desk */
+.desk-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;padding:12px}
+.desk-head h2{font-size:1.5rem;font-weight:800}
+.desk-head .sub{color:var(--muted);font-size:.9rem}
+.bigpx{text-align:right}
+.bigpx .p{font-family:var(--mono);font-size:1.9rem;font-weight:600;line-height:1.1}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1px;background:var(--line);border-block:1px solid var(--line)}
+.stats div{background:var(--surface);padding:7px 12px;display:flex;flex-direction:column}
+.stats span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.stats b{font-family:var(--mono);font-weight:600;font-size:.92rem}
+.chartbox{padding:8px 12px 0}
+canvas{width:100%;height:220px;display:block}
+.desk-low{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:14px;padding:12px}
+@media (max-width:900px){.desk-low{grid-template-columns:minmax(0,1fr)}}
+.book{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.85rem}
+.book th{font-family:var(--body);font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;padding:4px 6px;text-align:right}
+.book td{padding:3px 6px;text-align:right}
+.book td.bid{color:var(--up)} .book td.off{color:var(--down)}
+.book tr td:first-child,.book tr th:first-child{text-align:left}
+.ticket{border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--surface2);display:flex;flex-direction:column;gap:10px}
+.side{display:grid;grid-template-columns:1fr 1fr;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.side button{border:0;padding:8px;font-weight:700;background:var(--surface)}
+.side button.buy[aria-pressed="true"]{background:var(--up);color:#fff}
+.side button.sell[aria-pressed="true"]{background:var(--down);color:#fff}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.row{display:flex;gap:6px}
+.row input{flex:1;min-width:0}
+input[type=number]{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-family:var(--mono)}
+.mini{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:4px 8px;font-size:.8rem}
+.go{border:0;border-radius:7px;padding:10px;font-weight:700;color:#fff;background:var(--up);font-size:1rem}
+.go.sell{background:var(--down)}
+.est{font-size:.85rem;color:var(--muted)}
+.est b{font-family:var(--mono);color:var(--ink);font-weight:600}
+.msg{font-size:.88rem;border-radius:6px;padding:8px 10px;display:none}
+.msg.show{display:block}
+.msg.err{background:var(--down-soft);color:var(--down)}
+.msg.ok{background:var(--up-soft);color:var(--up)}
+.msg.fatwa{background:var(--warn-soft);color:var(--warn)}
+
+/* account */
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:.9rem}
+.kv span{color:var(--muted)} .kv b{font-family:var(--mono);font-weight:600;text-align:right}
+.kv .tot{font-size:1.05rem}
+.hold{width:100%;border-collapse:collapse;font-size:.84rem}
+.hold th{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;text-align:right;padding:4px 6px;border-bottom:1px solid var(--line)}
+.hold td{text-align:right;padding:5px 6px;border-bottom:1px solid var(--line);font-family:var(--mono)}
+.hold th:first-child,.hold td:first-child{text-align:left}
+.scroll{overflow-x:auto}
+.empty{color:var(--muted);font-size:.88rem;padding:6px 0}
+.cancel{border:0;background:transparent;color:var(--down);font-size:.8rem;text-decoration:underline}
+.purify{background:var(--halal-soft);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.purify p{margin:0;font-size:.85rem}
+.purify button{border:0;background:var(--halal);color:#fff;border-radius:6px;padding:7px;font-weight:700}
+.purify button:disabled{opacity:.45;cursor:default}
+.ipo{border:1px dashed var(--gold);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:7px;background:var(--gold-soft)}
+.ipo p{margin:0;font-size:.85rem}
+.news{list-style:none;margin:0;padding:0;max-height:220px;overflow:auto;font-size:.85rem}
+.news li{padding:6px 12px;border-bottom:1px solid var(--line)}
+.news time{font-family:var(--mono);color:var(--muted);font-size:.75rem;margin-right:6px}
+
+/* tabs */
+.tabs{margin-top:16px}
+.tablist{display:flex;gap:4px;flex-wrap:wrap;border-bottom:2px solid var(--line)}
+.tablist button{border:0;background:transparent;padding:9px 14px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px}
+.tablist button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--gold)}
+.tabpanel{background:var(--surface);border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px;padding:16px}
+.missions{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.mission{border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:5px}
+.mission.done{border-color:var(--halal);background:var(--halal-soft)}
+.mission h3{font-size:.98rem;font-weight:700}
+.mission p{margin:0;font-size:.88rem;color:var(--muted)}
+.mission .tag{font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gold)}
+.mission .st{font-size:.8rem;font-weight:700}
+.screen{width:100%;border-collapse:collapse;font-size:.88rem;min-width:820px}
+.screen th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:6px 8px;border-bottom:2px solid var(--line)}
+.screen td{padding:7px 8px;border-bottom:1px solid var(--line)}
+.screen td.n{font-family:var(--mono);text-align:right}
+.pass{color:var(--up);font-weight:700}.fail{color:var(--down);font-weight:700}
+.quiz{border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:14px;background:var(--surface2)}
+.quiz .opts{display:flex;flex-wrap:wrap;gap:8px 16px;margin:8px 0}
+.quiz button{border:0;background:var(--navy);color:#fff;border-radius:6px;padding:6px 12px;font-weight:700}
+.journal{list-style:none;margin:0;padding:0;font-size:.88rem;max-height:420px;overflow:auto}
+.journal li{display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}
+.journal .akad{display:block;color:var(--halal);font-size:.8rem}
+.journal .akad.riba{color:var(--down)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.rules section{border:1px solid var(--line);border-radius:8px;padding:12px}
+.rules h3{font-size:.95rem;margin-bottom:6px}
+.rules table{border-collapse:collapse;font-size:.85rem;width:100%}
+.rules td{padding:3px 4px;border-bottom:1px solid var(--line)}
+.rules p,.rules ul{margin:0;font-size:.88rem}
+.rules ul{padding-left:18px}
+.foot{margin-top:14px;font-size:.8rem;color:var(--muted)}
+.reset{border:1px solid var(--down);color:var(--down);background:transparent;border-radius:6px;padding:4px 10px;font-size:.8rem}
+/* registration */
+.regwrap{position:fixed;inset:0;z-index:20;background:var(--bg);overflow:auto;padding:24px 16px;display:flex;align-items:flex-start;justify-content:center}
+.regcard{width:100%;max-width:460px;margin-top:6vh;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.regcard .hd{background:var(--navy);color:#fff;padding:18px 20px}
+.regcard .hd small{color:var(--gold);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:.72rem}
+.regcard .hd h2{font-size:1.45rem;font-weight:800;margin-top:4px}
+.regcard form{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.regcard input[type=text]{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:9px 10px;width:100%}
+.regcard .go{background:var(--navy)}
+.regcard p{margin:0;font-size:.88rem;color:var(--muted)}
+.known{display:flex;flex-direction:column;gap:6px;padding:0 20px 18px}
+.known button{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--line);background:var(--surface2);border-radius:6px;padding:8px 10px;text-align:left}
+.known button span:last-child{font-family:var(--mono);color:var(--muted);font-size:.85rem}
+.who{display:flex;align-items:center;gap:8px;font-size:.85rem;background:#203654;border:1px solid #344c70;border-radius:6px;padding:4px 6px 4px 10px}
+.who b{font-weight:700}.who span{font-family:var(--mono);color:#c7d2e2}
+.who button{border:0;background:transparent;color:var(--gold);text-decoration:underline;font-size:.8rem}
+.report{border:2px solid var(--navy);border-radius:10px;padding:14px;margin-bottom:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;background:var(--surface2)}
+.report .t{grid-column:1/-1;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;align-items:baseline}
+.report .t h3{font-size:1.05rem}
+.report div span{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.report div b{font-family:var(--mono);font-size:1rem}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<div class="regwrap" id="regwrap">
+  <div class="regcard">
+    <div class="hd"><small>Islamic Financial Market and Institution</small><h2>Bursa Syariah Simulator</h2></div>
+    <form id="reg-form" novalidate>
+      <p>Register before you trade. Your progress is saved under your NIM on this device, and your report card shows your name and NIM.</p>
+      <div class="field"><label for="r-name">Full name (nama lengkap)</label><input type="text" id="r-name" autocomplete="name" maxlength="60"></div>
+      <div class="field"><label for="r-nim">Student ID (NIM)</label><input type="text" id="r-nim" inputmode="numeric" maxlength="20"></div>
+      <div class="field"><label for="r-cls">Class (optional)</label><input type="text" id="r-cls" maxlength="40" placeholder="e.g. PLKI FEB UI, Class A"></div>
+      <button class="go" type="submit">Start with Rp100.000.000</button>
+      <div class="msg" id="r-msg" role="status"></div>
+    </form>
+    <div class="known" id="known"></div>
+  </div>
+</div>
+
+<div class="regwrap" id="endwrap" hidden>
+  <div class="regcard" style="max-width:640px">
+    <div class="hd"><small>Session complete</small><h2>Your 10 trading days are over</h2></div>
+    <div style="padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+      <div class="report" id="end-report" style="margin:0"></div>
+      <p class="est">Take a screenshot of this card and submit it. Then answer in two or three sentences: which sharia rule changed one of your decisions, and why?</p>
+      <div class="row" style="flex-wrap:wrap"><button class="go" type="button" id="end-review" style="background:var(--navy);flex:1">Review my journal</button><button class="go" type="button" id="end-new" style="flex:1">Start a new session</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><h1>Bursa Syariah Simulator</h1><small><a href="./" style="color:#f2c200">← Learn Islamic Fintech</a> · 20-minute session · 10 trading days</small></div>
+    <div class="clock"><span class="phase" id="phase">Pre-opening</span><span class="mono" id="simdate">Mon 16 Nov 2026</span><span class="mono" id="simclock">08:45</span><span class="phase" id="left" title="Session length: 10 trading days, 20 minutes at 1×">20:00 left</span></div>
+    <div class="idx">
+      <div>ISSI (sim)<b id="ix-issi">—</b></div>
+      <div>Composite (sim)<b id="ix-comp">—</b></div>
+    </div>
+    <div class="who" id="who"><b id="who-name">—</b><span id="who-nim"></span><button type="button" id="btn-switch">Switch</button></div>
+    <div class="ctrl" role="group" aria-label="Simulation speed">
+      <button id="btn-pause" aria-pressed="false">Pause</button>
+      <button data-speed="1" aria-pressed="true">1×</button>
+      <button data-speed="2" aria-pressed="false">2×</button>
+      <button id="btn-skip">Skip to close</button>
+    </div>
+  </div>
+
+  <div class="mode">
+    <div class="seg" role="group" aria-label="Account type">
+      <button id="m-sots" aria-pressed="true">SOTS account (sharia)</button>
+      <button id="m-reg" class="reg" aria-pressed="false">Regular account</button>
+    </div>
+    <label class="chk" id="margin-wrap" hidden><input type="checkbox" id="use-margin"> Use margin (broker loan at 12% p.a.)</label>
+    <p id="mode-note">SOTS follows DSN-MUI Fatwa 40/2003 and 80/2011: you may buy only stocks in the Daftar Efek Syariah (DES), and margin trading and short selling are blocked.</p>
+  </div>
+
+  <div class="grid">
+    <aside class="panel">
+      <header><h2>Watchlist</h2><span class="est" id="wl-count"></span></header>
+      <ul class="wl" id="watchlist"></ul>
+    </aside>
+
+    <main class="panel" id="desk">
+      <div class="desk-head">
+        <div><h2 id="d-tk">SHJY</h2><div class="sub" id="d-name"></div><div id="d-badges"></div></div>
+        <div class="bigpx"><div class="p" id="d-px">—</div><div class="mono" id="d-ch">—</div></div>
+      </div>
+      <div class="stats">
+        <div><span>Prev close</span><b id="s-pc">—</b></div>
+        <div><span>Open</span><b id="s-open">—</b></div>
+        <div><span>High</span><b id="s-hi">—</b></div>
+        <div><span>Low</span><b id="s-lo">—</b></div>
+        <div><span>ARA</span><b id="s-ara" class="up">—</b></div>
+        <div><span>ARB</span><b id="s-arb" class="down">—</b></div>
+        <div><span>Tick size</span><b id="s-tick">—</b></div>
+        <div><span>Volume (lot)</span><b id="s-vol">—</b></div>
+      </div>
+      <div class="chartbox"><canvas id="chart" aria-label="Intraday price chart" role="img"></canvas></div>
+      <div class="desk-low">
+        <div>
+          <table class="book" aria-label="Order book">
+            <thead><tr><th>Lot</th><th>Bid</th><th>Offer</th><th>Lot</th></tr></thead>
+            <tbody id="book"></tbody>
+          </table>
+          <p class="est" style="margin:8px 0 0">Continuous auction. Your buy at or above the best offer matches at once (bay' al-musawamah, Fatwa 80/2011). Lower bids wait in the queue.</p>
+        </div>
+        <form class="ticket" id="ticket" novalidate>
+          <div class="side" role="group" aria-label="Order side">
+            <button type="button" class="buy" id="side-buy" aria-pressed="true">Buy</button>
+            <button type="button" class="sell" id="side-sell" aria-pressed="false">Sell</button>
+          </div>
+          <div class="field"><label for="o-price">Limit price (Rp)</label>
+            <div class="row"><input type="number" id="o-price" step="1" min="1"><button type="button" class="mini" id="px-down" aria-label="One tick lower">−</button><button type="button" class="mini" id="px-up" aria-label="One tick higher">+</button><button type="button" class="mini" id="px-best">Best</button></div></div>
+          <div class="field"><label for="o-lots">Quantity (lot, 1 lot = 100 shares)</label>
+            <div class="row"><input type="number" id="o-lots" value="10" min="1" step="1"><button type="button" class="mini" id="lot-max">Max</button></div></div>
+          <div class="est" id="o-est">—</div>
+          <button class="go" id="o-go" type="submit">Place buy order</button>
+          <div class="msg" id="o-msg" role="status"></div>
+        </form>
+      </div>
+    </main>
+
+    <aside class="acct" style="display:flex;flex-direction:column;gap:14px;min-width:0">
+      <section class="panel">
+        <header><h2>Account</h2><span class="est" id="acct-type">SOTS</span></header>
+        <div class="pad" style="display:flex;flex-direction:column;gap:12px">
+          <div class="kv">
+            <span>Cash (settled)</span><b id="a-cash">—</b>
+            <span>Receivable, waiting for T+2</span><b id="a-recv">—</b>
+            <span>Locked in open orders</span><b id="a-lock">—</b>
+            <span>Stock value</span><b id="a-stock">—</b>
+            <span id="a-loan-l" hidden>Margin loan</span><b id="a-loan" class="down" hidden>—</b>
+            <span class="tot">Total equity</span><b class="tot" id="a-tot">—</b>
+            <span>Return since start</span><b id="a-ret">—</b>
+          </div>
+          <div class="scroll"><table class="hold"><thead><tr><th>Stock</th><th>Lot</th><th>Avg</th><th>Last</th><th>P/L</th></tr></thead><tbody id="holdings"></tbody></table></div>
+          <div class="purify">
+            <p><b>Purification (tathir)</b>: the non-halal share of dividends you received. Give it to charity; it is not your income.</p>
+            <div class="kv"><span>Due</span><b id="p-due">Rp0</b><span>Already purified</span><b id="p-done">Rp0</b></div>
+            <button id="btn-purify" disabled>Pay due amount to charity</button>
+          </div>
+          <div class="ipo" id="ipo-box"></div>
+        </div>
+      </section>
+      <section class="panel">
+        <header><h2>Open orders</h2></header>
+        <div class="pad scroll"><table class="hold"><thead><tr><th>Order</th><th>Price</th><th>Lot</th><th></th></tr></thead><tbody id="orders"></tbody></table></div>
+      </section>
+      <section class="panel">
+        <header><h2>Market news</h2></header>
+        <ul class="news" id="news"></ul>
+      </section>
+    </aside>
+  </div>
+
+  <div class="tabs">
+    <div class="tablist" role="tablist">
+      <button role="tab" id="tab-missions" aria-selected="true" aria-controls="p-missions">Missions</button>
+      <button role="tab" id="tab-screen" aria-selected="false" aria-controls="p-screen">Screening lab</button>
+      <button role="tab" id="tab-journal" aria-selected="false" aria-controls="p-journal">Akad journal</button>
+      <button role="tab" id="tab-rules" aria-selected="false" aria-controls="p-rules">How it mirrors IDX</button>
+    </div>
+    <div class="tabpanel" role="tabpanel" id="p-missions"><div class="report" id="report"></div><div class="missions" id="missions"></div></div>
+    <div class="tabpanel" role="tabpanel" id="p-screen" hidden>
+      <div class="quiz">
+        <b>Quick check.</b> Which stocks pass the ISSI (OJK) screen but fail the stricter global screen (FTSE style: debt and non-halal income under 33.3% and 5%, tobacco excluded)? Tick all that apply.
+        <div class="opts" id="quiz-opts"></div>
+        <button id="quiz-check" type="button">Check my answer</button> <span id="quiz-res" class="est"></span>
+      </div>
+      <label class="chk" style="margin-bottom:10px"><input type="checkbox" id="show-res"> Show screening results</label>
+      <div class="scroll"><table class="screen"><thead><tr><th>Stock</th><th>Business</th><th>Interest-bearing debt / assets</th><th>Non-halal income / revenue</th><th>ISSI (≤45%, ≤10%)</th><th>Global (&lt;33.3%, &lt;5%)</th><th>Purify ratio</th></tr></thead><tbody id="screen"></tbody></table></div>
+      <p class="foot">Fictional issuers built for teaching. Ratios are from each issuer's (fictional) latest financial statements. The DES is published by OJK twice a year, in May and November.</p>
+    </div>
+    <div class="tabpanel" role="tabpanel" id="p-journal" hidden><ul class="journal" id="journal"></ul></div>
+    <div class="tabpanel" role="tabpanel" id="p-rules" hidden>
+      <div class="rules">
+        <section><h3>Trading unit and price steps</h3>
+          <p>1 lot = 100 shares. Prices move in IDX tick sizes (fraksi harga):</p>
+          <table><tbody><tr><td>Below Rp200</td><td class="mono">Rp1</td></tr><tr><td>Rp200 to below Rp500</td><td class="mono">Rp2</td></tr><tr><td>Rp500 to below Rp2.000</td><td class="mono">Rp5</td></tr><tr><td>Rp2.000 to below Rp5.000</td><td class="mono">Rp10</td></tr><tr><td>Rp5.000 and above</td><td class="mono">Rp25</td></tr></tbody></table></section>
+        <section><h3>Auto rejection (ARA and ARB)</h3>
+          <p>Orders outside the daily band are rejected. Band from the previous close: Rp50 to Rp200, 35%; above Rp200 to Rp5.000, 25%; above Rp5.000, 20%. Simplified as symmetric up and down.</p></section>
+        <section><h3>Sessions</h3>
+          <ul><li>Pre-opening 08:45 to 09:00: orders queue, matched at the opening price</li><li>Session 1 09:00 to 12:00: continuous auction</li><li>Break 12:00 to 13:30: orders queue</li><li>Session 2 13:30 to 15:50: continuous auction</li><li>Pre-closing 15:50 to 16:00: orders queue, matched at the close</li></ul></section>
+        <section><h3>Costs and settlement</h3>
+          <p>Buy fee 0.15%, sell fee 0.25% (includes the 0.1% final tax on sales). Sale money settles at T+2, so it is a receivable for two trading days. Dividends are paid to holders on the record day, and the price is adjusted on the next open.</p></section>
+        <section><h3>Sharia layer</h3>
+          <ul><li>SOTS: only DES stocks, no margin, no short selling</li><li>Akad: wakalah to your broker, bay' al-musawamah on the exchange, musyarakah as a shareholder</li><li>Primary market (IPO): wakalah bil ujrah with the underwriter</li><li>Purify the non-halal share of dividends</li></ul></section>
+        <section><h3>Simplifications</h3>
+          <p>Fictional stocks, simulated prices. One session is 10 trading days; each day lasts two minutes at 1×, so the session takes 20 minutes. Queued orders fill when the last price reaches your limit. No dividend tax, no margin calls. Rules follow IDX practice taught in class; check the latest IDX regulations before real trading.</p></section>
+      </div>
+      <p class="foot">Lecturers: Dr. Yaser Taufik Syamlan, ME, CIFP · Lisa Listiana, PhD. Your progress is saved in this browser only. <button class="reset" id="btn-reset" type="button">Reset simulation</button></p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+// ---------------------------------------------------------------- data (fictional issuers)
+const STOCKS = [
+ {tk:'SHJY',name:'Sehat Jaya Tbk',sector:'Halal food producer',bizI:true,bizG:true,debt:40,nhi:6,p:1850,sh:5.2e9,vol:.022,dps:60,rec:4},
+ {tk:'TMBG',name:'Tambang Nusantara Tbk',sector:'Coal mining',bizI:true,bizG:true,debt:22,nhi:1.2,p:4320,sh:11.5e9,vol:.03,dps:180,rec:3},
+ {tk:'TLKS',name:'Telekomunika Satu Tbk',sector:'Telecommunication',bizI:true,bizG:true,debt:30,nhi:2.5,p:3150,sh:99e9,vol:.018,dps:95,rec:6},
+ {tk:'BSYR',name:'Bank Syariah Madani Tbk',sector:'Islamic banking',bizI:true,bizG:true,debt:4,nhi:.4,p:2640,sh:46e9,vol:.024,dps:40,rec:7},
+ {tk:'RSIA',name:'RS Insan Amanah Tbk',sector:'Hospitals',bizI:true,bizG:true,debt:20,nhi:1.8,p:1540,sh:14e9,vol:.02},
+ {tk:'AGRO',name:'Agro Sawit Lestari Tbk',sector:'Palm plantation',bizI:true,bizG:true,debt:35,nhi:2,p:1120,sh:7e9,vol:.026,dps:35,rec:8},
+ {tk:'PRPT',name:'Properti Graha Tbk',sector:'Property developer',bizI:true,bizG:true,debt:44,nhi:4,p:278,sh:20e9,vol:.035},
+ {tk:'RKKN',name:'Rokok Kencana Tbk',sector:'Tobacco',bizI:true,bizG:false,why:'tobacco is excluded by global indices, not by OJK',debt:12,nhi:2,p:486,sh:19e9,vol:.022,dps:20,rec:5},
+ {tk:'SEMN',name:'Semen Pertiwi Tbk',sector:'Cement',bizI:true,bizG:true,debt:48,nhi:3,p:6250,sh:6e9,vol:.02},
+ {tk:'DGTL',name:'Digital Niaga Tbk',sector:'Tech, interest-based paylater',bizI:true,bizG:true,debt:10,nhi:12,p:186,sh:30e9,vol:.045},
+ {tk:'BKNV',name:'Bank Konvensional Raya Tbk',sector:'Conventional banking',bizI:false,bizG:false,why:'interest-based banking (riba)',debt:0,nhi:85,p:4880,sh:150e9,vol:.02,dps:220,rec:5},
+ {tk:'BRWX',name:'Bir Tropika Tbk',sector:'Brewery',bizI:false,bizG:false,why:'alcoholic beverages',debt:15,nhi:100,p:715,sh:2e9,vol:.02},
+ {tk:'HALA',name:'Halal Logistik Indonesia Tbk',sector:'Halal logistics (IPO)',bizI:true,bizG:true,debt:25,nhi:1,p:250,sh:4e9,vol:.05,ipo:true}
+];
+const IPO = {tk:'HALA',price:250,bookDays:[1,2],listDay:3};
+const BUY_FEE=.0015, SELL_FEE=.0025, START_CASH=100e6, LOAN_RATE=.12/250, SHORT_FEE=.0003;
+const TICKS_PER_DAY=120, KEY='plki-bursa-syariah-v1', SESSION_DAYS=10, TICK_MS=1000; // 10 days x 120 ticks x 1 s = 20 minutes at 1x
+const BY = Object.fromEntries(STOCKS.map(s=>[s.tk,s]));
+const issiPass = s => s.bizI && s.debt<=45 && s.nhi<=10;
+const globPass = s => s.bizG && s.debt<33.33 && s.nhi<5;
+const purRatio = s => s.bizI ? Math.min(1,s.nhi/100) : 1;
+const inDES = s => issiPass(s);
+
+// ---------------------------------------------------------------- IDX mechanics
+const tickOf = p => p<200?1:p<500?2:p<2000?5:p<5000?10:25;
+const snap = p => {const t=tickOf(p);return Math.max(50,Math.round(p/t)*t)};
+const band = pc => pc<=200?.35:pc<=5000?.25:.20;
+function limits(pc){const r=band(pc);let up=pc*(1+r),lo=pc*(1-r);up=Math.floor(up/tickOf(up))*tickOf(up);lo=Math.ceil(lo/tickOf(lo))*tickOf(lo);return {ara:up,arb:Math.max(50,lo)}}
+function phase(t){
+  if(t<8) return {name:'Pre-opening',open:false,q:true,mins:525+t*15/8};
+  if(t<58) return {name:'Session 1',open:true,mins:540+(t-8)*180/50};
+  if(t<68) return {name:'Break',open:false,q:true,mins:720+(t-58)*90/10};
+  if(t<114) return {name:'Session 2',open:true,mins:810+(t-68)*140/46};
+  return {name:'Pre-closing',open:false,q:true,mins:950+(t-114)*10/6};
+}
+const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function dateOf(day){const d=new Date(2026,10,16);let n=day-1;while(n>0){d.setDate(d.getDate()+1);if(d.getDay()%6)n--;}return DAYS[d.getDay()]+' '+d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear()}
+const esc = t => String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hhmm = m => String(Math.floor(m/60)).padStart(2,'0')+':'+String(Math.floor(m%60)).padStart(2,'0');
+const idr = n => (n<0?'−':'')+'Rp'+Math.round(Math.abs(n)).toLocaleString('id-ID');
+const num = n => Math.round(n).toLocaleString('id-ID');
+const pct = (a,b) => b? ((a-b)/b*100):0;
+const sgn = v => v>0?'up':v<0?'down':'flat';
+const fpct = v => (v>0?'+':'')+v.toFixed(2).replace('.',',')+'%';
+function gauss(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+
+// ---------------------------------------------------------------- state
+function fresh(){
+  const m={};STOCKS.forEach(s=>{m[s.tk]={p:s.p,pc:s.p,open:null,hi:s.p,lo:s.p,vol:0,fair:s.p,hist:[s.p],listed:!s.ipo}});
+  return {day:1,t:0,cash:START_CASH,recv:[],hold:{},orders:[],loan:0,purDue:0,purDone:0,mode:'sots',margin:false,
+    mk:m,news:[],journal:[],missions:{},ipo:{lots:0,locked:0,allotted:0,status:'book'},seq:1,sel:'SHJY',quiz:false};
+}
+let S=null,USER=null;
+const UKEY=KEY+'-users';
+function users(){try{return JSON.parse(localStorage.getItem(UKEY)||'[]')}catch(e){return []}}
+function keyOf(nim){return KEY+'-'+nim}
+const base={issi:0,comp:0};
+STOCKS.forEach(s=>{if(s.ipo)return;base.comp+=s.p*s.sh;if(inDES(s))base.issi+=s.p*s.sh});
+function save(){if(!USER||!S)return;try{localStorage.setItem(keyOf(USER.nim),JSON.stringify(S))}catch(e){}}
+
+let speed=1,paused=false,side='buy',timer,lastR=0;
+const $=id=>document.getElementById(id);
+
+function news(text){S.news.unshift({at:dateOf(S.day).slice(0,10)+' '+hhmm(phase(S.t).mins),text});S.news=S.news.slice(0,40)}
+function jour(type,text,akad,riba){S.journal.unshift({at:'Day '+S.day+' · '+hhmm(phase(S.t).mins),type,text,akad,riba:!!riba});S.journal=S.journal.slice(0,200)}
+function done(id){if(!S.missions[id]){S.missions[id]=true;const m=MISSIONS.find(x=>x.id===id);if(m)news('Mission complete: '+m.title)}}
+
+// ---------------------------------------------------------------- book & quotes
+function quotes(tk){const q=S.mk[tk];const t=tickOf(q.p);const {ara,arb}=limits(q.pc);
+  return {bid:Math.max(arb,q.p),off:Math.min(ara,q.p+t)}}
+function bookRows(tk){const q=S.mk[tk];const {ara,arb}=limits(q.pc);const rows=[];let b=quotes(tk).bid,o=quotes(tk).off;
+  const seed=(q.p*7+S.t*13)%97;
+  for(let i=0;i<5;i++){const bl=b>=arb?Math.round(80+((seed*(i+3))%37)*25+i*90):0,ol=o<=ara?Math.round(70+((seed*(i+5))%41)*22+i*80):0;
+    rows.push([bl,b>=arb?b:null,o<=ara?o:null,ol]);b=snap(b-tickOf(b-1));o=snap(o+tickOf(o))}
+  return rows}
+
+// ---------------------------------------------------------------- holdings & cash
+function locked(){return S.orders.filter(o=>o.side==='buy').reduce((a,o)=>a+o.locked,0)}
+function loanLocked(){return S.orders.filter(o=>o.side==='buy').reduce((a,o)=>a+o.loanPart,0)}
+function lockedSell(tk){return S.orders.filter(o=>o.side==='sell'&&o.tk===tk).reduce((a,o)=>a+o.lots*100,0)}
+function stockVal(){let v=0;for(const tk in S.hold)v+=S.hold[tk].sh*S.mk[tk].p;return v}
+function recvSum(){return S.recv.reduce((a,r)=>a+r.amt,0)}
+function equity(){return S.cash+locked()+recvSum()+stockVal()-S.loan}
+function marginCap(){return S.mode==='reg'&&S.margin? Math.max(0,equity()-S.loan-loanLocked()):0}
+function addHold(tk,sh,price){
+  const h=S.hold[tk]||{sh:0,avg:0};const ns=h.sh+sh;
+  if(h.sh===0||Math.sign(h.sh)===Math.sign(sh)) h.avg=(h.avg*Math.abs(h.sh)+price*Math.abs(sh))/Math.abs(ns);
+  else if(Math.sign(ns)!==Math.sign(h.sh)&&ns!==0) h.avg=price;
+  h.sh=ns; if(h.sh===0) delete S.hold[tk]; else S.hold[tk]=h;
+}
+
+function fill(o,price){
+  const s=BY[o.tk],sh=o.lots*100,val=price*sh;
+  if(o.side==='buy'){
+    const cost=val*(1+BUY_FEE);const useLoan=Math.min(o.loanPart,cost);const useCash=cost-useLoan;
+    S.cash+=o.locked-useCash;S.loan+=useLoan;o.locked=0;o.loanPart=0;
+    const wasShort=(S.hold[o.tk]?.sh||0)<0;
+    addHold(o.tk,sh,price);
+    jour('Buy',`${o.lots} lot ${o.tk} at ${idr(price)} · fee ${idr(val*BUY_FEE)}${useLoan>0?' · '+idr(useLoan)+' borrowed on margin':''}`,
+      wasShort?'Covering a short sale: you return borrowed shares':`Wakalah: your broker buys for you · Bay' al-musawamah on the exchange · you become a musyarakah partner in ${s.name}`, useLoan>0||wasShort);
+    news(`Matched: bought ${o.lots} lot ${o.tk} at ${num(price)}`);
+    if(S.mode==='sots'&&inDES(s)) done('buy');
+    if(useLoan>0) done('margin');
+  }else{
+    const net=val*(1-SELL_FEE);const before=S.hold[o.tk]?.sh||0;
+    const pl=before>0?(price-S.hold[o.tk].avg)*Math.min(sh,before):0;
+    addHold(o.tk,-sh,price);
+    S.recv.push({amt:net,due:S.day+2,tk:o.tk});
+    jour('Sell',`${o.lots} lot ${o.tk} at ${idr(price)} · net ${idr(net)} settles on Day ${S.day+2} (T+2)${before>0?' · realised P/L '+idr(pl):''}`,
+      before<sh?"Short sale: selling shares you do not own (bay' ma laysa 'indak), prohibited by Fatwa 40/2003":"Wakalah: your broker sells for you · Bay' al-musawamah: ownership passes to the buyer",before<sh);
+    news(`Matched: sold ${o.lots} lot ${o.tk} at ${num(price)}`);
+    done('sell');
+  }
+  S.mk[o.tk].vol+=o.lots;
+  S.orders=S.orders.filter(x=>x!==o);
+}
+function matchAll(atPrice){
+  for(const o of [...S.orders]){const q=S.mk[o.tk];if(!q.listed)continue;
+    if(o.side==='buy'&&q.p<=o.price) fill(o,atPrice?q.p:o.price);
+    else if(o.side==='sell'&&q.p>=o.price) fill(o,atPrice?q.p:o.price);}
+}
+
+// ---------------------------------------------------------------- order entry
+function msg(text,kind){const m=$('o-msg');m.className='msg show '+kind;m.innerHTML=text}
+function place(e){
+  e.preventDefault();
+  if(S.over){msg('The session is over. Start a new session from the report screen to trade again.','err');return}
+  const tk=S.sel,s=BY[tk],q=S.mk[tk],ph=phase(S.t);
+  const price=Number($('o-price').value),lots=Math.floor(Number($('o-lots').value));
+  if(!q.listed){msg(`${tk} is not listed yet. Join the IPO in the primary market (Account panel) instead.`,'err');return}
+  if(!(lots>=1)){msg('Enter at least 1 lot.','err');return}
+  if(lots>50000){msg('IDX caps one order at 50.000 lot.','err');return}
+  const t=tickOf(price);
+  if(!(price>0)||price%t!==0){msg(`Price must follow the tick size: Rp${t} for prices around ${idr(price||q.p)}. Try ${num(snap(price||q.p))}.`,'err');return}
+  const {ara,arb}=limits(q.pc);
+  if(price>ara||price<arb){msg(`Auto rejection: today ${tk} may trade only between ${num(arb)} (ARB) and ${num(ara)} (ARA).`,'err');return}
+  const sh=lots*100;
+  if(side==='buy'){
+    if(S.mode==='sots'&&!inDES(s)){
+      const why=!s.bizI?`its core business is ${s.why}`:s.debt>45?`its interest-bearing debt is ${s.debt}% of assets (limit 45%)`:`its non-halal income is ${s.nhi}% of revenue (limit 10%)`;
+      msg(`<b>Blocked by SOTS.</b> ${tk} is not in the Daftar Efek Syariah because ${why}. See the Screening lab.`,'fatwa');done('blocked');return}
+    const need=price*sh*(1+BUY_FEE);let lockCash=Math.min(S.cash,need),loanPart=need-lockCash;
+    if(loanPart>0.5){
+      if(S.mode==='sots'){msg(`Not enough cash. You need ${idr(need)}; settled cash is ${idr(S.cash)}${recvSum()>0?' (sale money arrives at T+2)':''}. Margin is not available in a SOTS account.`,'err');return}
+      if(loanPart>marginCap()){msg(`Not enough buying power. Need ${idr(need)}, cash ${idr(S.cash)}${S.margin?', margin room '+idr(marginCap()):'. Turn on margin to borrow (interest applies)'}.`,'err');return}
+    }else loanPart=0;
+    S.cash-=lockCash;
+    const o={id:S.seq++,side,tk,price,lots,locked:lockCash,loanPart};
+    S.orders.push(o);
+    const qt=quotes(tk);
+    if(ph.open&&price>=qt.off){fill(o,qt.off);msg(`Bought ${lots} lot ${tk} at ${num(qt.off)}. Akad journal updated.`,'ok')}
+    else msg(ph.open?`Order queued at ${num(price)}. It fills if the price falls to your bid.`:`Order queued during ${ph.name.toLowerCase()}. It will be matched when trading resumes.`,'ok');
+  }else{
+    const have=(S.hold[tk]?.sh||0)-lockedSell(tk);
+    if(sh>Math.max(0,have)){
+      if(S.mode==='sots'){msg(`<b>Short selling is blocked.</b> You hold ${num(Math.max(0,have)/100)} lot ${tk} available. Selling shares you do not own is bay' ma laysa 'indak, prohibited by DSN-MUI Fatwa 40/2003.`,'fatwa');done('short');return}
+      msg(`Short sale: you are selling ${num((sh-Math.max(0,have))/100)} lot you do not own. A Regular account allows it; a lending fee and the dividend obligation apply.`,'fatwa');
+    }
+    const o={id:S.seq++,side,tk,price,lots,locked:0,loanPart:0};
+    S.orders.push(o);
+    const qt=quotes(tk);
+    if(ph.open&&price<=qt.bid){fill(o,qt.bid);if(sh<=Math.max(0,have))msg(`Sold ${lots} lot ${tk} at ${num(qt.bid)}. Money settles at T+2.`,'ok')}
+    else if(sh<=Math.max(0,have)) msg(ph.open?`Order queued at ${num(price)}. It fills if the price rises to your offer.`:`Order queued during ${ph.name.toLowerCase()}.`,'ok');
+  }
+  save();render();
+}
+function cancel(id){const o=S.orders.find(x=>x.id===id);if(!o)return;S.cash+=o.locked;S.orders=S.orders.filter(x=>x!==o);jour('Cancel',`Order #${o.id} ${o.side} ${o.lots} lot ${o.tk} cancelled`,'The wakalah mandate to your broker ends for this order');save();render()}
+
+// ---------------------------------------------------------------- market engine
+function stepPrices(){
+  for(const s of STOCKS){const q=S.mk[s.tk];if(!q.listed)continue;
+    const {ara,arb}=limits(q.pc);
+    let r=gauss()*s.vol/Math.sqrt(60)+.03*Math.log(q.fair/q.p)/60;
+    if(Math.random()<.0025){const j=(Math.random()<.5?-1:1)*(.03+Math.random()*.05);r+=j;q.fair*=Math.exp(j*.8);
+      news(j>0?`${s.tk}: strong buying after positive news (${s.sector}).`:`${s.tk}: selling pressure after weak quarterly numbers.`)}
+    if(s.tk==='DGTL'&&Math.random()<.003){r+=.08;news('DGTL: IDX flags Unusual Market Activity (UMA). Large bids appear and vanish. Is someone placing fake bids (najsy)?')}
+    let np=snap(q.p*Math.exp(r));np=Math.min(ara,Math.max(arb,np));
+    if(np===ara&&q.p!==ara)news(`${s.tk} hits auto rejection upper (ARA) at ${num(ara)}.`);
+    if(np===arb&&q.p!==arb)news(`${s.tk} hits auto rejection lower (ARB) at ${num(arb)}.`);
+    q.p=np;q.hi=Math.max(q.hi,np);q.lo=Math.min(q.lo,np);q.vol+=Math.round(20+Math.random()*400);
+  }
+}
+function openMarket(){
+  for(const s of STOCKS){const q=S.mk[s.tk];if(!q.listed)continue;const {ara,arb}=limits(q.pc);
+    const op=Math.min(ara,Math.max(arb,snap(q.pc*Math.exp(gauss()*s.vol*.35))));q.p=op;q.open=op;q.hi=op;q.lo=op}
+  matchAll(true);
+}
+function endOfDay(){
+  // settlement T+2
+  const due=S.recv.filter(r=>r.due<=S.day+1);
+  for(const r of due){let amt=r.amt;if(S.loan>0){const pay=Math.min(S.loan,amt);S.loan-=pay;amt-=pay;if(pay>0)jour('Repay',`${idr(pay)} of sale money repays the margin loan`,'Loan principal repaid',true)}
+    S.cash+=amt;jour('Settle',`${idr(r.amt)} from selling ${r.tk} settles into cash`,'Settlement at T+2 through KPEI and KSEI');done('settle')}
+  S.recv=S.recv.filter(r=>r.due>S.day+1);
+  // dividends on record day
+  for(const s of STOCKS){if(!s.dps||s.rec!==S.day)continue;const h=S.hold[s.tk];const q=S.mk[s.tk];
+    if(h&&h.sh>0){const amt=h.sh*s.dps,pur=amt*purRatio(s);S.cash+=amt;S.purDue+=pur;
+      jour('Dividend',`${s.tk} pays ${idr(s.dps)} per share on ${num(h.sh/100)} lot = ${idr(amt)}. Purification due: ${idr(pur)} (${(purRatio(s)*100).toFixed(1).replace('.',',')}%).`,'Profit share as a musyarakah partner');done('div')}
+    if(h&&h.sh<0){const amt=-h.sh*s.dps;S.cash-=amt;jour('Dividend',`As a short seller you pay ${idr(amt)} of ${s.tk} dividend to the share lender`,'Cost of a short position',true)}
+    news(`${s.tk} goes ex-dividend (${idr(s.dps)} per share). Tomorrow's reference price is adjusted.`);
+    q.pc=snap(q.p-s.dps);q.p=q.pc;q.fair=Math.max(60,q.fair-s.dps)}
+  // margin interest & short fee
+  if(S.loan>0){const i=S.loan*LOAN_RATE;S.loan+=i;jour('Interest',`Margin interest ${idr(i)} added to your loan`,'Riba: interest on a loan, prohibited in a sharia account',true)}
+  let shortV=0;for(const tk in S.hold)if(S.hold[tk].sh<0)shortV+=-S.hold[tk].sh*S.mk[tk].p;
+  if(shortV>0){const f=shortV*SHORT_FEE;S.cash-=f;jour('Fee',`Share lending fee ${idr(f)} on short positions`,'Fee for borrowed shares',true)}
+  // IPO
+  if(S.day===IPO.bookDays[1]&&S.ipo.status==='book'){
+    if(S.ipo.lots>0){const ratio=.3+Math.random()*.3;const al=Math.max(1,Math.floor(S.ipo.lots*ratio));const cost=al*100*IPO.price;
+      S.cash+=S.ipo.locked-cost;S.ipo.allotted=al;addHold('HALA',al*100,IPO.price);
+      jour('IPO allotment',`HALA oversubscribed ${(1/ratio).toFixed(1).replace('.',',')}×. You receive ${al} of ${S.ipo.lots} lot at ${idr(IPO.price)}; ${idr(S.ipo.locked-cost)} refunded.`,"Bay': you buy new shares from the issuer; the underwriter acted under wakalah bil ujrah");done('ipo')}
+    S.ipo.locked=0;S.ipo.status='allotted';news('HALA IPO book building closed. Allotment done; listing tomorrow.')}
+  for(const s of STOCKS){const q=S.mk[s.tk];if(s.dps&&s.rec===S.day)continue;if(q.listed)q.pc=q.p}
+  if(S.day>=SESSION_DAYS){S.over=true;S.t=TICKS_PER_DAY-1;news('The 20-minute session is complete. The market is closed. See your report card.');save();clearInterval(timer);setTimeout(showEnd,50);return}
+  S.day++;S.t=0;
+  if(S.day>=IPO.listDay&&!S.mk.HALA.listed){const q=S.mk.HALA;q.listed=true;q.pc=IPO.price;q.p=IPO.price;q.fair=IPO.price*1.25;S.ipo.status='listed';news('HALA lists on the IDX today at the IPO price of Rp250.')}
+  for(const tk in S.mk){const q=S.mk[tk];q.open=null;q.hi=q.p;q.lo=q.p;q.vol=0;q.hist=[q.pc]}
+  news(`Day ${S.day} begins: ${dateOf(S.day)}.`);
+  save();
+}
+function tick(){
+  if(S.over)return;
+  S.t++;
+  if(S.t===8||S.t===68){if(S.t===8)openMarket();else matchAll(false)}
+  const ph=phase(S.t);
+  if(ph.open){stepPrices();matchAll(false)}
+  if(S.t===TICKS_PER_DAY-1) matchAll(false);
+  for(const tk in S.mk){const q=S.mk[tk];q.hist.push(q.p)}
+  if(S.t>=TICKS_PER_DAY){endOfDay()}
+}
+
+// ---------------------------------------------------------------- missions
+const MISSIONS=[
+ {id:'buy',tag:'Secondary market · akad',title:'Buy a DES stock in SOTS',body:"Place a buy order for any stock marked DES. Read the akad in the journal: wakalah, bay' al-musawamah, musyarakah."},
+ {id:'blocked',tag:'Screening',title:'Try a non-DES stock',body:'In SOTS, try to buy BKNV, BRWX, SEMN, or DGTL. Read why the system blocks it, then find the ratio in the Screening lab.'},
+ {id:'short',tag:'Prohibited transactions',title:'Try to short sell',body:"In SOTS, try to sell more lots than you own. Which fiqh rule stops you?"},
+ {id:'div',tag:'Purification',title:'Earn a dividend',body:'Hold TMBG through Day 3, SHJY through Day 4, or another payer. Dividends are paid at the end of the record day.'},
+ {id:'purify',tag:'Purification',title:'Purify your dividend',body:'Pay the purification due to charity. SHJY has 6% non-halal income, so 6% of its dividend is not yours.'},
+ {id:'ipo',tag:'Primary market',title:'Join the HALA IPO',body:'Subscribe during book building (Day 1 to 2). Notice the allotment when the IPO is oversubscribed.'},
+ {id:'settle',tag:'Market mechanics',title:'See T+2 settlement',body:'Sell shares and keep trading until the money moves from receivable to cash.'},
+ {id:'margin',tag:'Contrast',title:'See what conventional allows',body:'Switch to a Regular account, turn on margin, and buy beyond your cash. Watch the daily interest in the journal.'},
+ {id:'quiz',tag:'Screening',title:'Pass the screening check',body:'In the Screening lab, find every stock that passes ISSI but fails the global screen.'}
+];
+
+// ---------------------------------------------------------------- render
+function render(){
+  const ph=phase(S.t);
+  $('phase').textContent=ph.name;$('phase').className='phase '+(ph.open?'open':'queue');
+  const leftT=Math.max(0,(SESSION_DAYS-S.day)*TICKS_PER_DAY+(TICKS_PER_DAY-S.t)),leftS=Math.round(leftT*TICK_MS/1000);
+  $('left').textContent=S.over?'Session complete':String(Math.floor(leftS/60)).padStart(2,'0')+':'+String(leftS%60).padStart(2,'0')+' left';
+  $('simdate').textContent='Day '+Math.min(S.day,SESSION_DAYS)+' of '+SESSION_DAYS+' · '+dateOf(S.day);$('simclock').textContent=hhmm(ph.mins);
+  let ci=0,ii=0;for(const s of STOCKS){if(s.ipo)continue;const q=S.mk[s.tk];ci+=q.p*s.sh;if(inDES(s))ii+=q.p*s.sh}
+  const ixI=ii/base.issi*215,ixC=ci/base.comp*7250;
+  const pcI=STOCKS.filter(s=>!s.ipo&&inDES(s)).reduce((a,s)=>a+S.mk[s.tk].pc*s.sh,0)/base.issi*215;
+  const pcC=STOCKS.filter(s=>!s.ipo).reduce((a,s)=>a+S.mk[s.tk].pc*s.sh,0)/base.comp*7250;
+  $('ix-issi').innerHTML=ixI.toFixed(2).replace('.',',')+` <span class="${sgn(ixI-pcI)}" style="font-size:.8rem">${fpct(pct(ixI,pcI))}</span>`;
+  $('ix-comp').innerHTML=num(ixC)+` <span class="${sgn(ixC-pcC)}" style="font-size:.8rem">${fpct(pct(ixC,pcC))}</span>`;
+
+  // watchlist
+  $('watchlist').innerHTML=STOCKS.map(s=>{const q=S.mk[s.tk];const {ara,arb}=limits(q.pc);const ch=pct(q.p,q.pc);
+    const bd=!q.listed?'<span class="badge b-ipo">IPO</span>':inDES(s)?'<span class="badge b-des">DES</span>':'<span class="badge b-no">NON-DES</span>';
+    const lim=q.listed&&q.p===ara&&S.t>8?'<span class="badge b-ara">ARA</span>':q.listed&&q.p===arb&&S.t>8?'<span class="badge b-arb">ARB</span>':'';
+    return `<li><button data-tk="${s.tk}" aria-current="${S.sel===s.tk}"><span><span class="tk">${s.tk}</span>${bd}${lim}</span><span class="px">${q.listed?num(q.p):'—'}</span><span class="nm">${s.name}</span><span class="ch ${sgn(ch)}">${q.listed?fpct(ch):'Day '+IPO.listDay}</span></button></li>`}).join('');
+  $('wl-count').textContent=STOCKS.filter(inDES).length+' of '+STOCKS.length+' in DES';
+
+  // desk
+  const s=BY[S.sel],q=S.mk[S.sel],{ara,arb}=limits(q.pc),ch=q.p-q.pc;
+  $('d-tk').textContent=s.tk;$('d-name').textContent=s.name+' · '+s.sector;
+  $('d-badges').innerHTML=(inDES(s)?'<span class="badge b-des" style="margin:0">IN DAFTAR EFEK SYARIAH</span>':'<span class="badge b-no" style="margin:0">NOT IN DES</span>')+(s.dps?` <span class="badge b-ipo">DIVIDEND ${idr(s.dps)} · RECORD DAY ${s.rec}</span>`:'');
+  $('d-px').textContent=q.listed?num(q.p):'IPO';$('d-px').className='p '+sgn(ch);
+  $('d-ch').innerHTML=q.listed?`<span class="${sgn(ch)}">${ch>0?'+':''}${num(ch)} (${fpct(pct(q.p,q.pc))})</span>`:'Lists on Day '+IPO.listDay;
+  $('s-pc').textContent=num(q.pc);$('s-open').textContent=q.open?num(q.open):'—';$('s-hi').textContent=num(q.hi);$('s-lo').textContent=num(q.lo);
+  $('s-ara').textContent=num(ara);$('s-arb').textContent=num(arb);$('s-tick').textContent='Rp'+tickOf(q.p);$('s-vol').textContent=num(q.vol);
+  $('book').innerHTML=q.listed?bookRows(S.sel).map(r=>`<tr><td>${r[0]?num(r[0]):''}</td><td class="bid">${r[1]?num(r[1]):''}</td><td class="off">${r[2]?num(r[2]):''}</td><td>${r[3]?num(r[3]):''}</td></tr>`).join(''):'<tr><td colspan="4" class="empty">No trading before listing.</td></tr>';
+  drawChart();updateEst();
+
+  // account
+  const eq=equity();
+  $('acct-type').textContent=S.mode==='sots'?'SOTS · sharia':'Regular';
+  $('a-cash').textContent=idr(S.cash);$('a-recv').textContent=idr(recvSum());$('a-lock').textContent=idr(locked()+S.ipo.locked);$('a-stock').textContent=idr(stockVal());
+  const showLoan=S.loan>0.5;$('a-loan-l').hidden=!showLoan;$('a-loan').hidden=!showLoan;$('a-loan').textContent=idr(-S.loan);
+  $('a-tot').textContent=idr(eq+S.ipo.locked);const r=pct(eq+S.ipo.locked+S.purDone,START_CASH);$('a-ret').innerHTML=`<span class="${sgn(r)}">${fpct(r)}</span>`;
+  const hs=Object.entries(S.hold);
+  $('holdings').innerHTML=hs.length?hs.map(([tk,h])=>{const p=S.mk[tk].p,pl=(p-h.avg)*h.sh;return `<tr><td>${tk}${h.sh<0?' <span class="badge b-no">SHORT</span>':''}</td><td>${num(h.sh/100)}</td><td>${num(h.avg)}</td><td>${num(p)}</td><td class="${sgn(pl)}">${idr(pl)}</td></tr>`}).join(''):'<tr><td colspan="5" class="empty">No holdings yet. Pick a stock and place a buy order.</td></tr>';
+  $('p-due').textContent=idr(S.purDue);$('p-done').textContent=idr(S.purDone);$('btn-purify').disabled=S.purDue<1||S.cash<S.purDue;
+  $('orders').innerHTML=S.orders.length?S.orders.map(o=>`<tr><td><span class="${o.side==='buy'?'up':'down'}">${o.side==='buy'?'Buy':'Sell'}</span> ${o.tk}</td><td>${num(o.price)}</td><td>${num(o.lots)}</td><td><button class="cancel" data-cancel="${o.id}">Cancel</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">No open orders.</td></tr>';
+  renderIPO();
+  $('news').innerHTML=S.news.map(n=>`<li><time>${n.at}</time>${n.text}</li>`).join('');
+  const nDone=MISSIONS.filter(m=>S.missions[m.id]).length;
+  $('report').innerHTML=`<div class="t"><h3>Student report card</h3><span class="est">Screenshot this card to submit your progress.</span></div>
+    <div><span>Name</span><b style="font-family:var(--body)">${esc(USER.name)}</b></div><div><span>NIM</span><b>${esc(USER.nim)}</b></div>
+    <div><span>Class</span><b style="font-family:var(--body)">${esc(USER.cls||'—')}</b></div><div><span>Sim day</span><b>${Math.min(S.day,SESSION_DAYS)} / ${SESSION_DAYS}${S.over?' ✓':''}</b></div>
+    <div><span>Total equity</span><b>${idr(eq+S.ipo.locked)}</b></div><div><span>Return</span><b class="${sgn(r)}">${fpct(r)}</b></div>
+    <div><span>Missions</span><b>${nDone} / ${MISSIONS.length}</b></div><div><span>Purified</span><b>${idr(S.purDone)}</b></div>
+    <div><span>Account</span><b style="font-family:var(--body)">${S.mode==='sots'?'SOTS (sharia)':'Regular'}</b></div><div><span>Registered</span><b style="font-family:var(--body);font-size:.85rem">${esc(S.regAt||'')}</b></div>`;
+  $('missions').innerHTML=MISSIONS.map(m=>`<div class="mission ${S.missions[m.id]?'done':''}"><span class="tag">${m.tag}</span><h3>${m.title}</h3><p>${m.body}</p><span class="st ${S.missions[m.id]?'pass':''}">${S.missions[m.id]?'✓ Done':'Not yet'}</span></div>`).join('');
+  $('journal').innerHTML=S.journal.length?S.journal.map(j=>`<li><span class="mono" style="font-size:.78rem;color:var(--muted)">${j.at}</span><span><b>${j.type}.</b> ${j.text}<span class="akad ${j.riba?'riba':''}">${j.akad}</span></span></li>`).join(''):'<li><span></span><span class="empty">Your trades, dividends, and fees will appear here with the akad behind each one.</span></li>';
+}
+let ipoSig='';
+function renderIPO(){
+  const b=$('ipo-box'),st=S.ipo.status;const sig=st+S.day+'|'+S.ipo.lots+'|'+S.ipo.allotted;if(sig===ipoSig)return;ipoSig=sig;
+  if(st==='book'&&S.day<=IPO.bookDays[1]){
+    b.innerHTML=`<p><b>Primary market: HALA IPO</b> · Halal Logistik Indonesia. Book building Day 1 to 2 at ${idr(IPO.price)} per share. The underwriter sells on the issuer's behalf (wakalah bil ujrah).</p>
+    ${S.ipo.lots?`<p>Your order: <b class="mono">${num(S.ipo.lots)} lot</b>, ${idr(S.ipo.locked)} locked until allotment.</p>`:''}
+    <div class="row"><input type="number" id="ipo-lots" value="50" min="1" step="1" aria-label="IPO lots"><button type="button" class="mini" id="ipo-go">Subscribe</button></div>`;
+  }else if(st==='allotted'||(st==='book')){b.innerHTML=`<p><b>HALA IPO closed.</b> ${S.ipo.allotted?`You received ${num(S.ipo.allotted)} lot.`:'You did not subscribe.'} Listing on Day ${IPO.listDay}.</p>`}
+  else b.innerHTML=`<p><b>HALA is listed.</b> ${S.ipo.allotted?`You received ${num(S.ipo.allotted)} lot at ${idr(IPO.price)}. `:''}Primary market done; it now trades on the secondary market.</p>`;
+}
+function updateEst(){
+  const p=Number($('o-price').value)||0,l=Math.floor(Number($('o-lots').value))||0,v=p*l*100;
+  $('o-est').innerHTML=side==='buy'?`Value <b>${idr(v)}</b> + fee 0,15% <b>${idr(v*BUY_FEE)}</b> = <b>${idr(v*(1+BUY_FEE))}</b>`:`Value <b>${idr(v)}</b> − fee and tax 0,25% <b>${idr(v*SELL_FEE)}</b> = <b>${idr(v*(1-SELL_FEE))}</b> at T+2`;
+}
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+function drawChart(){
+  const c=$('chart'),dpr=window.devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;if(!w)return;
+  if(c.width!==w*dpr||c.height!==h*dpr){c.width=w*dpr;c.height=h*dpr}
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
+  const q=S.mk[S.sel];const hist=q.hist;const {ara,arb}=limits(q.pc);
+  let mx=Math.max(...hist,q.pc),mn=Math.min(...hist,q.pc);const padv=(mx-mn)*.15||q.pc*.01;mx+=padv;mn-=padv;
+  const L=8,R=58,T=10,B=22,X=i=>L+(w-L-R)*i/(TICKS_PER_DAY),Y=v=>T+(h-T-B)*(1-(v-mn)/(mx-mn));
+  g.font='11px '+css('--mono');g.fillStyle=css('--muted');g.strokeStyle=css('--line');g.lineWidth=1;
+  for(let k=0;k<=3;k++){const v=mn+(mx-mn)*k/3;g.beginPath();g.moveTo(L,Y(v));g.lineTo(w-R,Y(v));g.stroke();g.fillText(num(v),w-R+6,Y(v)+4)}
+  [[8,'09:00'],[58,'12:00'],[68,'13:30'],[114,'15:50']].forEach(([i,t])=>{g.fillText(t,X(i)-14,h-6)});
+  g.fillStyle=css('--surface2');g.fillRect(X(58),T,X(68)-X(58),h-T-B);
+  g.setLineDash([4,4]);g.strokeStyle=css('--flat');g.beginPath();g.moveTo(L,Y(q.pc));g.lineTo(w-R,Y(q.pc));g.stroke();g.setLineDash([]);
+  if(!q.listed){g.fillStyle=css('--muted');g.fillText('Not listed yet',w/2-40,h/2);return}
+  const col=q.p>=q.pc?css('--up'):css('--down');
+  g.beginPath();hist.forEach((v,i)=>{i?g.lineTo(X(i),Y(v)):g.moveTo(X(i),Y(v))});
+  g.strokeStyle=col;g.lineWidth=2;g.stroke();
+  g.lineTo(X(hist.length-1),h-B);g.lineTo(X(0),h-B);g.closePath();g.globalAlpha=.1;g.fillStyle=col;g.fill();g.globalAlpha=1;
+  g.beginPath();g.arc(X(hist.length-1),Y(q.p),3.5,0,7);g.fillStyle=col;g.fill();
+}
+
+// ---------------------------------------------------------------- events
+function select(tk){S.sel=tk;const q=S.mk[tk];$('o-price').value=side==='buy'?quotes(tk).off:quotes(tk).bid;$('o-msg').className='msg';render()}
+function setSide(sd){side=sd;$('side-buy').setAttribute('aria-pressed',sd==='buy');$('side-sell').setAttribute('aria-pressed',sd==='sell');
+  $('o-go').textContent=sd==='buy'?'Place buy order':'Place sell order';$('o-go').className='go'+(sd==='sell'?' sell':'');
+  const q=quotes(S.sel);$('o-price').value=sd==='buy'?q.off:q.bid;updateEst()}
+function setMode(m){S.mode=m;$('m-sots').setAttribute('aria-pressed',m==='sots');$('m-reg').setAttribute('aria-pressed',m==='reg');
+  $('margin-wrap').hidden=m!=='reg';if(m!=='reg'){S.margin=false;$('use-margin').checked=false}
+  $('mode-note').textContent=m==='sots'?'SOTS follows DSN-MUI Fatwa 40/2003 and 80/2011: you may buy only stocks in the Daftar Efek Syariah (DES), and margin trading and short selling are blocked.':'Regular account: any listed stock, margin loans at interest, and short selling are allowed. Use it to compare, and watch how the journal labels each transaction.';
+  save();render()}
+['pointerdown','click'].forEach(ev=>$('watchlist').addEventListener(ev,e=>{const b=e.target.closest('button[data-tk]');if(b&&S.sel!==b.dataset.tk)select(b.dataset.tk)}));
+$('side-buy').onclick=()=>setSide('buy');$('side-sell').onclick=()=>setSide('sell');
+$('m-sots').onclick=()=>setMode('sots');$('m-reg').onclick=()=>setMode('reg');
+$('use-margin').onchange=e=>{S.margin=e.target.checked;save();render()};
+$('px-up').onclick=()=>{const p=Number($('o-price').value)||S.mk[S.sel].p;$('o-price').value=snap(p+tickOf(p));updateEst()};
+$('px-down').onclick=()=>{const p=Number($('o-price').value)||S.mk[S.sel].p;$('o-price').value=snap(p-tickOf(p-1));updateEst()};
+$('px-best').onclick=()=>{const q=quotes(S.sel);$('o-price').value=side==='buy'?q.off:q.bid;updateEst()};
+$('lot-max').onclick=()=>{const p=Number($('o-price').value)||S.mk[S.sel].p;
+  $('o-lots').value=side==='buy'?Math.max(1,Math.floor((S.cash+marginCap())/(p*100*(1+BUY_FEE)))):Math.max(1,Math.floor(((S.hold[S.sel]?.sh||0)-lockedSell(S.sel))/100));updateEst()};
+$('o-price').oninput=updateEst;$('o-lots').oninput=updateEst;
+$('ticket').addEventListener('submit',place);
+['pointerdown','click'].forEach(ev=>$('orders').addEventListener(ev,e=>{const b=e.target.closest('[data-cancel]');if(b)cancel(Number(b.dataset.cancel))}));
+$('btn-purify').onclick=()=>{const a=S.purDue;if(a<1||S.cash<a)return;S.cash-=a;S.purDone+=a;S.purDue=0;jour('Purify',`${idr(a)} given to charity`,'Tathir: cleansing the non-halal share of income (Fatwa 40/2003)');done('purify');save();render()};
+document.addEventListener('click',e=>{
+  if(e.target.id==='ipo-go'){const l=Math.floor(Number($('ipo-lots').value));if(!(l>=1))return;const cost=l*100*IPO.price;
+    if(cost>S.cash){news('IPO order rejected: not enough cash.');render();return}
+    S.cash-=cost;S.ipo.lots+=l;S.ipo.locked+=cost;jour('IPO order',`Subscribed ${l} lot HALA at ${idr(IPO.price)}; ${idr(cost)} locked`,'Primary market: you buy from the issuer through the underwriter (wakalah bil ujrah)');news(`IPO order placed: ${l} lot HALA.`);save();render()}
+});
+document.querySelectorAll('[data-speed]').forEach(b=>b.onclick=()=>{speed=Number(b.dataset.speed);document.querySelectorAll('[data-speed]').forEach(x=>x.setAttribute('aria-pressed',x===b));restart()});
+$('btn-pause').onclick=()=>{paused=!paused;$('btn-pause').setAttribute('aria-pressed',paused);$('btn-pause').textContent=paused?'Resume':'Pause'};
+$('btn-skip').onclick=()=>{if(S.over)return;const d=S.day;let n=0;while(S.day===d&&!S.over&&n<200){tick();n++}render()};
+document.querySelectorAll('[role=tab]').forEach(t=>t.onclick=()=>{document.querySelectorAll('[role=tab]').forEach(x=>{x.setAttribute('aria-selected',x===t);$(x.getAttribute('aria-controls')).hidden=x!==t})});
+// quiz + screening
+const ANS=STOCKS.filter(s=>!s.ipo&&issiPass(s)&&!globPass(s)).map(s=>s.tk);
+$('quiz-opts').innerHTML=STOCKS.filter(s=>!s.ipo).map(s=>`<label class="chk"><input type="checkbox" value="${s.tk}"> ${s.tk}</label>`).join('');
+$('quiz-check').onclick=()=>{const pick=[...document.querySelectorAll('#quiz-opts input:checked')].map(i=>i.value).sort();
+  const ok=pick.join()===[...ANS].sort().join();$('quiz-res').innerHTML=ok?'<span class="pass">Correct. Four stocks sit in the gap between ISSI and the stricter global screen.</span>':`<span class="fail">Not yet. You picked ${pick.length}; check debt above 33.3%, non-halal income above 5%, and the tobacco rule.</span>`;
+  if(ok){done('quiz');save();render()}};
+function renderScreen(){const show=$('show-res').checked;
+  $('screen').innerHTML=STOCKS.map(s=>{const bz=s.bizI&&s.bizG?'<span class="pass">Halal</span>':s.bizI?`<span class="pass">Halal (OJK)</span>; global: <span class="fail">excluded</span>`:`<span class="fail">Excluded</span>: ${s.why}`;
+    const r=(ok)=>show?(ok?'<span class="pass">Pass</span>':'<span class="fail">Fail</span>'):'<span class="est">?</span>';
+    return `<tr><td><b class="mono">${s.tk}</b> <span class="est">${s.sector}</span></td><td>${bz}</td><td class="n">${s.debt}%</td><td class="n">${String(s.nhi).replace('.',',')}%</td><td>${r(issiPass(s))}</td><td>${r(globPass(s))}</td><td class="n">${show?(purRatio(s)*100).toFixed(1).replace('.',',')+'%':'?'}</td></tr>`}).join('')}
+$('show-res').onchange=renderScreen;renderScreen();
+// reset with in-page confirm
+let armed=false;$('btn-reset').onclick=()=>{if(!armed){armed=true;$('btn-reset').textContent='Click again to erase all progress';setTimeout(()=>{armed=false;$('btn-reset').textContent='Reset simulation'},4000);return}
+  try{localStorage.removeItem(keyOf(USER.nim))}catch(e){}S=fresh();S.regAt=new Date().toLocaleString('id-ID');armed=false;$('btn-reset').textContent='Reset simulation';setMode('sots');setSide('buy');news('Simulation reset. You start with Rp100.000.000 in a SOTS account.');render()};
+
+function restart(){clearInterval(timer);timer=setInterval(()=>{if(paused||S.over)return;tick();if(S.t%20===0)save();const n=Date.now();if(n-lastR>280){render();lastR=n}},Math.round(TICK_MS/speed))}
+window.addEventListener('resize',drawChart);
+function showEnd(){render();$('end-report').innerHTML=$('report').innerHTML;$('endwrap').hidden=false}
+$('end-review').onclick=()=>{$('endwrap').hidden=true;document.getElementById('tab-journal').click();$('p-journal').scrollIntoView({behavior:'smooth'})};
+$('end-new').onclick=()=>{try{localStorage.removeItem(keyOf(USER.nim))}catch(e){}S=fresh();S.regAt=new Date().toLocaleString('id-ID');$('endwrap').hidden=true;ipoSig='';
+  news('New session started. You have 20 minutes and Rp100.000.000 in a SOTS account.');setMode('sots');setSide('buy');select(S.sel);save();restart()};
+function login(u){
+  USER=u;let st=null;try{st=JSON.parse(localStorage.getItem(keyOf(u.nim))||'null')}catch(e){}
+  S=(st&&st.mk&&st.mk.HALA)?st:fresh();if(!S.regAt)S.regAt=new Date().toLocaleString('id-ID');
+  const list=users().filter(x=>x.nim!==u.nim);list.unshift(u);try{localStorage.setItem(UKEY,JSON.stringify(list.slice(0,40)))}catch(e){}
+  try{localStorage.setItem(KEY+'-last',u.nim)}catch(e){}
+  $('who-name').textContent=u.name;$('who-nim').textContent=u.nim;$('regwrap').hidden=true;
+  if(!S.news.length) news(`Welcome, ${esc(u.name)}. You start with Rp100.000.000 in a SOTS account. The HALA IPO is open for book building on Day 1 to 2.`);
+  ipoSig='';paused=false;$('btn-pause').setAttribute('aria-pressed','false');$('btn-pause').textContent='Pause';
+  setMode(S.mode);$('use-margin').checked=!!S.margin;setSide('buy');select(S.sel);save();restart();
+  if(S.over)showEnd();
+}
+function showReg(){clearInterval(timer);save();$('endwrap').hidden=true;
+  const list=users();
+  $('known').innerHTML=list.length?'<p>Or continue on this device as:</p>'+list.map(u=>`<button type="button" data-nim="${esc(u.nim)}"><span>${esc(u.name)}</span><span>${esc(u.nim)}</span></button>`).join(''):'';
+  $('r-name').value='';$('r-nim').value='';$('r-msg').className='msg';$('regwrap').hidden=false;$('r-name').focus();
+}
+$('reg-form').addEventListener('submit',e=>{e.preventDefault();
+  const name=$('r-name').value.trim().replace(/\s+/g,' '),nim=$('r-nim').value.trim(),cls=$('r-cls').value.trim();
+  const m=$('r-msg');
+  if(name.length<3){m.className='msg show err';m.textContent='Enter your full name (at least 3 letters).';return}
+  if(!/^[0-9A-Za-z.\-]{5,20}$/.test(nim)){m.className='msg show err';m.textContent='Enter a valid NIM: 5 to 20 digits or letters, no spaces.';return}
+  const old=users().find(u=>u.nim===nim);
+  if(old&&old.name.toLowerCase()!==name.toLowerCase()){m.className='msg show err';m.textContent=`NIM ${nim} is already registered on this device as ${old.name}. Pick it from the list below, or check your NIM.`;return}
+  login({name,nim,cls:cls||(old&&old.cls)||''});
+});
+$('known').addEventListener('click',e=>{const b=e.target.closest('[data-nim]');if(!b)return;const u=users().find(x=>x.nim===b.dataset.nim);if(u)login(u)});
+$('btn-switch').onclick=showReg;
+(function(){let last=null;try{last=localStorage.getItem(KEY+'-last')}catch(e){}
+  const u=last&&users().find(x=>x.nim===last);if(u)login(u);else showReg()})();
+})();
+</script>
+
+</body>
+</html>
