@@ -15,6 +15,20 @@ Situs ini membuka materi kuliah Teknologi Keuangan Islam (Islamic Fintech) agar 
 | `simulasi/dbcf/` | Donation Based Crowdfunding Simulation (10 menit, 12 bulan simulasi) |
 | `assets/` | Logo dan foto |
 
+## Deploy
+
+Situs tayang di <https://learnislamicfintech.tazkia.ac.id> dan di-deploy otomatis oleh GitHub Actions (`.github/workflows/deploy.yml`) setiap ada tag versi baru:
+
+```bash
+git checkout main && git pull
+git tag v1.2.0          # naikkan nomor versi setiap rilis
+git push origin v1.2.0
+```
+
+Pantau hasilnya di tab **Actions**. Commit yang di-tag harus sudah ada di `main`. Untuk kembali ke versi lama, buka **Actions → Deploy → Run workflow** lalu pilih tag-nya pada *Use workflow from*.
+
+Versi pada tautan `site.js` dan `site.css` diganti otomatis dengan nama tag supaya cache Cloudflare ikut diperbarui, jadi tidak perlu diubah manual.
+
 ## Lisensi
 
 Materi dilisensikan dengan [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/): boleh dipelajari, dibagikan, dan diadaptasi untuk pembelajaran dengan menyebut sumber, tidak untuk tujuan komersial. Logo Universitas Tazkia, foto pihak ketiga, dan merek yang dibahas dalam studi kasus tetap milik pemiliknya masing-masing.

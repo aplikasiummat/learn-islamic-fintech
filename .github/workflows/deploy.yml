@@ -1,5 +1,8 @@
 # Deploy otomatis ke https://learnislamicfintech.tazkia.ac.id
-# Berjalan setiap ada push ke main, atau manual dari tab Actions (Run workflow).
+# Berjalan setiap ada tag versi baru yang di-push, misalnya:
+#   git tag v1.2.0 && git push origin v1.2.0
+# Deploy ulang versi lama: tab Actions > Deploy > Run workflow, lalu pilih tag-nya
+# pada "Use workflow from". Commit yang di-tag harus sudah ada di branch main.
 #
 # Server 103.103.20.79 juga menjalankan website utama tazkia.ac.id. Karena itu
 # deploy memakai user khusus "deploy-fintech" tanpa sudo, yang kuncinya dikunci
@@ -12,7 +15,7 @@ name: Deploy
 
 on:
   push:
-    branches: [main]
+    tags: ['v*']
   workflow_dispatch:
 
 concurrency:
@@ -33,16 +36,30 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Pastikan yang di-deploy adalah tag dari main
+        run: |
+          if [ "$GITHUB_REF_TYPE" != tag ]; then
+            echo "::error::Deploy hanya dari tag. Pilih tag pada 'Use workflow from', bukan branch."
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::Tag $GITHUB_REF_NAME menunjuk commit yang belum ada di main."
+            exit 1
+          fi
+          echo "Deploy $GITHUB_REF_NAME ($(git rev-parse --short HEAD))"
 
       # Cloudflare menyimpan CSS/JS sampai 7 hari. Versi pada tautan diganti
-      # dengan hash commit supaya setiap deploy otomatis memaksa versi baru,
+      # dengan nama tag supaya setiap rilis otomatis memaksa versi baru,
       # tanpa perlu menaikkan ?v= secara manual.
       - name: Pasang versi aset (cache busting)
         run: |
-          V=$(git rev-parse --short HEAD)
+          V=$(printf '%s' "$GITHUB_REF_NAME" | tr -c 'A-Za-z0-9._-' '-')
           find . -name '*.html' -not -path './.git/*' -print0 \
             | xargs -0 sed -i -E "s#(assets/site\.(js|css))(\?v=[^\"]*)?\"#\1?v=$V\"#g"
-          grep -rho 'assets/site\.[a-z]*?v=[0-9a-f]*' --include='*.html' . | sort | uniq -c
+          grep -rho 'assets/site\.[a-z]*?v=[A-Za-z0-9._-]*' --include='*.html' . | sort | uniq -c
 
       - name: Siapkan kunci SSH
         env:
