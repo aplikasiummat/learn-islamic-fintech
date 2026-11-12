@@ -1,0 +1,74 @@
+# Deploy otomatis ke https://learnislamicfintech.tazkia.ac.id
+# Berjalan setiap ada push ke main, atau manual dari tab Actions (Run workflow).
+#
+# Server 103.103.20.79 juga menjalankan website utama tazkia.ac.id. Karena itu
+# deploy memakai user khusus "deploy-fintech" tanpa sudo, yang kuncinya dikunci
+# rrsync ke folder /var/www/learnislamicfintech.tazkia.ac.id saja.
+#
+# Secret yang dibutuhkan (Settings > Secrets and variables > Actions):
+#   DEPLOY_SSH_KEY  private key ed25519 milik user deploy-fintech
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  HOST: 103.103.20.79
+  DEPLOY_USER: deploy-fintech
+  SITE_URL: https://learnislamicfintech.tazkia.ac.id
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      # Cloudflare menyimpan CSS/JS sampai 7 hari. Versi pada tautan diganti
+      # dengan hash commit supaya setiap deploy otomatis memaksa versi baru,
+      # tanpa perlu menaikkan ?v= secara manual.
+      - name: Pasang versi aset (cache busting)
+        run: |
+          V=$(git rev-parse --short HEAD)
+          find . -name '*.html' -not -path './.git/*' -print0 \
+            | xargs -0 sed -i -E "s#(assets/site\.(js|css))(\?v=[^\"]*)?\"#\1?v=$V\"#g"
+          grep -rho 'assets/site\.[a-z]*?v=[0-9a-f]*' --include='*.html' . | sort | uniq -c
+
+      - name: Siapkan kunci SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          test -n "$DEPLOY_SSH_KEY" || { echo "::error::Secret DEPLOY_SSH_KEY belum diisi"; exit 1; }
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # Host key server dipatok agar tidak bisa disusupi server palsu.
+          echo "$HOST ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOeFTto3kp7RSmod8tsR4ceQQODVE1Yp6GpcmDG1XPT+" > ~/.ssh/known_hosts
+
+      - name: Kirim file ke server
+        run: |
+          rsync -rltz --delete --chmod=D755,F644 \
+            --exclude .git --exclude .github --exclude .nojekyll \
+            --exclude README.md --exclude LICENSE \
+            -e "ssh -o StrictHostKeyChecking=yes" \
+            ./ "$DEPLOY_USER@$HOST:./"
+
+      - name: Periksa situs
+        run: |
+          fail=0
+          for p in / /bahan-ajar/ /simulasi/dbcf/ /simulasi/saham/ /simulasi/saham/main.html; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -m 20 "$SITE_URL$p")
+            echo "$code $p"
+            [ "$code" = 200 ] || fail=1
+          done
+          exit $fail
