@@ -253,9 +253,16 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
 .res span{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 .res b{font-family:var(--mono)}
 /* trade bar on top */
-.tradebar{display:grid;grid-template-columns:minmax(150px,auto) 150px minmax(210px,1fr) minmax(230px,1fr) minmax(230px,1.1fr);gap:10px 14px;align-items:end;margin:14px 0 0;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:8px}
+.tradebar{display:grid;grid-template-columns:minmax(150px,auto) 210px minmax(200px,1fr) minmax(230px,1fr) minmax(230px,1.1fr);gap:10px 14px;align-items:end;margin:14px 0 0;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:8px}
 .tradebar .msg{grid-column:1/-1}
-.tradebar .side{align-self:end;height:38px}
+.tradebar .side{height:36px}
+.tb-side{display:flex;flex-direction:column;gap:6px;align-self:end}
+.otype{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.otype button{border:0;border-left:1px solid var(--line);background:var(--surface);font-size:.74rem;font-weight:700;padding:5px 2px;color:var(--ink)}
+.otype button:first-child{border-left:0}
+.otype button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.otype button.riba[aria-pressed="true"]{background:var(--warn);color:#fff}
+.otype[data-locked="true"] button.riba{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--down)}
 .tradebar input{height:34px}
 .tb-stock{display:flex;flex-direction:column;gap:2px;min-width:0}
 .tb-stock .l{display:flex;align-items:baseline;gap:8px}
@@ -349,7 +356,8 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
     <div class="hd"><small>Session complete</small><h2>Your 10 trading days are over</h2></div>
     <div style="padding:18px 20px;display:flex;flex-direction:column;gap:12px">
       <div class="report" id="end-report" style="margin:0"></div>
-      <p class="est">Take a screenshot of this card and submit it. Then answer in two or three sentences: which sharia rule changed one of your decisions, and why?</p>
+      <button class="go" type="button" data-pdf style="background:var(--gold);color:#10243f">Download PDF report: score, behaviour, and analysis</button>
+      <p class="est">Submit the PDF to your lecturer. It ends with two reflection questions for you to answer.</p>
       <div class="row" style="flex-wrap:wrap"><button class="go" type="button" id="end-review" style="background:var(--navy);flex:1">Review my journal</button><button class="go" type="button" id="end-new" style="flex:1">Start a new session</button></div>
     </div>
   </div>
@@ -383,9 +391,16 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
 
   <form class="ticket tradebar" id="ticket" novalidate aria-label="Order ticket">
     <div class="tb-stock"><div class="l"><b id="t-tk">SHJY</b><span class="px" id="t-px">—</span><span class="mono" id="t-ch"></span></div><span class="nm" id="t-nm"></span></div>
-    <div class="side" role="group" aria-label="Order side">
-      <button type="button" class="buy" id="side-buy" aria-pressed="true">Buy <span class="kbd">B</span></button>
-      <button type="button" class="sell" id="side-sell" aria-pressed="false">Sell <span class="kbd">S</span></button>
+    <div class="tb-side">
+      <div class="side" role="group" aria-label="Order side">
+        <button type="button" class="buy" id="side-buy" aria-pressed="true">Buy <span class="kbd">B</span></button>
+        <button type="button" class="sell" id="side-sell" aria-pressed="false">Sell <span class="kbd">S</span></button>
+      </div>
+      <div class="otype" id="otype" role="group" aria-label="Order type" data-locked="true">
+        <button type="button" data-ot="cash" aria-pressed="true" title="Pay with your own settled cash">Cash</button>
+        <button type="button" class="riba" data-ot="margin" aria-pressed="false" title="Borrow from the broker at interest">Margin</button>
+        <button type="button" class="riba" data-ot="short" aria-pressed="false" title="Sell borrowed shares you do not own">Short sell</button>
+      </div>
     </div>
     <div class="field"><label for="o-price">Limit price (Rp)</label>
       <div class="row"><input type="number" id="o-price" step="1" min="1"><button type="button" class="mini" id="px-down" aria-label="One tick lower">−</button><button type="button" class="mini" id="px-up" aria-label="One tick higher">+</button><button type="button" class="mini" id="px-best">Best</button></div></div>
@@ -401,7 +416,7 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
       <button id="m-sots" aria-pressed="true">SOTS account (sharia)</button>
       <button id="m-reg" class="reg" aria-pressed="false">Regular account</button>
     </div>
-    <label class="chk" id="margin-wrap" hidden><input type="checkbox" id="use-margin"> Use margin (broker loan at <span id="loan-rate">12%</span> p.a. = BI Rate + 7,25%)</label>
+    <label class="chk" id="margin-wrap" hidden style="display:none"><input type="checkbox" id="use-margin"> Use margin (broker loan at <span id="loan-rate">12%</span> p.a. = BI Rate + 7,25%)</label>
     <p id="mode-note">SOTS follows DSN-MUI Fatwa 40/2003 and 80/2011: you may buy only stocks in the Daftar Efek Syariah (DES), and margin trading and short selling are blocked.</p>
   </div>
 
@@ -478,7 +493,7 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
       <button role="tab" id="tab-journal" aria-selected="false" aria-controls="p-journal">Akad journal</button>
       <button role="tab" id="tab-rules" aria-selected="false" aria-controls="p-rules">How it mirrors IDX</button>
     </div>
-    <div class="tabpanel" role="tabpanel" id="p-missions"><div class="report" id="report"></div><div class="missions" id="missions"></div></div>
+    <div class="tabpanel" role="tabpanel" id="p-missions"><div class="report" id="report"></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:-4px 0 14px"><button class="go" type="button" data-pdf style="background:var(--gold);color:#10243f;padding:10px 18px">Download PDF report</button><span class="est" id="pdf-note">Score so far, your behaviour profile (homo islamicus or homo economicus), and an analysis of your game. Download it again after Day 10 for the final version.</span></div><div class="missions" id="missions"></div></div>
     <div class="tabpanel" role="tabpanel" id="p-ipo" hidden>
       <ol class="stepper" id="ipo-steps"></ol>
       <div class="ipogrid">
@@ -530,6 +545,11 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
           <ul><li>SOTS: only DES stocks, no margin, no short selling</li><li>Akad: wakalah to your broker, bay' al-musawamah on the exchange, musyarakah as a shareholder</li><li>Primary market (IPO): prospectus, book building, OJK effective statement, e-IPO offering, pooling allotment, distribution, listing; the underwriter works under wakalah bil ujrah</li><li>Purify the non-halal share of dividends</li></ul></section>
         <section><h3>Macro and index events</h3>
           <p>The economic calendar mirrors what moves the IDX: BPS inflation, the BI Rate decision (RDG BI), the US Fed, coal (HBA) and CPO prices, the rupiah, the MSCI index review and its rebalancing day, and the OJK review of the Daftar Efek Syariah each May and November. Prices react to the <b>surprise</b> against expectations, not to the news itself, and each sector reacts differently. Make your call before each decision.</p></section>
+        <section><h3>How your score is computed</h3>
+          <table><tbody><tr><td>Missions completed</td><td class="mono">35</td></tr><tr><td>Sharia compliance: purification paid, no margin loan or short position at the end, all holdings in the DES</td><td class="mono">20</td></tr><tr><td>Reading macro events: 2 points per call made, 3 more if right (3 calls)</td><td class="mono">15</td></tr><tr><td>Performance against the ISSI: 12 points for matching it, plus or minus 2 per percentage point of difference (at most 6 with fewer than 3 trades)</td><td class="mono">20</td></tr><tr><td>Activity: finishing the session, at least 5 trades, at least 3 different stocks</td><td class="mono">10</td></tr></tbody></table>
+          <p>Grades: A 85, A− 80, B+ 75, B 70, B− 65, C+ 60, C 55, D 40. The score is formative feedback; your lecturer makes the final assessment.</p></section>
+        <section><h3>Behaviour profile</h3>
+          <p>Separate from the score, the report places you between <b>homo economicus</b> (maximises personal gain; leverage, interest, and short selling are just tools) and <b>homo islamicus</b> (pursues falah and maslahah within sharia limits). It starts at 100 and deducts for margin loans (riba), short sales, non-DES purchases, unpaid purification, speculation (very high turnover, buying into a UMA warning), and time spent in the Regular account. One margin trade for the comparison mission costs little; repeated use costs more.</p></section>
         <section><h3>Simplifications</h3>
           <p>Fictional stocks, simulated prices. One session is 10 trading days; each day lasts two minutes at 1×, so the session takes 20 minutes. Queued orders fill when the last price reaches your limit. No dividend tax, no margin calls. Rules follow IDX practice taught in class; check the latest IDX regulations before real trading.</p></section>
       </div>
@@ -538,6 +558,7 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 (function(){
 'use strict';
@@ -601,7 +622,7 @@ function gauss(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();r
 function fresh(){
   const m={};STOCKS.forEach(s=>{m[s.tk]={p:s.p,pc:s.p,open:null,hi:s.p,lo:s.p,vol:0,fair:s.p,hist:[s.p],listed:!s.ipo}});
   return {day:1,t:0,cash:START_CASH,recv:[],hold:{},orders:[],loan:0,purDue:0,purDone:0,mode:'sots',margin:false,
-    mk:m,news:[],journal:[],missions:{},ipo:freshIpo(),macro:freshMacro(),seq:1,sel:'SHJY',quiz:false};
+    mk:m,news:[],journal:[],missions:{},ipo:freshIpo(),macro:freshMacro(),stats:freshStats(),eqHist:[],seq:1,sel:'SHJY',quiz:false};
 }
 let S=null,USER=null;
 const UKEY=KEY+'-users';
@@ -611,7 +632,7 @@ const base={issi:0,comp:0};
 STOCKS.forEach(s=>{if(s.ipo)return;base.comp+=s.p*s.sh;if(inDES(s))base.issi+=s.p*s.sh});
 function save(){if(!USER||!S)return;try{localStorage.setItem(keyOf(USER.nim),JSON.stringify(S))}catch(e){}}
 
-let speed=1,paused=false,side='buy',timer,lastR=0;
+let speed=1,paused=false,side='buy',timer,lastR=0,otype='cash';
 const $=id=>document.getElementById(id);
 
 function news(text){S.news.unshift({at:dateOf(S.day).slice(0,10)+' '+hhmm(phase(S.t).mins),text});S.news=S.news.slice(0,40)}
@@ -652,6 +673,7 @@ function fill(o,price){
     jour('Buy',`${o.lots} lot ${o.tk} at ${idr(price)} · fee ${idr(val*BUY_FEE)}${useLoan>0?' · '+idr(useLoan)+' borrowed on margin':''}`,
       wasShort?'Covering a short sale: you return borrowed shares':`Wakalah: your broker buys for you · Bay' al-musawamah on the exchange · you become a musyarakah partner in ${s.name}`, useLoan>0||wasShort);
     news(`Matched: bought ${o.lots} lot ${o.tk} at ${num(price)}`);
+    ensureStats();const X=S.stats;X.trades++;X.fees+=val*BUY_FEE;X.buyValue+=val;if(!X.tks.includes(o.tk))X.tks.push(o.tk);if(useLoan>0)X.marginTrades++;if(!inDES(s))X.nonDesBuys++;if(S.uma&&o.tk==='DGTL'&&S.uma.day===S.day&&S.t-S.uma.t<=20)X.chase++;
     if(S.mode==='sots'&&inDES(s)) done('buy');
     if(S.macro&&S.macro.desIn.includes(o.tk)&&S.macro.st.des&&S.macro.st.des.done) done('des');
     if(useLoan>0) done('margin');
@@ -663,6 +685,7 @@ function fill(o,price){
     jour('Sell',`${o.lots} lot ${o.tk} at ${idr(price)} · net ${idr(net)} settles on Day ${S.day+2} (T+2)${before>0?' · realised P/L '+idr(pl):''}`,
       before<sh?"Short sale: selling shares you do not own (bay' ma laysa 'indak), prohibited by Fatwa 40/2003":"Wakalah: your broker sells for you · Bay' al-musawamah: ownership passes to the buyer",before<sh);
     news(`Matched: sold ${o.lots} lot ${o.tk} at ${num(price)}`);
+    ensureStats();S.stats.trades++;S.stats.fees+=val*SELL_FEE;S.stats.realised+=pl;if(before<sh)S.stats.shortTrades++;
     done('sell');
     if(S.macro&&S.macro.desOut.includes(o.tk)&&S.macro.st.des&&S.macro.st.des.done) done('des');
   }
@@ -693,11 +716,11 @@ function place(e){
   if(side==='buy'){
     if(S.mode==='sots'&&!inDES(s)){
       const why=!s.bizI?`its core business is ${s.why}`:s.debt>45?`its interest-bearing debt is ${s.debt}% of assets (limit 45%)`:`its non-halal income is ${s.nhi}% of revenue (limit 10%)`;
-      msg(`<b>Blocked by SOTS.</b> ${tk} is not in the Daftar Efek Syariah because ${why}. See the Screening lab.`,'fatwa');done('blocked');return}
+      msg(`<b>Blocked by SOTS.</b> ${tk} is not in the Daftar Efek Syariah because ${why}. See the Screening lab.`,'fatwa');done('blocked');ensureStats();S.stats.blockedDes++;return}
     const need=price*sh*(1+BUY_FEE);let lockCash=Math.min(S.cash,need),loanPart=need-lockCash;
     if(loanPart>0.5){
       if(S.mode==='sots'){msg(`Not enough cash. You need ${idr(need)}; settled cash is ${idr(S.cash)}${recvSum()>0?' (sale money arrives at T+2)':''}. Margin is not available in a SOTS account.`,'err');return}
-      if(loanPart>marginCap()){msg(`Not enough buying power. Need ${idr(need)}, cash ${idr(S.cash)}${S.margin?', margin room '+idr(marginCap()):'. Turn on margin to borrow (interest applies)'}.`,'err');return}
+      if(loanPart>marginCap()){msg(`Not enough buying power. Need ${idr(need)}, cash ${idr(S.cash)}${S.margin?', margin room '+idr(marginCap()):'. Choose <b>Margin</b> as the order type to borrow (interest applies)'}.`,'err');return}
     }else loanPart=0;
     S.cash-=lockCash;
     const o={id:S.seq++,side,tk,price,lots,locked:lockCash,loanPart};
@@ -708,7 +731,8 @@ function place(e){
   }else{
     const have=(S.hold[tk]?.sh||0)-lockedSell(tk);
     if(sh>Math.max(0,have)){
-      if(S.mode==='sots'){msg(`<b>Short selling is blocked.</b> You hold ${num(Math.max(0,have)/100)} lot ${tk} available. Selling shares you do not own is bay' ma laysa 'indak, prohibited by DSN-MUI Fatwa 40/2003.`,'fatwa');done('short');return}
+      if(S.mode==='sots'){msg(`<b>Short selling is blocked.</b> You hold ${num(Math.max(0,have)/100)} lot ${tk} available. Selling shares you do not own is bay' ma laysa 'indak, prohibited by DSN-MUI Fatwa 40/2003.`,'fatwa');done('short');ensureStats();S.stats.blockedShort++;return}
+      if(otype!=='short'){msg(`You have ${num(Math.max(0,have)/100)} lot ${tk} available to sell. To sell shares you do not own, choose <b>Short sell</b> as the order type.`,'err');return}
       msg(`Short sale: you are selling ${num((sh-Math.max(0,have))/100)} lot you do not own. A Regular account allows it; a lending fee and the dividend obligation apply.`,'fatwa');
     }
     const o={id:S.seq++,side,tk,price,lots,locked:0,loanPart:0};
@@ -730,7 +754,7 @@ function stepPrices(){
     if(q.momN>0){r+=q.mom;q.momN--}
     if(Math.random()<.0025){const j=(Math.random()<.5?-1:1)*(.03+Math.random()*.05);r+=j;q.fair*=Math.exp(j*.8);
       news(j>0?`${s.tk}: strong buying after positive news (${s.sector}).`:`${s.tk}: selling pressure after weak quarterly numbers.`)}
-    if(s.tk==='DGTL'&&Math.random()<.003){r+=.08;news('DGTL: IDX flags Unusual Market Activity (UMA). Large bids appear and vanish. Is someone placing fake bids (najsy)?')}
+    if(s.tk==='DGTL'&&Math.random()<.003){r+=.08;news('DGTL: IDX flags Unusual Market Activity (UMA). Large bids appear and vanish. Is someone placing fake bids (najsy)?');S.uma={day:S.day,t:S.t}}
     let np=snap(q.p*Math.exp(r));np=Math.min(ara,Math.max(arb,np));
     if(np===ara&&q.p!==ara)news(`${s.tk} hits auto rejection upper (ARA) at ${num(ara)}.`);
     if(np===arb&&q.p!==arb)news(`${s.tk} hits auto rejection lower (ARB) at ${num(arb)}.`);
@@ -756,7 +780,7 @@ function endOfDay(){
     news(`${s.tk} goes ex-dividend (${idr(s.dps)} per share). Tomorrow's reference price is adjusted.`);
     q.pc=snap(q.p-s.dps);q.p=q.pc;q.fair=Math.max(60,q.fair-s.dps)}
   // margin interest & short fee
-  if(S.loan>0){const i=S.loan*loanRate();S.loan+=i;jour('Interest',`Margin interest ${idr(i)} added to your loan`,'Riba: interest on a loan, prohibited in a sharia account',true)}
+  if(S.loan>0){const i=S.loan*loanRate();S.loan+=i;ensureStats();S.stats.interest+=i;jour('Interest',`Margin interest ${idr(i)} added to your loan`,'Riba: interest on a loan, prohibited in a sharia account',true)}
   let shortV=0;for(const tk in S.hold)if(S.hold[tk].sh<0)shortV+=-S.hold[tk].sh*S.mk[tk].p;
   if(shortV>0){const f=shortV*SHORT_FEE;S.cash-=f;jour('Fee',`Share lending fee ${idr(f)} on short positions`,'Fee for borrowed shares',true)}
   // IPO process
@@ -776,6 +800,7 @@ function endOfDay(){
     if(I.allotted){addHold('HALA',I.allotted*100,I.final);jour('IPO distribution',`${num(I.allotted)} lot HALA credited to your KSEI sub-account`,'You now own part of HALA as a musyarakah partner; trading starts at listing')}
     news('HALA shares distributed to investors\' KSEI sub-accounts. Listing tomorrow.')}
   for(const s of STOCKS){const q=S.mk[s.tk];if(s.dps&&s.rec===S.day)continue;if(q.listed)q.pc=q.p}
+  ensureStats();S.eqHist=S.eqHist.filter(h=>h.d!==S.day);S.eqHist.push({d:S.day,eq:equity()+ipoHeld()+S.purDone,ix:issiIdx()});
   if(S.day>=SESSION_DAYS){S.over=true;S.t=TICKS_PER_DAY-1;news('The 20-minute session is complete. The market is closed. See your report card.');save();clearInterval(timer);setTimeout(showEnd,50);return}
   S.day++;S.t=0;
   if(S.day===3&&!S.ipo.legacy)news(`OJK declares HALA's registration statement effective. Public offering opens today at Rp${S.ipo.final} through e-IPO.`);
@@ -788,6 +813,7 @@ function endOfDay(){
 function tick(){
   if(S.over)return;
   S.t++;
+  if(S.stats&&phase(S.t).open){S.stats.ticks++;if(S.mode==='reg')S.stats.regTicks++}
   macroTick();
   if(S.t===8||S.t===68){if(S.t===8)openMarket();else matchAll(false)}
   const ph=phase(S.t);
@@ -934,7 +960,7 @@ const MISSIONS=[
  {id:'ipo',tag:'Primary market · step 4 to 5',title:'Get an IPO allotment',body:'Subscribe in the public offering on Day 3 or 4, then read your allotment and refund at the end of Day 4.'},
  {id:'list',tag:'Primary to secondary',title:'Watch HALA list',body:'On Day 6 HALA starts trading. Compare its price with the IPO price.'},
  {id:'settle',tag:'Market mechanics',title:'See T+2 settlement',body:'Sell shares and keep trading until the money moves from receivable to cash.'},
- {id:'margin',tag:'Contrast',title:'See what conventional allows',body:'Switch to a Regular account, turn on margin, and buy beyond your cash. Watch the daily interest in the journal.'},
+ {id:'margin',tag:'Contrast',title:'See what conventional allows',body:'Switch to a Regular account, choose Margin as the order type, and buy beyond your cash. Watch the daily interest in the journal.'},
  {id:'quiz',tag:'Screening',title:'Pass the screening check',body:'In the Screening lab, find every stock that passes ISSI but fails the global screen.'},
  {id:'macro',tag:'Macro · BI Rate',title:'Make your BI Rate call',body:'Before the RDG BI announcement on Day 2, call cut, hold, or hike in the economic calendar. Then see why the market reacts to the surprise, not the decision.'},
  {id:'msci',tag:'Index · MSCI',title:'Ride the MSCI rebalancing',body:'After MSCI announces its review on Day 5, hold the added stock at the Day 8 close, when index funds must buy. Watch what happens at the next open.'},
@@ -1004,11 +1030,12 @@ function render(){
     const len=items.reduce((a,n)=>a+n.text.replace(/<[^>]+>/g,'').length,0);el.style.setProperty('--nbdur',Math.max(25,Math.round(len*.11))+'s');
     el.style.animation='none';void el.offsetWidth;el.style.animation=''}
   const nDone=MISSIONS.filter(m=>S.missions[m.id]).length;
-  $('report').innerHTML=`<div class="t"><h3>Student report card</h3><span class="est">Screenshot this card to submit your progress.</span></div>
+  ensureStats();const G=grade(),BH=behaviour();
+  $('report').innerHTML=`<div class="t"><h3>Student report card</h3><span class="est">Download the PDF report below to submit.</span></div>
     <div><span>Name</span><b style="font-family:var(--body)">${esc(USER.name)}</b></div><div><span>NIM</span><b>${esc(USER.nim)}</b></div>
     <div><span>Class</span><b style="font-family:var(--body)">${esc(USER.cls||'—')}</b></div><div><span>Sim day</span><b>${Math.min(S.day,SESSION_DAYS)} / ${SESSION_DAYS}${S.over?' ✓':''}</b></div>
     <div><span>Total equity</span><b>${idr(eq+ipoHeld())}</b></div><div><span>Return</span><b class="${sgn(r)}">${fpct(r)}</b></div>
-    <div><span>Missions</span><b>${nDone} / ${MISSIONS.length}</b></div><div><span>Macro calls right</span><b>${S.macro?S.macro.score:0} / 3</b></div><div><span>Purified</span><b>${idr(S.purDone)}</b></div>
+    <div><span>Score</span><b>${G.total} / 100 · ${G.letter}</b></div><div><span>Behaviour</span><b style="font-family:var(--body)">${BH.lab} (${BH.score})</b></div><div><span>Missions</span><b>${nDone} / ${MISSIONS.length}</b></div><div><span>Macro calls right</span><b>${S.macro?S.macro.score:0} / 3</b></div><div><span>Purified</span><b>${idr(S.purDone)}</b></div>
     <div><span>Account</span><b style="font-family:var(--body)">${S.mode==='sots'?'SOTS (sharia)':'Regular'}</b></div><div><span>Registered</span><b style="font-family:var(--body);font-size:.85rem">${esc(S.regAt||'')}</b></div>`;
   $('missions').innerHTML=MISSIONS.map(m=>`<div class="mission ${S.missions[m.id]?'done':''}"><span class="tag">${m.tag}</span><h3>${m.title}</h3><p>${m.body}</p><span class="st ${S.missions[m.id]?'pass':''}">${S.missions[m.id]?'✓ Done':'Not yet'}</span></div>`).join('');
   $('journal').innerHTML=S.journal.length?S.journal.map(j=>`<li><span class="mono" style="font-size:.78rem;color:var(--muted)">${j.at}</span><span><b>${j.type}.</b> ${j.text}<span class="akad ${j.riba?'riba':''}">${j.akad}</span></span></li>`).join(''):'<li><span></span><span class="empty">Your trades, dividends, and fees will appear here with the akad behind each one.</span></li>';
@@ -1093,11 +1120,22 @@ function setSide(sd){side=sd;$('side-buy').setAttribute('aria-pressed',sd==='buy
   $('o-go').textContent=sd==='buy'?'Buy '+S.sel:'Sell '+S.sel;$('o-go').className='go'+(sd==='sell'?' sell':'');
   const q=quotes(S.sel);$('o-price').value=sd==='buy'?q.off:q.bid;updateEst()}
 function setMode(m){S.mode=m;$('m-sots').setAttribute('aria-pressed',m==='sots');$('m-reg').setAttribute('aria-pressed',m==='reg');
-  $('margin-wrap').hidden=m!=='reg';if(m!=='reg'){S.margin=false;$('use-margin').checked=false}
-  $('mode-note').textContent=m==='sots'?'SOTS follows DSN-MUI Fatwa 40/2003 and 80/2011: you may buy only stocks in the Daftar Efek Syariah (DES), and margin trading and short selling are blocked.':'Regular account: any listed stock, margin loans at interest, and short selling are allowed. Use it to compare, and watch how the journal labels each transaction.';
+  $('margin-wrap').hidden=true;if(m!=='reg'){S.margin=false;$('use-margin').checked=false;otype='cash';document.querySelectorAll('[data-ot]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ot==='cash'))}
+  $('otype').dataset.locked=m!=='reg';
+  $('mode-note').textContent=m==='sots'?'SOTS follows DSN-MUI Fatwa 40/2003 and 80/2011: you may buy only stocks in the Daftar Efek Syariah (DES), and margin trading and short selling are blocked.':'Regular account: any listed stock, plus Margin and Short sell order types in the order bar. Use them to compare, and watch how the journal labels each transaction. Your behaviour report records these choices.';
   save();render()}
 ['pointerdown','click'].forEach(ev=>$('watchlist').addEventListener(ev,e=>{const b=e.target.closest('button[data-tk]');if(b&&S.sel!==b.dataset.tk)select(b.dataset.tk)}));
-$('side-buy').onclick=()=>setSide('buy');$('side-sell').onclick=()=>setSide('sell');
+$('side-buy').onclick=()=>{if(otype==='short')setOtype('cash',true);setSide('buy')};$('side-sell').onclick=()=>{if(otype==='margin')setOtype('cash',true);setSide('sell')};
+function setOtype(t,quiet){
+  if(t!=='cash'&&S.mode==='sots'){ensureStats();S.stats.tempt++;
+    msg(t==='margin'?'<b>Margin trading is blocked in SOTS.</b> A broker loan at interest is riba (DSN-MUI Fatwa 80/2011). Switch to the Regular account above if you want to compare.':"<b>Short selling is blocked in SOTS.</b> Selling shares you do not own is bay' ma laysa 'indak (DSN-MUI Fatwa 40/2003). Switch to the Regular account above if you want to compare.",'fatwa');
+    if(t==='short')done('short');t='cash';quiet=true;save();render()}
+  otype=t;S.margin=t==='margin';$('use-margin').checked=S.margin;
+  document.querySelectorAll('[data-ot]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ot===t));
+  if(t==='short'&&side!=='sell')setSide('sell');if(t==='margin'&&side!=='buy')setSide('buy');
+  if(!quiet&&t!=='cash')msg(t==='margin'?`<b>Margin on.</b> You can buy beyond your cash with a broker loan at ${((S.macro?S.macro.bi:4.75)+7.25).toFixed(2).replace('.',',')}% a year. The journal tags it as riba.`:"<b>Short sell on.</b> You may sell shares you do not own. A lending fee and the dividend obligation apply; the journal tags it as bay' ma laysa 'indak.",'fatwa');
+  save();updateEst()}
+document.querySelectorAll('[data-ot]').forEach(b=>b.onclick=()=>setOtype(b.dataset.ot));
 $('m-sots').onclick=()=>setMode('sots');$('m-reg').onclick=()=>setMode('reg');
 $('use-margin').onchange=e=>{S.margin=e.target.checked;save();render()};
 $('px-up').onclick=()=>{const p=Number($('o-price').value)||S.mk[S.sel].p;$('o-price').value=snap(p+tickOf(p));updateEst()};
@@ -1149,19 +1187,195 @@ let armed=false;$('btn-reset').onclick=()=>{if(!armed){armed=true;$('btn-reset')
 
 function restart(){clearInterval(timer);timer=setInterval(()=>{if(paused||S.over)return;tick();if(S.t%20===0)save();const n=Date.now();if(n-lastR>280){render();lastR=n}},Math.round(TICK_MS/speed))}
 window.addEventListener('resize',drawChart);
+
+// ---------------------------------------------------------------- score, behaviour, PDF report
+function freshStats(){return {trades:0,fees:0,realised:0,blockedDes:0,blockedShort:0,tks:[],tempt:0,interest:0,marginTrades:0,shortTrades:0,nonDesBuys:0,buyValue:0,chase:0,ticks:0,regTicks:0}}
+function issiIdx(){let ii=0;for(const s of STOCKS){if(s.ipo||!inDES(s))continue;ii+=S.mk[s.tk].p*s.sh}return ii/base.issi*215*(S.macro?S.macro.k:1)}
+function ensureStats(){if(!S.eqHist)S.eqHist=[];
+  if(!S.stats){S.stats=freshStats();S.stats.est=true;S.stats.trades=S.journal.filter(j=>j.type==='Buy'||j.type==='Sell').length;S.stats.tks=Object.keys(S.hold);
+    S.stats.blockedDes=S.missions.blocked?1:0;S.stats.blockedShort=S.missions.short?1:0;S.stats.marginTrades=S.journal.filter(j=>j.type==='Buy'&&j.riba&&/borrowed/.test(j.text)).length;
+    S.stats.shortTrades=S.journal.filter(j=>j.type==='Sell'&&j.riba).length}
+  const f=freshStats();for(const k in f)if(S.stats[k]===undefined)S.stats[k]=f[k]}
+function grade(){const st=S.stats,M=S.macro||{calls:{},st:{}};
+  const r2=v=>Math.round(v*100)/100||0,eq=equity()+ipoHeld(),ret=r2(pct(eq+S.purDone,START_CASH)),ixRet=r2(pct(issiIdx(),215)),alpha=r2(ret-ixRet);
+  const nM=MISSIONS.filter(m=>S.missions[m.id]).length,parts=[];
+  parts.push({k:'Missions completed',max:35,got:35*nM/MISSIONS.length,note:`${nM} of ${MISSIONS.length} missions done`});
+  const purTot=S.purDone+S.purDue,purP=purTot>0?8*S.purDone/purTot:8;
+  const shortNow=Object.values(S.hold).some(h=>h.sh<0),riskP=(S.loan<1&&!shortNow)?6:0;
+  const nonDes=Object.keys(S.hold).filter(tk=>S.hold[tk].sh>0&&!inDES(BY[tk])),desP=nonDes.length?0:6;
+  parts.push({k:'Sharia compliance',max:20,got:purP+riskP+desP,note:`Purification ${purTot>0?Math.round(100*S.purDone/purTot)+'% paid':'none due'}; ${riskP?'no margin loan or short at the end':'margin loan or short still open'}; ${desP?'all holdings in DES':'holds non-DES '+nonDes.join(', ')}`});
+  let mp=0,made=0,right=0;EVENTS.filter(e=>e.call).forEach(e=>{if(M.calls[e.id]){mp+=2;made++;if(M.st[e.id]&&M.st[e.id].ok){mp+=3;right++}}});
+  parts.push({k:'Reading macro events',max:15,got:mp,note:`${made} of 3 calls made, ${right} right`});
+  let perf=Math.max(0,Math.min(20,12+alpha*2));if(st.trades<3)perf=Math.min(perf,6);
+  parts.push({k:'Performance vs ISSI',max:20,got:perf,note:`Return ${fpct(ret)} against ISSI ${fpct(ixRet)}${st.trades<3?'; under 3 trades, capped at 6':''}`});
+  const fin=S.over?1:Math.min(1,(S.day-1)/SESSION_DAYS);
+  parts.push({k:'Activity and diversification',max:10,got:4*fin+3*Math.min(1,st.trades/5)+3*Math.min(1,st.tks.length/3),note:`${S.over?'Session finished':'Day '+S.day+' of '+SESSION_DAYS}; ${st.trades} trades; ${st.tks.length} different stocks`});
+  const total=Math.round(parts.reduce((a,x)=>a+x.got,0));
+  const letter=[[85,'A'],[80,'A-'],[75,'B+'],[70,'B'],[65,'B-'],[60,'C+'],[55,'C'],[40,'D'],[0,'E']].find(x=>total>=x[0])[1];
+  return {parts,total,letter,eq,ret,ixRet,alpha,nM,made,right,nonDes,purTot}}
+function behaviour(){const st=S.stats,ind=[];
+  const purTot=S.purDone+S.purDue,regShare=st.ticks?st.regTicks/st.ticks:(S.mode==='reg'?1:0),turn=st.buyValue/START_CASH;
+  const nonDesEnd=Object.keys(S.hold).filter(tk=>S.hold[tk].sh>0&&!inDES(BY[tk]));
+  const I=(k,rule,ev,pen,max)=>ind.push({k,rule,ev,pen:Math.round(Math.max(0,Math.min(max,pen))),max});
+  I('Riba: margin loans','Interest on debt is prohibited (QS 2:275; DSN-MUI Fatwa 80/2011).',st.marginTrades?`${st.marginTrades} margin buy${st.marginTrades>1?'s':''}; interest paid ${idr(st.interest)}.`:'No margin loan used.',(st.marginTrades?6:0)+Math.max(0,st.marginTrades-1)*8+Math.min(8,st.interest/25000),25);
+  I('Short selling',"Selling what you do not own, bay' ma laysa 'indak (Fatwa 40/2003).",st.shortTrades?`${st.shortTrades} short sale${st.shortTrades>1?'s':''} executed.`:'No short sale executed.',st.shortTrades*10,25);
+  I('Non-sharia stocks','Buy only stocks in the Daftar Efek Syariah.',(st.nonDesBuys?`${st.nonDesBuys} purchase${st.nonDesBuys>1?'s':''} of non-DES stocks.`:'Only DES stocks bought.')+(nonDesEnd.length?` Still holding ${nonDesEnd.join(', ')} outside the DES.`:''),st.nonDesBuys*5+(nonDesEnd.length?6:0),20);
+  I('Purification (tathir)','Give away the non-halal share of income.',purTot>0?`${Math.round(100*S.purDone/purTot)}% of ${idr(purTot)} purified.`:'No purification due yet.',purTot>0?15*S.purDue/purTot:0,15);
+  I('Speculation (maysir)','Invest on value; do not gamble on noise or rumour.',`Turnover ${turn.toFixed(1).replace('.',',')}x your capital.${st.chase?` Bought DGTL right after a UMA/najsy warning ${st.chase}x.`:''}`,Math.max(0,(turn-4)*2.5)+st.chase*5,15);
+  I('Account choice','Choose the sharia (SOTS) account.',`${Math.round(regShare*100)}% of market time in the Regular account.`,Math.max(0,regShare-.15)/.85*10,10);
+  const score=Math.max(0,100-ind.reduce((a,x)=>a+x.pen,0));
+  const lab=score>=80?'Homo Islamicus':score>=60?'Leaning Homo Islamicus':score>=40?'Between the two':score>=20?'Leaning Homo Economicus':'Homo Economicus';
+  const txt=score>=80?'Your choices stayed inside sharia limits even when the Regular account offered leverage or a quicker profit. You treated the rules on riba, gharar, and maysir as part of the decision, not as an obstacle to it.'
+    :score>=60?'You mostly kept to sharia limits, with a few choices driven by profit alone. The indicators with points deducted show the moments when the economicus in you won.'
+    :score>=40?'Your behaviour mixed both models. Sometimes the rules guided you; sometimes leverage, short selling, or speculation did. Ask what would have changed if every trade had to pass the SOTS test.'
+    :score>=20?'Profit maximisation drove most of your choices. You used tools that sharia investing rules out. The Regular account allowed it, but this is the behaviour of homo economicus.'
+    :'You acted as a pure profit maximiser: leverage, short selling, and non-sharia stocks whenever they promised a return. Compare your result with a SOTS-only strategy.';
+  return {ind,score,lab,txt}}
+function feedback(g,b){const pos=[],imp=[],st=S.stats;
+  if(g.alpha>=0)pos.push(`Your return beat the ISSI benchmark by ${g.alpha.toFixed(2).replace('.',',')} percentage points.`);
+  else imp.push(`Your return trailed the ISSI by ${(-g.alpha).toFixed(2).replace('.',',')} percentage points. Find the trade that cost you most and ask whether it followed a plan or a headline.`);
+  if(g.nM>=12)pos.push(`You completed ${g.nM} of ${MISSIONS.length} missions.`);
+  else imp.push(`Missions still open: ${MISSIONS.filter(m=>!S.missions[m.id]).slice(0,4).map(m=>m.title).join('; ')}.`);
+  if(g.purTot>0&&S.purDue<1)pos.push(`You purified all non-halal dividend income (${idr(S.purDone)}).`);
+  if(S.purDue>=1)imp.push(`${idr(S.purDue)} of dividend income still needs purification. It is not your income; give it to charity.`);
+  if(g.nonDes.length)imp.push(`You still hold ${g.nonDes.join(', ')}, which is outside the DES. In a SOTS account you cannot add to it; plan an orderly exit.`);
+  if(g.right>=2)pos.push(`You read the macro calendar well: ${g.right} of 3 calls were right.`);
+  if(g.made<3)imp.push(`You made ${g.made} of 3 macro calls. Commit to a view before each announcement, then compare it with the market's reaction.`);
+  else if(g.right<2)imp.push('Most of your macro calls missed. Read the consensus hints: markets react to the surprise against expectations.');
+  if(st.blockedDes+st.blockedShort+st.tempt>0)pos.push(`SOTS stopped ${st.blockedDes+st.blockedShort+st.tempt} prohibited order${st.blockedDes+st.blockedShort+st.tempt>1?'s':''} or order types. You saw the screening rules and the fatwas at work.`);
+  if(st.trades<3)imp.push('You placed fewer than 3 trades. Test your ideas; the simulator is the safe place to make mistakes.');
+  const sv=stockVal();if(sv>0){const top=Object.entries(S.hold).filter(([,h])=>h.sh>0).map(([tk,h])=>[tk,h.sh*S.mk[tk].p/sv]).sort((a,b)=>b[1]-a[1])[0];
+    if(top&&top[1]>.6)imp.push(`${Math.round(top[1]*100)}% of your stock value sits in ${top[0]}. Spread risk across sectors that react differently to rates, the rupiah, and commodities.`);
+    else if(st.tks.length>=3)pos.push(`You spread your trades over ${st.tks.length} different stocks.`)}
+  b.ind.filter(x=>x.pen>=6&&/Riba|Short|Speculation|Account/.test(x.k)).forEach(x=>imp.push(`${x.k}: ${x.ev} ${x.rule}`));
+  if(b.score>=80)pos.push(`Your behaviour profile is ${b.lab} (${b.score}/100).`);
+  if(!pos.length)pos.push('You registered and started the session. Every mission adds to your score.');
+  return {pos,imp}}
+function pdfReport(){const J=window.jspdf&&window.jspdf.jsPDF;
+  if(!J){$('pdf-note').textContent='The PDF library could not load. Check your internet connection and try again.';return}
+  ensureStats();const g=grade(),b=behaviour(),fb=feedback(g,b),doc=new J({unit:'mm',format:'a4'}),W=210,X=16,CW=W-2*X,BOT=276;let y=0;
+  const T=t=>String(t).replace(/[−–—]/g,'-').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/[^\x00-\xFF]/g,'');
+  const NAVY=[16,36,63],GOLD=[201,150,10],INK=[20,35,58],MUT=[93,107,128],UP=[15,138,79],DN=[196,54,43],LINE=[217,224,234],SOFT=[246,248,251],HAL=[15,110,106];
+  const font=(st,sz,c)=>{doc.setFont('helvetica',st);doc.setFontSize(sz);doc.setTextColor(...(c||INK))};
+  const page=()=>{doc.addPage();doc.setFillColor(...NAVY);doc.rect(0,0,W,13,'F');doc.setFillColor(...GOLD);doc.rect(0,13,W,.8,'F');
+    font('bold',9.5,[255,255,255]);doc.text('Bursa Syariah Simulator',X,8.4);font('normal',8.5,[199,210,226]);doc.text(T(`${USER.name}  |  NIM ${USER.nim}`),W-X,8.4,{align:'right'});y=24};
+  const need=h=>{if(y+h>BOT)page()};
+  const h2=(t,sub)=>{need(18);font('bold',11,NAVY);doc.text(T(t).toUpperCase(),X,y);doc.setDrawColor(...GOLD);doc.setLineWidth(.8);doc.line(X,y+2,X+14,y+2);y+=6.5;
+    if(sub){font('normal',8.5,MUT);const L=doc.splitTextToSize(T(sub),CW);doc.text(L,X,y);y+=L.length*3.6+1.5}y+=1};
+  const bullet=(t,c)=>{font('normal',9.3);const L=doc.splitTextToSize(T(t),CW-6);need(L.length*4+1.5);doc.setFillColor(...c);doc.circle(X+1.4,y-1.2,1,'F');doc.text(L,X+5,y);y+=L.length*4+1.8};
+  const sgnC=v=>v>0?UP:v<0?DN:MUT;
+  const card=(x,yy,w,h)=>{doc.setFillColor(...SOFT);doc.setDrawColor(...LINE);doc.setLineWidth(.3);doc.roundedRect(x,yy,w,h,2,2,'FD')};
+
+  // ============ PAGE 1: identity, score, breakdown, behaviour summary, results
+  doc.setFillColor(...NAVY);doc.rect(0,0,W,30,'F');doc.setFillColor(...GOLD);doc.rect(0,30,W,1.2,'F');
+  font('bold',17,[255,255,255]);doc.text('Bursa Syariah Simulator',X,12.5);
+  font('normal',10,[255,255,255]);doc.text('Student performance report  |  Islamic Capital Market',X,19);
+  font('normal',8,[199,210,226]);doc.text('Learn Islamic Fintech with Tazkia  |  learnislamicfintech.tazkia.ac.id',X,25);
+  doc.text(T('Generated '+new Date().toLocaleString('id-ID')),W-X,25,{align:'right'});
+  y=40;const id=[['Name',USER.name],['NIM',USER.nim],['Class',USER.cls||'-'],['Registered',S.regAt||'-'],['Status',S.over?'Session complete (10 of 10 days)':`In progress: day ${S.day} of ${SESSION_DAYS} (provisional)`],['Account at the end',S.mode==='sots'?'SOTS (sharia)':'Regular']];
+  id.forEach(([k,v])=>{font('normal',8.8,MUT);doc.text(k,X,y);font('bold',9.8);doc.text(T(v),X+33,y,{maxWidth:84});y+=6});
+  // score + behaviour boxes
+  const bx=W-X-56;card(bx,35,56,35);
+  font('bold',7.5,MUT);doc.text('SIMULATION SCORE',bx+28,41,{align:'center'});
+  font('bold',28,NAVY);doc.text(String(g.total),bx+22,55,{align:'center'});font('normal',9,MUT);doc.text('/ 100',bx+34,55);
+  doc.setFillColor(...GOLD);doc.roundedRect(bx+16,59,24,7.5,1.5,1.5,'F');font('bold',10.5,NAVY);doc.text('Grade '+g.letter,bx+28,64.3,{align:'center'});
+  y=82;
+  h2('Score breakdown');
+  g.parts.forEach(pt=>{const r=Math.max(0,Math.min(1,pt.got/pt.max));font('bold',9.5);doc.text(T(pt.k),X,y);
+    doc.setFillColor(...LINE);doc.roundedRect(X+58,y-2.7,70,3,1,1,'F');doc.setFillColor(...(r>=.7?UP:r>=.4?GOLD:DN));if(r>0)doc.roundedRect(X+58,y-2.7,Math.max(2,70*r),3,1,1,'F');
+    font('bold',9.5,NAVY);doc.text(`${pt.got.toFixed(1).replace('.',',')} / ${pt.max}`,W-X,y,{align:'right'});
+    y+=4;font('normal',8,MUT);doc.text(T(pt.note),X,y,{maxWidth:CW});y+=6});
+  y+=2;h2('Behaviour profile','Where your decisions sit between homo economicus and homo islamicus. Not part of the score; details on page 3.');
+  // gauge
+  const gx=X,gw=CW,gy=y+2,steps=40;for(let k=0;k<steps;k++){const t=k/(steps-1);doc.setFillColor(Math.round(DN[0]+(UP[0]-DN[0])*t),Math.round(DN[1]+(UP[1]-DN[1])*t),Math.round(DN[2]+(UP[2]-DN[2])*t));doc.rect(gx+gw*k/steps,gy,gw/steps+.2,5,'F')}
+  [20,40,60,80].forEach(v=>{doc.setDrawColor(255,255,255);doc.setLineWidth(.6);doc.line(gx+gw*v/100,gy,gx+gw*v/100,gy+5)});
+  const mx=gx+gw*b.score/100;doc.setFillColor(...NAVY);doc.triangle(mx-2.4,gy-3.2,mx+2.4,gy-3.2,mx,gy+.4,'F');doc.setDrawColor(...NAVY);doc.setLineWidth(.8);doc.line(mx,gy,mx,gy+5);
+  font('bold',8,DN);doc.text('Homo Economicus',gx,gy+9.5);font('bold',8,UP);doc.text('Homo Islamicus',gx+gw,gy+9.5,{align:'right'});
+  font('normal',7.5,MUT);doc.text('Between the two',gx+gw/2,gy+9.5,{align:'center'});
+  y=gy+16;font('bold',12,NAVY);doc.text(T(`${b.lab}  (${b.score} / 100)`),X,y);y+=5.5;
+  font('normal',9.3);const bl=doc.splitTextToSize(T(b.txt),CW);doc.text(bl,X,y);y+=bl.length*4+4;
+  h2('Portfolio results');
+  const kv=[['Starting capital',idr(START_CASH)],['Final equity',idr(g.eq)],['Return (incl. purification given)',fpct(g.ret)],['ISSI over the session',fpct(g.ixRet)],['Difference vs ISSI',(g.alpha>=0?'+':'')+g.alpha.toFixed(2).replace('.',',')+' pp'],['Realised profit or loss',S.stats.est?'n/a (older save)':idr(S.stats.realised)],['Fees and tax paid',S.stats.est?'n/a (older save)':idr(S.stats.fees)],['Purified to charity',idr(S.purDone)],['Trades matched',String(S.stats.trades)],['Prohibited orders stopped by SOTS',String(S.stats.blockedDes+S.stats.blockedShort+S.stats.tempt)]];
+  const colW=(CW-8)/2;kv.forEach(([k,v],i)=>{const cx=X+(i%2)*(colW+8);if(i%2===0){need(6.5);if((i/2)%2===0){doc.setFillColor(...SOFT);doc.rect(X-1.5,y-4.2,CW+3,6.2,'F')}}
+    font('normal',8.8,MUT);doc.text(T(k),cx,y);font('bold',9.3,/Return|Difference/.test(k)?sgnC(k==='Difference vs ISSI'?g.alpha:g.ret):INK);doc.text(T(v),cx+colW,y,{align:'right'});if(i%2===1)y+=6.2});
+
+  y+=6;need(24);card(X,y-4,CW,22);font('bold',8.5,NAVY);doc.text('How to read this report',X+4,y+1.5);
+  font('normal',8,MUT);doc.text(doc.splitTextToSize('Score (0-100): missions 35, sharia compliance 20, macro calls 15, performance against the ISSI 20, activity 10. Grades: A 85+, A- 80, B+ 75, B 70, B- 65, C+ 60, C 55, D 40, E below 40. The behaviour profile is a separate lens on your choices and does not change the score.',CW-8),X+4,y+6.5);y+=22;
+  // ============ PAGE 2: chart, holdings, macro calls, missions
+  page();
+  const pts=[{d:0,r:0,i:0}].concat((S.eqHist||[]).map(h=>({d:h.d,r:pct(h.eq,START_CASH),i:pct(h.ix,215)})));
+  if(!S.over)pts.push({d:S.day-1+S.t/TICKS_PER_DAY,r:g.ret,i:g.ixRet});
+  h2('Your equity against the ISSI','Cumulative return at each daily close. The ISSI is the benchmark for a sharia stock investor.');
+  {const cx=X+11,cy=y,cw=CW-13,ch=50;card(X,cy-3,CW,ch+12);
+    let mn=Math.min(...pts.map(p=>Math.min(p.r,p.i)),-1),mx=Math.max(...pts.map(p=>Math.max(p.r,p.i)),1);const pad=(mx-mn)*.12;mn-=pad;mx+=pad;
+    const PX=d=>cx+cw*d/SESSION_DAYS,PY=v=>cy+ch*(1-(v-mn)/(mx-mn));
+    doc.setLineWidth(.2);for(let k=0;k<=4;k++){const v=mn+(mx-mn)*k/4;doc.setDrawColor(...LINE);doc.line(cx,PY(v),cx+cw-3,PY(v));font('normal',7,MUT);doc.text(v.toFixed(1).replace('.',',')+'%',cx-1.5,PY(v)+1,{align:'right'})}
+    for(let d=0;d<=SESSION_DAYS;d+=1){font('normal',7,MUT);doc.text(d?'D'+d:'Start',Math.min(PX(d),cx+cw-4),cy+ch+4.5,{align:'center'})}
+    if(mn<0&&mx>0){doc.setDrawColor(...MUT);doc.setLineWidth(.3);doc.line(cx,PY(0),cx+cw-3,PY(0))}
+    const ln=(key,c,w)=>{doc.setDrawColor(...c);doc.setLineWidth(w);for(let k=1;k<pts.length;k++)doc.line(PX(pts[k-1].d),PY(pts[k-1][key]),PX(pts[k].d),PY(pts[k][key]));const last=pts[pts.length-1];doc.setFillColor(...c);doc.circle(PX(last.d),PY(last[key]),.9,'F')};
+    if(pts.length>1){ln('i',GOLD,.8);ln('r',NAVY,1.1)}else{font('normal',9,MUT);doc.text('The chart fills in after your first daily close.',cx+cw/2,cy+ch/2,{align:'center'})}
+    doc.setFillColor(...NAVY);doc.rect(cx+2,cy-.5,6,1.4,'F');font('bold',7.8,NAVY);doc.text('You',cx+9.5,cy+.9);doc.setFillColor(...GOLD);doc.rect(cx+20,cy-.5,6,1.4,'F');font('bold',7.8,GOLD);doc.text('ISSI',cx+27.5,cy+.9);
+    y=cy+ch+16}
+  h2('Holdings at the end');
+  const hs=Object.entries(S.hold);
+  if(!hs.length){font('normal',9.3,MUT);doc.text('No stocks held.',X,y);y+=7}else{
+    const cols=[['Stock',X,0],['Sharia status',X+30,0],['Lot',X+82,1],['Average',X+108,1],['Last',X+134,1],['Profit or loss',W-X,1]];
+    doc.setFillColor(...NAVY);doc.rect(X,y-4.3,CW,6.3,'F');font('bold',8.3,[255,255,255]);cols.forEach(([c,x,r])=>doc.text(c,r?x-(x===W-X?2:0):x+2,y,r?{align:'right'}:undefined));y+=6.3;
+    hs.forEach(([tk,h],i)=>{need(6.4);const q=S.mk[tk],pl=(q.p-h.avg)*h.sh;if(i%2){doc.setFillColor(...SOFT);doc.rect(X,y-4.2,CW,6.2,'F')}
+      font('bold',9.3);doc.text(tk+(h.sh<0?' (short)':''),X+2,y);font('bold',8.6,inDES(BY[tk])?HAL:DN);doc.text(inDES(BY[tk])?'In DES':'Not in DES',X+30,y);
+      font('normal',9.3);doc.text(num(h.sh/100),X+82,y,{align:'right'});doc.text(num(h.avg),X+108,y,{align:'right'});doc.text(num(q.p),X+134,y,{align:'right'});font('bold',9.3,sgnC(pl));doc.text(T(idr(pl)),W-X-2,y,{align:'right'});y+=6.2});
+    y+=3}
+  h2('Macro calls','Your prediction before each announcement, and what actually happened.');
+  EVENTS.filter(e=>e.call).forEach(e=>{const M=S.macro||{calls:{},st:{}},c=M.calls[e.id],st=M.st[e.id];const lab=c?e.call.find(x=>x[0]===c)[1]:'No call made';
+    const out=st&&!st.skip?st.head:st&&st.skip?'Before your session started':'Not announced yet';need(15);card(X,y-4.5,CW,13);
+    font('bold',9.3);doc.text(T(e.title),X+3,y);font('normal',8.6,MUT);doc.text(T(`Your call: ${lab}`),X+3,y+5);doc.text(T(`Outcome: ${out}`),X+60,y+5,{maxWidth:CW-90});
+    const tag=st&&c&&!st.skip?(st.ok?['RIGHT',UP]:['MISSED',DN]):[c?'PENDING':'NO CALL',MUT];doc.setFillColor(...tag[1]);doc.roundedRect(W-X-22,y-2.5,19,6,1.2,1.2,'F');font('bold',7.8,[255,255,255]);doc.text(tag[0],W-X-12.5,y+1.6,{align:'center'});y+=15});
+  h2(`Missions (${g.nM} of ${MISSIONS.length})`);
+  {const half=Math.ceil(MISSIONS.length/2);need(half*6+2);const my=y;
+    MISSIONS.forEach((m,i)=>{const cx=X+(i<half?0:CW/2+2),yy=my+(i%half)*6,ok=S.missions[m.id];doc.setLineWidth(.3);doc.setDrawColor(...(ok?UP:MUT));doc.setFillColor(...(ok?UP:[255,255,255]));doc.roundedRect(cx,yy-3,3.6,3.6,.6,.6,'FD');
+      if(ok){doc.setDrawColor(255,255,255);doc.setLineWidth(.55);doc.line(cx+.8,yy-1.3,cx+1.6,yy-.5);doc.line(cx+1.6,yy-.5,cx+2.9,yy-2.3)}font(ok?'bold':'normal',8.8,ok?INK:MUT);doc.text(T(m.title),cx+5.5,yy,{maxWidth:CW/2-8})});
+    y=my+half*6+3}
+
+  // ============ PAGE 3: behaviour analysis, feedback, reflection
+  page();
+  h2('Behaviour analysis: homo islamicus or homo economicus?');
+  {const w=(CW-6)/2,top=y;const defs=[['Homo Economicus',DN,'The rational self-interested agent of conventional economics. Maximises personal wealth or utility; the only limits are budget and law. Interest, leverage, and short selling are simply tools.'],
+      ['Homo Islamicus',UP,'The agent of Islamic economics. Seeks falah (success in this life and the next) and maslahah. Treats wealth as an amanah, avoids riba, gharar, and maysir, and purifies non-halal income. Profit is pursued within sharia limits.']];
+    let hmax=0;defs.forEach(([t,c,d],i)=>{const L=doc.splitTextToSize(T(d),w-8);hmax=Math.max(hmax,L.length*3.7+12)});
+    defs.forEach(([t,c,d],i)=>{const x=X+i*(w+6);card(x,top-4,w,hmax);doc.setFillColor(...c);doc.rect(x,top-4,1.6,hmax,'F');font('bold',9.8,c);doc.text(t,x+5,top+1.5);font('normal',8.4);doc.text(doc.splitTextToSize(T(d),w-8),x+5,top+6.5)});
+    y=top+hmax+3;font('italic',7.6,MUT);doc.text('Concepts from the Islamic economics literature, for example M. Umer Chapra (Islam and the Economic Challenge, 1992) and M. Nejatullah Siddiqi.',X,y);y+=7}
+  {const c1=X,c2=X+64,c3=W-X,w1=60,w2=c3-c2-26;doc.setFillColor(...NAVY);doc.rect(X,y-4.3,CW,6.3,'F');font('bold',8.3,[255,255,255]);doc.text('Indicator and rule',c1+2,y);doc.text('What you did',c2,y);doc.text('Deducted',c3-2,y,{align:'right'});y+=6.5;
+    b.ind.forEach((x,i)=>{const L1=doc.splitTextToSize(T(x.rule),w1-2),L2=doc.splitTextToSize(T(x.ev),w2);const h=Math.max(5+L1.length*3.4,L2.length*4)+3;need(h);
+      if(i%2){doc.setFillColor(...SOFT);doc.rect(X,y-4,CW,h,'F')}
+      font('bold',9.2);doc.text(T(x.k),c1+2,y);font('normal',7.8,MUT);doc.text(L1,c1+2,y+4.2);font('normal',8.8);doc.text(L2,c2,y);
+      font('bold',9.2,x.pen>0?DN:UP);doc.text(x.pen>0?`-${x.pen} / ${x.max}`:`0 / ${x.max}`,c3-2,y,{align:'right'});y+=h});
+    doc.setDrawColor(...NAVY);doc.setLineWidth(.4);doc.line(X,y-2,W-X,y-2);font('bold',9.6,NAVY);doc.text('Behaviour index (100 minus deductions)',c1+2,y+3);doc.text(T(`${b.score} / 100  |  ${b.lab}`),c3-2,y+3,{align:'right'});y+=11}
+  h2('What went well');fb.pos.forEach(t=>bullet(t,UP));y+=1;
+  h2('What to improve');(fb.imp.length?fb.imp:['Nothing major. Try a different strategy in a new session and compare the result.']).forEach(t=>bullet(t,DN));y+=1;
+  page();h2('Reflection','Answer before you submit. Write by hand on a printout or type into the PDF.');
+  ['1. Which sharia rule changed one of your decisions, and why?','2. Based on your behaviour profile, were you closer to homo islamicus or homo economicus? Give one example from your trades.'].forEach(q=>{need(30);font('bold',9.2);const L=doc.splitTextToSize(T(q),CW);doc.text(L,X,y);y+=L.length*4+1;doc.setDrawColor(...LINE);doc.setLineWidth(.3);for(let k=0;k<9;k++){y+=7.5;doc.line(X,y,W-X,y)}y+=10});
+  need(20);y+=6;doc.setDrawColor(...MUT);doc.line(X,y,X+62,y);doc.line(W-X-62,y,W-X,y);font('normal',8.5,MUT);doc.text('Student signature',X,y+4.5);doc.text('Lecturer: final score and notes',W-X-62,y+4.5);
+  // footer on every page
+  const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setDrawColor(...LINE);doc.setLineWidth(.3);doc.line(X,284,W-X,284);font('normal',7.2,MUT);
+    doc.text(T(`${USER.name}  |  NIM ${USER.nim}  |  Score ${g.total}/100 (${g.letter})  |  ${b.lab}`),X,288.5);doc.text(`Page ${i} of ${n}`,W-X,288.5,{align:'right'});
+    doc.text('Automatic formative score from the simulator. The lecturer makes the final assessment.',X,292.3)}
+  doc.save(`Bursa-Syariah-Report-${String(USER.nim).replace(/[^\w-]/g,'')}.pdf`);
+  $('pdf-note').textContent=`Report downloaded: ${g.total}/100 (${g.letter}), ${b.lab}.${S.over?'':' This is provisional; download again after Day 10.'}`}
+document.addEventListener('click',e=>{if(e.target.closest('[data-pdf]')&&S&&USER)pdfReport()});
+
 function showEnd(){render();$('end-report').innerHTML=$('report').innerHTML;$('endwrap').hidden=false}
 $('end-review').onclick=()=>{$('endwrap').hidden=true;document.getElementById('tab-journal').click();$('p-journal').scrollIntoView({behavior:'smooth'})};
 $('end-new').onclick=()=>{try{localStorage.removeItem(keyOf(USER.nim))}catch(e){}S=fresh();S.regAt=new Date().toLocaleString('id-ID');applyAdj();renderScreen();$('endwrap').hidden=true;ipoSig='';
   news('New session started. You have 20 minutes and Rp100.000.000 in a SOTS account.');setMode('sots');setSide('buy');select(S.sel);save();restart()};
 function login(u){
   USER=u;let st=null;try{st=JSON.parse(localStorage.getItem(keyOf(u.nim))||'null')}catch(e){}
-  S=(st&&st.mk&&st.mk.HALA)?st:fresh();if(!S.ipo||!S.ipo.v2){const old=S.ipo||{};S.ipo=freshIpo();if(S.day>1||old.lots){S.ipo.legacy=true;S.ipo.final=250;if(old.locked){S.cash+=old.locked}S.ipo.dist=true;S.ipo.allotted=old.allotted||0;S.ipo.lots=old.lots||0}}if(!S.regAt)S.regAt=new Date().toLocaleString('id-ID');ensureMacro();applyAdj();renderScreen();
+  S=(st&&st.mk&&st.mk.HALA)?st:fresh();if(!S.ipo||!S.ipo.v2){const old=S.ipo||{};S.ipo=freshIpo();if(S.day>1||old.lots){S.ipo.legacy=true;S.ipo.final=250;if(old.locked){S.cash+=old.locked}S.ipo.dist=true;S.ipo.allotted=old.allotted||0;S.ipo.lots=old.lots||0}}if(!S.regAt)S.regAt=new Date().toLocaleString('id-ID');ensureMacro();ensureStats();applyAdj();renderScreen();
   const list=users().filter(x=>x.nim!==u.nim);list.unshift(u);try{localStorage.setItem(UKEY,JSON.stringify(list.slice(0,40)))}catch(e){}
   try{localStorage.setItem(KEY+'-last',u.nim)}catch(e){}
   $('who-name').textContent=u.name;$('who-nim').textContent=u.nim;$('regwrap').hidden=true;
   if(!S.news.length) news(`Welcome, ${esc(u.name)}. You start with Rp100.000.000 in a SOTS account. The HALA IPO starts today: read the prospectus in the IPO process tab. Watch the economic calendar: BPS inflation is out at 10:55, and Bank Indonesia decides the BI Rate tomorrow.`);
   ipoSig='';paused=false;$('btn-pause').setAttribute('aria-pressed','false');$('btn-pause').textContent='Pause';
-  setMode(S.mode);$('use-margin').checked=!!S.margin;setSide('buy');select(S.sel);save();restart();
+  setMode(S.mode);otype=S.margin&&S.mode==='reg'?'margin':'cash';document.querySelectorAll('[data-ot]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ot===otype));$('use-margin').checked=!!S.margin;setSide('buy');select(S.sel);save();restart();
   if(S.over)showEnd();
 }
 function showReg(){clearInterval(timer);save();$('flash').hidden=true;$('endwrap').hidden=true;
