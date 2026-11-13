@@ -192,6 +192,8 @@ function msg(id,t,k){const m=$(id);m.className='msg show '+(k||'ok');m.textConte
 function phaseMins(t){return t<8?525+t*15/8:t<58?540+(t-8)*180/50:t<68?720+(t-58)*90/10:t<114?810+(t-68)*140/46:950+(t-114)*10/6}
 const hhmm=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(Math.floor(m%60)).padStart(2,'0');
 const tickNow=()=>BSKelas.tickAt(ctl,BSKelas.now());
+// pause, end, and issues take effect a few seconds ahead, so every device (slightly fast or slow) lands on the same tick
+const lead=s=>Math.ceil(s*1000/ctl.tickMs)+1;
 function when(g){const d=Math.min(ctl.days,Math.floor(g/ctl.tpd)+1),t=g>=ctl.days*ctl.tpd?ctl.tpd-1:g%ctl.tpd;return `Hari ${d} · ${hhmm(phaseMins(t))}`}
 function store(){try{localStorage.setItem(SAVE,JSON.stringify({code,name:ctl&&ctl.name,created:ctl&&ctl.created}))}catch(e){}}
 
@@ -226,9 +228,9 @@ function showLive(){$('setup').hidden=true;$('live').hidden=false;$('code').text
 
 // ---------- controls
 $('b-start').onclick=async()=>{if(ctl.state==='lobby'){ctl.state='run';ctl.baseTick=0;ctl.baseTime=BSKelas.now()}else if(ctl.state==='pause'){ctl.state='run';ctl.baseTime=BSKelas.now()}await publish()};
-$('b-pause').onclick=async()=>{if(ctl.state!=='run')return;ctl.baseTick=tickNow();ctl.state='pause';await publish()};
+$('b-pause').onclick=async()=>{if(ctl.state!=='run')return;ctl.baseTick=Math.min(ctl.days*ctl.tpd,tickNow()+lead(2.5));ctl.state='pause';await publish()};
 $('b-end').onclick=async()=>{if(armed!=='end'){armed='end';$('b-end').textContent='Klik lagi untuk mengakhiri';setTimeout(()=>{armed=null;$('b-end').textContent='Akhiri kelas'},4000);return}
-  armed=null;$('b-end').textContent='Akhiri kelas';ctl.baseTick=tickNow();ctl.state='end';await publish()};
+  armed=null;$('b-end').textContent='Akhiri kelas';ctl.baseTick=Math.min(ctl.days*ctl.tpd,tickNow()+lead(2.5));ctl.state='end';await publish()};
 $('l-reg').onchange=async e=>{ctl.allowReg=e.target.checked;await publish()};
 $('b-new').onclick=()=>{if(armed!=='new'){armed='new';$('b-new').textContent='Klik lagi: buka kelas baru';setTimeout(()=>{armed=null;$('b-new').textContent='Kelas baru'},4000);return}
   try{CH.close()}catch(e){}location.reload()};
@@ -248,7 +250,7 @@ $('i-go').onclick=()=>{const t=$('i-title').value.trim();if(t.length<5){msg('i-m
   send({title:t,body:$('i-body').value.trim(),imp,mkt})};
 $('n-go').onclick=()=>{const t=$('i-title').value.trim();if(t.length<5){msg('i-msg','Tulis isi pengumuman di kolom judul.','err');return}send({title:t,body:$('i-body').value.trim(),kind:'note'})};
 async function send(p){if(!ctl)return;if(ctl.state==='end'){msg('i-msg','Kelas sudah berakhir.','err');return}
-  const ev=Object.assign({kind:'issue'},p,{id:'e'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36),tick:tickNow()+8,at:Date.now()});
+  const ev=Object.assign({kind:'issue'},p,{id:'e'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36),tick:tickNow()+Math.max(8,lead(5)),at:Date.now()});
   ctl.events=(ctl.events||[]).concat([ev]);log=ctl.events.slice();await publish();
   msg('i-msg',`Terkirim: "${p.title}". Berlaku di ${when(ev.tick)}${ctl.state==='run'?'':' (setelah pasar berjalan)'}.`);$('i-title').value='';$('i-body').value=''}
 

@@ -28,13 +28,20 @@ window.BSKelas = (function () {
     return JSON.parse(dec.decode(pt));
   }
 
-  // server clock: the site's HTTP Date header, so every device agrees on "now" within about a second
+  // server clock from the site's HTTP Date header. The header only has whole seconds, so we sample it
+  // for about 1,3 s and catch the moment the second changes: that pins "now" to roughly 0,1 s on every device.
   let offset = 0;
   async function syncClock() {
     if (location.protocol === 'file:') return 0;
+    const sample = async () => { const t0 = Date.now(); const r = await fetch(location.pathname + '?clock=' + t0 + Math.random(), { method: 'HEAD', cache: 'no-store' }); const t1 = Date.now();
+      return { mid: (t0 + t1) / 2, rtt: t1 - t0, sec: Date.parse(r.headers.get('date')) } };
     try {
-      const t0 = Date.now(); const r = await fetch(location.pathname + '?clock=' + t0, { method: 'HEAD', cache: 'no-store' }); const t1 = Date.now();
-      const d = Date.parse(r.headers.get('date')); if (d) offset = d + 500 - (t0 + t1) / 2;
+      let prev = await sample(); if (!prev.sec) return 0; offset = prev.sec + 500 - prev.mid;
+      for (let i = 0; i < 16; i++) {
+        await new Promise(r => setTimeout(r, 80)); const s = await sample(); if (!s.sec) break;
+        if (s.sec > prev.sec) { const edge = (prev.mid + s.mid) / 2; offset = s.sec - edge; break }
+        prev = s;
+      }
     } catch (e) { }
     return offset;
   }

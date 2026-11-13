@@ -1435,7 +1435,7 @@ function publishStatus(force){if(!CH||!S.room||!myId)return;const n=Date.now();i
 function classStep(){if(!S||!S.room||!CTL)return;const target=BSKelas.tickAt(CTL,BSKelas.now());let g=gIdx(),n=0;
   catching=target-g>4;while(g<target&&!S.over&&n<2500){tick();g=gIdx();n++}catching=false;
   classEvents(true);
-  if(CTL.state==='end'&&!S.over){S.over=true;news('Your lecturer has ended the class. See your report card.');save();showEnd()}
+  if(CTL.state==='end'&&!S.over&&gIdx()>=target){S.over=true;news('Your lecturer has ended the class. See your report card.');save();showEnd()}
   const t=Date.now();if(n||t-lastR>900){render();renderClass();lastR=t}if(t-lastSave>5000){save();lastSave=t}publishStatus(false)}
 async function joinClass(u){const m=$('r-msg');m.className='msg show ok';m.textContent='Connecting to the class…';$('r-go').disabled=true;
   if(!window.BSKelas||!window.mqtt||!window.crypto||!crypto.subtle){m.className='msg show err';m.textContent='Class mode needs an internet connection and a modern browser. Reload the page and try again.';$('r-go').disabled=false;return}
