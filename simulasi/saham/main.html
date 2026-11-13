@@ -27,6 +27,7 @@
   --up:#3cc684; --down:#ff6b5e; --flat:#8d99ab; --up-soft:#103426; --down-soft:#3d1a18;
   --halal:#4fc7bf; --halal-soft:#0f302e; --warn:#ffb54a; --warn-soft:#3a2a10; color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;margin:0}
 .wrap{max-width:1440px;margin:0 auto;padding-inline:16px;padding-block:0 32px}
 .num,.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
@@ -204,6 +205,23 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
 .regcard form{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
 .regcard input[type=text]{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:9px 10px;width:100%}
 .regcard .go{background:var(--navy)}
+.modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.modes button{border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:8px 6px;text-align:left;display:flex;flex-direction:column;gap:2px;color:var(--ink)}
+.modes button b{font-size:.86rem}.modes button span{font-size:.72rem;color:var(--muted);line-height:1.25}
+.modes button[aria-pressed="true"]{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy);background:var(--gold-soft)}
+#r-code{font-family:var(--mono);font-size:1.2rem;letter-spacing:.2em;text-transform:uppercase}
+.classbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:12px 0 0;padding:9px 14px;border-radius:8px;background:var(--halal-soft);border:1px solid var(--halal);color:var(--ink);font-size:.9rem}
+.classbar[hidden]{display:none}
+.classbar b.code{font-family:var(--mono);letter-spacing:.12em}
+.classbar .st{font-weight:800;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:var(--halal);color:#fff}
+.classbar .st.wait{background:var(--warn)}.classbar .st.off{background:var(--down)}
+.lb{list-style:none;margin:0;padding:4px 0;font-size:.86rem;counter-reset:r}
+.lb li{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:6px;padding:4px 12px;align-items:center}
+.lb li .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb li.me{background:var(--gold-soft);font-weight:700}
+.lb li .k{font-family:var(--mono);color:var(--muted);font-size:.78rem}
+.lb li .r{font-family:var(--mono);font-size:.82rem}
+.lb li.gap{display:block;text-align:center;color:var(--muted);padding:0}
 .regcard p{margin:0;font-size:.88rem;color:var(--muted)}
 .known{display:flex;flex-direction:column;gap:6px;padding:0 20px 18px}
 .known button{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--line);background:var(--surface2);border-radius:6px;padding:8px 10px;text-align:left}
@@ -339,11 +357,18 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
   <div class="regcard">
     <div class="hd"><small>Islamic Financial Market and Institution</small><h2>Bursa Syariah Simulator</h2></div>
     <form id="reg-form" novalidate>
-      <p>Register before you trade. Your progress is saved under your NIM on this device, and your report card shows your name and NIM.</p>
+      <p>Register before you trade. Your progress is saved under your NIM on this device, and your report shows your name and NIM.</p>
+      <div class="field"><label>How do you want to play?</label>
+        <div class="modes" role="group" aria-label="Game mode">
+          <button type="button" data-mode="timed" aria-pressed="true"><b>20 minutes</b><span>Solo, 10 trading days on a clock</span></button>
+          <button type="button" data-mode="free" aria-pressed="false"><b>No time limit</b><span>Solo, play at your own pace</span></button>
+          <button type="button" data-mode="class" aria-pressed="false"><b>Join a class</b><span>Play together, with a code from your lecturer</span></button>
+        </div></div>
+      <div class="field" id="code-wrap" hidden><label for="r-code">Class code from your lecturer</label><input type="text" id="r-code" maxlength="8" autocomplete="off" placeholder="ABC123"></div>
       <div class="field"><label for="r-name">Full name (nama lengkap)</label><input type="text" id="r-name" autocomplete="name" maxlength="60"></div>
       <div class="field"><label for="r-nim">Student ID (NIM)</label><input type="text" id="r-nim" inputmode="numeric" maxlength="20"></div>
       <div class="field"><label for="r-cls">Class (optional)</label><input type="text" id="r-cls" maxlength="40" placeholder="e.g. PLKI FEB UI, Class A"></div>
-      <button class="go" type="submit">Start with Rp100.000.000</button>
+      <button class="go" type="submit" id="r-go">Start with Rp100.000.000</button>
       <div class="msg" id="r-msg" role="status"></div>
     </form>
     <div class="known" id="known"></div>
@@ -365,7 +390,7 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
 
 <div class="wrap">
   <div class="top">
-    <div class="brand"><h1>Bursa Syariah Simulator</h1><small><a href="./" style="color:#f2c200">← Learn Islamic Fintech</a> · 20-minute session · 10 trading days</small></div>
+    <div class="brand"><h1>Bursa Syariah Simulator</h1><small><a href="./" style="color:#f2c200">← Learn Islamic Fintech</a> · Islamic capital market · 10 trading days</small></div>
     <div class="clock"><span class="phase" id="phase">Pre-opening</span><span class="mono" id="simdate">Mon 16 Nov 2026</span><span class="mono" id="simclock">08:45</span><span class="phase" id="left" title="Session length: 10 trading days, 20 minutes at 1×">20:00 left</span></div>
     <div class="idx">
       <div>ISSI (sim)<b id="ix-issi">—</b></div>
@@ -376,10 +401,12 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
       <button id="btn-pause" aria-pressed="false">Pause</button>
       <button data-speed="1" aria-pressed="true">1×</button>
       <button data-speed="2" aria-pressed="false">2×</button>
+      <button data-speed="4" aria-pressed="false" id="sp4" hidden>4×</button>
       <button id="btn-skip">Skip to close</button>
     </div>
   </div>
   <div class="tape" aria-hidden="true"><div class="tape-in" id="tape"></div></div>
+  <div class="classbar" id="classbar" hidden></div>
   <div class="newsbar">
     <span class="lbl">Market news</span>
     <div class="nb-view" aria-live="off"><div class="nb-in" id="newsrun"></div></div>
@@ -424,6 +451,8 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
     <aside class="panel">
       <header><h2>Watchlist</h2><span class="est" id="wl-count"></span></header>
       <ul class="wl" id="watchlist"></ul>
+      <header style="border-top:1px solid var(--line)" id="lb-h" hidden><h2>Class leaderboard</h2><span class="est" id="lb-me"></span></header>
+      <ol class="lb" id="lb" hidden></ol>
       <header style="border-top:1px solid var(--line)"><h2>Economic calendar</h2><span class="est" id="cal-score"></span></header>
       <ul class="cal" id="cal"></ul>
     </aside>
@@ -559,6 +588,8 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="kelas.js"></script>
 <script>
 (function(){
 'use strict';
@@ -580,13 +611,13 @@ const STOCKS = [
 ];
 const IPO = {tk:'HALA',lo:230,hi:260,levels:[230,236,242,248,254,260],offer:8e6,pool:.3,fee:.02,listDay:6};
 const STAGES=[['Day 1','Prospectus and screening'],['Day 1 to 2','Book building'],['End of Day 2','Pricing and OJK effective'],['Day 3 to 4','Public offering (e-IPO)'],['End of Day 4','Allotment and refund'],['Day 5','Distribution to KSEI'],['Day 6','Listing on IDX']];
-function freshIpo(){const m=2.4+Math.random()*1.4,w=[.07,.11,.16,.21,.25,.20];
-  return {v2:1,screened:null,bb:null,final:null,inst:w.map(x=>Math.round(IPO.offer*m*x)),retailX:4+Math.random()*10,lots:0,locked:0,allotted:0,oversub:0,refund:0,dist:false}}
+function freshIpo(){const m=2.4+R()*1.4,w=[.07,.11,.16,.21,.25,.20];
+  return {v2:1,screened:null,bb:null,final:null,inst:w.map(x=>Math.round(IPO.offer*m*x)),retailX:4+R()*10,lots:0,locked:0,allotted:0,oversub:0,refund:0,dist:false}}
 function stageIdx(){const d=S.day,i=S.ipo;if(i.legacy)return 7;if(d<=2)return i.screened==='ok'?1:0;if(d<=4)return 3;if(d===5)return 5;return 7}
 function ipoHeld(){const i=S.ipo;return i.locked+(i.allotted&&!i.dist?i.allotted*100*i.final:0)}
 const BUY_FEE=.0015, SELL_FEE=.0025, START_CASH=100e6, SHORT_FEE=.0003;
 const loanRate=()=>((S&&S.macro?S.macro.bi:4.75)+7.25)/100/250;
-const TICKS_PER_DAY=120, KEY='plki-bursa-syariah-v1', SESSION_DAYS=10, TICK_MS=1000; // 10 days x 120 ticks x 1 s = 20 minutes at 1x
+const TICKS_PER_DAY=120, KEY='plki-bursa-syariah-v1', SESSION_DAYS=10;let TICK_MS=1000; // 10 days x 120 ticks x 1 s = 20 minutes at 1x
 const BY = Object.fromEntries(STOCKS.map(s=>[s.tk,s]));
 const issiPass = s => s.bizI && s.debt<=45 && s.nhi<=10;
 const globPass = s => s.bizG && s.debt<33.33 && s.nhi<5;
@@ -616,7 +647,10 @@ const num = n => Math.round(n).toLocaleString('id-ID');
 const pct = (a,b) => b? ((a-b)/b*100):0;
 const sgn = v => v>0?'up':v<0?'down':'flat';
 const fpct = v => (v>0?'+':'')+v.toFixed(2).replace('.',',')+'%';
-function gauss(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+// market randomness: Math.random when solo; a seeded generator in class mode so every student sees the same market
+let R=Math.random;
+function seeded(){let a=(S.rng=(S.rng+0x6D2B79F5)|0);a=Math.imul(a^a>>>15,a|1);a^=a+Math.imul(a^a>>>7,a|61);return((a^a>>>14)>>>0)/4294967296}
+function gauss(){let u=0,v=0;while(!u)u=R();while(!v)v=R();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
 
 // ---------------------------------------------------------------- state
 function fresh(){
@@ -630,7 +664,7 @@ function users(){try{return JSON.parse(localStorage.getItem(UKEY)||'[]')}catch(e
 function keyOf(nim){return KEY+'-'+nim}
 const base={issi:0,comp:0};
 STOCKS.forEach(s=>{if(s.ipo)return;base.comp+=s.p*s.sh;if(inDES(s))base.issi+=s.p*s.sh});
-function save(){if(!USER||!S)return;try{localStorage.setItem(keyOf(USER.nim),JSON.stringify(S))}catch(e){}}
+function save(){if(!USER||!S)return;try{localStorage.setItem(stateKey(USER),JSON.stringify(S))}catch(e){}}
 
 let speed=1,paused=false,side='buy',timer,lastR=0,otype='cash';
 const $=id=>document.getElementById(id);
@@ -752,13 +786,13 @@ function stepPrices(){
     const {ara,arb}=limits(q.pc);
     let r=gauss()*s.vol/Math.sqrt(60)+.06*Math.log(q.fair/q.p)/60+mf*(BETA[s.tk]||1);
     if(q.momN>0){r+=q.mom;q.momN--}
-    if(Math.random()<.0025){const j=(Math.random()<.5?-1:1)*(.03+Math.random()*.05);r+=j;q.fair*=Math.exp(j*.8);
+    if(R()<.0025){const j=(R()<.5?-1:1)*(.03+R()*.05);r+=j;q.fair*=Math.exp(j*.8);
       news(j>0?`${s.tk}: strong buying after positive news (${s.sector}).`:`${s.tk}: selling pressure after weak quarterly numbers.`)}
-    if(s.tk==='DGTL'&&Math.random()<.003){r+=.08;news('DGTL: IDX flags Unusual Market Activity (UMA). Large bids appear and vanish. Is someone placing fake bids (najsy)?');S.uma={day:S.day,t:S.t}}
+    if(s.tk==='DGTL'&&R()<.003){r+=.08;news('DGTL: IDX flags Unusual Market Activity (UMA). Large bids appear and vanish. Is someone placing fake bids (najsy)?');S.uma={day:S.day,t:S.t}}
     let np=snap(q.p*Math.exp(r));np=Math.min(ara,Math.max(arb,np));
     if(np===ara&&q.p!==ara)news(`${s.tk} hits auto rejection upper (ARA) at ${num(ara)}.`);
     if(np===arb&&q.p!==arb)news(`${s.tk} hits auto rejection lower (ARB) at ${num(arb)}.`);
-    q.p=np;q.hi=Math.max(q.hi,np);q.lo=Math.min(q.lo,np);q.vol+=Math.round(20+Math.random()*400);
+    q.p=np;q.hi=Math.max(q.hi,np);q.lo=Math.min(q.lo,np);q.vol+=Math.round(20+R()*400);
   }
 }
 function openMarket(){
@@ -766,6 +800,8 @@ function openMarket(){
     const op=Math.min(ara,Math.max(arb,snap(q.pc*Math.exp(gauss()*s.vol*.35+(q.gap||0)))));q.gap=0;q.p=op;q.open=op;q.hi=op;q.lo=op}
   matchAll(true);
 }
+// charges on a Regular account: if cash runs out, the broker lends the rest (it joins the margin loan)
+function debit(a){if(S.cash>=a){S.cash-=a;return}S.loan+=a-S.cash;S.cash=0}
 function endOfDay(){
   // settlement T+2
   const due=S.recv.filter(r=>r.due<=S.day+1);
@@ -776,17 +812,17 @@ function endOfDay(){
   for(const s of STOCKS){if(!s.dps||s.rec!==S.day)continue;const h=S.hold[s.tk];const q=S.mk[s.tk];
     if(h&&h.sh>0){const amt=h.sh*s.dps,pur=amt*purRatio(s);S.cash+=amt;S.purDue+=pur;
       jour('Dividend',`${s.tk} pays ${idr(s.dps)} per share on ${num(h.sh/100)} lot = ${idr(amt)}. Purification due: ${idr(pur)} (${(purRatio(s)*100).toFixed(1).replace('.',',')}%).`,'Profit share as a musyarakah partner');done('div')}
-    if(h&&h.sh<0){const amt=-h.sh*s.dps;S.cash-=amt;jour('Dividend',`As a short seller you pay ${idr(amt)} of ${s.tk} dividend to the share lender`,'Cost of a short position',true)}
+    if(h&&h.sh<0){const amt=-h.sh*s.dps;debit(amt);jour('Dividend',`As a short seller you pay ${idr(amt)} of ${s.tk} dividend to the share lender`,'Cost of a short position',true)}
     news(`${s.tk} goes ex-dividend (${idr(s.dps)} per share). Tomorrow's reference price is adjusted.`);
     q.pc=snap(q.p-s.dps);q.p=q.pc;q.fair=Math.max(60,q.fair-s.dps)}
   // margin interest & short fee
   if(S.loan>0){const i=S.loan*loanRate();S.loan+=i;ensureStats();S.stats.interest+=i;jour('Interest',`Margin interest ${idr(i)} added to your loan`,'Riba: interest on a loan, prohibited in a sharia account',true)}
   let shortV=0;for(const tk in S.hold)if(S.hold[tk].sh<0)shortV+=-S.hold[tk].sh*S.mk[tk].p;
-  if(shortV>0){const f=shortV*SHORT_FEE;S.cash-=f;jour('Fee',`Share lending fee ${idr(f)} on short positions`,'Fee for borrowed shares',true)}
+  if(shortV>0){const f=shortV*SHORT_FEE;debit(f);jour('Fee',`Share lending fee ${idr(f)} on short positions`,'Fee for borrowed shares',true)}
   // IPO process
   const I=S.ipo;
   if(!I.legacy&&S.day===2&&!I.final){
-    const lv=IPO.levels,dem=lv.map((p,k)=>I.inst[k]+(I.bb&&I.bb.price===p?I.bb.lots:0));let fin=IPO.lo;
+    const lv=IPO.levels,dem=lv.map((p,k)=>I.inst[k]+(!S.room&&I.bb&&I.bb.price===p?I.bb.lots:0));let fin=IPO.lo;
     for(let k=lv.length-1;k>=0;k--){const cum=dem.slice(k).reduce((a,b)=>a+b,0);if(cum>=IPO.offer){fin=lv[k];break}}
     I.final=fin;news(`HALA book building closed. Final IPO price set at Rp${fin} from investor demand.`);
     jour('IPO pricing',`Book building closed. The underwriter and issuer set the final price at ${idr(fin)} per share${I.bb?`; your indicative bid was ${num(I.bb.lots)} lot at ${idr(I.bb.price)}`:''}.`,'Pricing: no contract yet; a book-building bid is only an indication of interest')}
@@ -804,7 +840,7 @@ function endOfDay(){
   if(S.day>=SESSION_DAYS){S.over=true;S.t=TICKS_PER_DAY-1;news('The 20-minute session is complete. The market is closed. See your report card.');save();clearInterval(timer);setTimeout(showEnd,50);return}
   S.day++;S.t=0;
   if(S.day===3&&!S.ipo.legacy)news(`OJK declares HALA's registration statement effective. Public offering opens today at Rp${S.ipo.final} through e-IPO.`);
-  if(S.day>=IPO.listDay&&!S.mk.HALA.listed){const q=S.mk.HALA,fp=S.ipo.final||250;q.listed=true;q.pc=fp;q.p=fp;q.fair=fp*(1.05+Math.min(.35,(S.ipo.oversub||5)/40));news(`HALA lists on the IDX today at the IPO price of Rp${fp}. Watch the first-day move.`);done('list')}
+  if(S.day>=IPO.listDay&&!S.mk.HALA.listed){const q=S.mk.HALA,fp=S.ipo.final||250;q.listed=true;q.pc=fp;q.p=fp;q.fair=fp*(1.05+Math.min(.35,(S.room?S.ipo.retailX:(S.ipo.oversub||5))/40));news(`HALA lists on the IDX today at the IPO price of Rp${fp}. Watch the first-day move.`);done('list')}
   for(const tk in S.mk){const q=S.mk[tk];q.open=null;q.hi=q.p;q.lo=q.p;q.vol=0;q.hist=[q.pc]}
   if(S.macro)S.macro.flow=0;
   news(`Day ${S.day} begins: ${dateOf(S.day)}.`);
@@ -837,17 +873,17 @@ const EVENTS=[
  {id:'des',day:9,t:30,kind:'Sharia',title:'OJK publishes the periodic Daftar Efek Syariah review',call:[['stay','PRPT stays in DES'],['out','PRPT leaves DES']],warn:[9,8]}
 ];
 const EVB=Object.fromEntries(EVENTS.map(e=>[e.id,e]));
-function freshMacro(){const pick=(a,w)=>{let r=Math.random(),k=0;for(;k<w.length-1;k++){if(r<w[k])break;r-=w[k]}return a[k]};
-  const prptOut=Math.random()<.55,dgtlIn=prptOut?Math.random()<.5:true;
+function freshMacro(){const pick=(a,w)=>{let r=R(),k=0;for(;k<w.length-1;k++){if(r<w[k])break;r-=w[k]}return a[k]};
+  const prptOut=R()<.55,dgtlIn=prptOut?R()<.5:true;
   return {v:1,bi:4.75,fx:16250,fxT:16250,cpi:2.7,coal:118,cpo:4120,flow:0,mood:0,k:1,st:{},calls:{},score:0,adj:{},desIn:[],desOut:[],
-    plan:{cpiLow:Math.random()<.5,fedHawk:Math.random()<.5,coalUp:Math.random()<.55,msciIn:pick(['BSYR','AGRO','SHJY','none'],[.38,.27,.25,.10]),msciOut:Math.random()<.7,cpoCut:Math.random()<.5,prptOut,dgtlIn}}}
+    plan:{cpiLow:R()<.5,fedHawk:R()<.5,coalUp:R()<.55,msciIn:pick(['BSYR','AGRO','SHJY','none'],[.38,.27,.25,.10]),msciOut:R()<.7,cpoCut:R()<.5,prptOut,dgtlIn}}}
 function applyAdj(){STOCKS.forEach((s,i)=>{s.debt=ORIG[i].debt;s.nhi=ORIG[i].nhi;Object.assign(s,(S&&S.macro&&S.macro.adj[s.tk])||{})})}
 function issiRaw(){let v=0;for(const s of STOCKS){if(s.ipo||!inDES(s))continue;v+=S.mk[s.tk].p*s.sh}return v}
 // move a stock's fair value; part shows at once, the rest drifts in over the next ticks
 function shock(tk,pct,now){const q=S.mk[tk];if(!q||!q.listed||!pct)return;const r=Math.log(1+pct/100);q.fair*=Math.exp(r);
   const ph=phase(S.t),im=now===undefined?.45:now;
   if(ph.open){const {ara,arb}=limits(q.pc);q.p=Math.min(ara,Math.max(arb,snap(q.p*Math.exp(r*im))));q.hi=Math.max(q.hi,q.p);q.lo=Math.min(q.lo,q.p)}else q.gap=(q.gap||0)+r*im;
-  q.mom=r*(1-im)*.8/45;q.momN=45;q.vol+=Math.round(2000+Math.random()*8000)}
+  q.mom=r*(1-im)*.8/45;q.momN=45;q.vol+=Math.round(2000+R()*8000)}
 function market(pct){for(const s of STOCKS)shock(s.tk,pct*(BETA[s.tk]||1)*.6,.5);S.macro.mood+=pct/100*.6}
 function fire(e){const M=S.macro,P=M.plan,st=M.st[e.id]={done:true,imp:{}};let head='',body='',why='',call=null;
   const hit=(tk,p)=>{st.imp[tk]=(st.imp[tk]||0)+p;shock(tk,p)};
@@ -855,7 +891,7 @@ function fire(e){const M=S.macro,P=M.plan,st=M.st[e.id]={done:true,imp:{}};let h
     if(P.cpiLow){market(.5);hit('PRPT',2.5);hit('DGTL',2);hit('SEMN',1.5);body='Lower than expected. Traders now bet that Bank Indonesia can cut the BI Rate tomorrow.'}
     else{market(-.6);hit('PRPT',-3);hit('DGTL',-2.5);hit('SEMN',-1.5);body='Higher than expected. A rate cut tomorrow looks less likely; some even fear a hike.'}
     why='Inflation shapes the BI Rate outlook. Rate-sensitive sectors (property, cement, growth tech) react first.'}
-  if(e.id==='bi'){const pr=P.cpiLow?{cut:.55,hold:.4,hike:.05}:{cut:.1,hold:.6,hike:.3};const r=Math.random();
+  if(e.id==='bi'){const pr=P.cpiLow?{cut:.55,hold:.4,hike:.05}:{cut:.1,hold:.6,hike:.3};const r=R();
     const out=r<pr.cut?'cut':r<pr.cut+pr.hold?'hold':'hike';st.out=out;const dir={cut:-1,hold:0,hike:1};
     const exp=pr.cut*-1+pr.hike*1,sur=dir[out]-exp;M.bi=+(M.bi+dir[out]*.25).toFixed(2);
     head=`BI Rate ${out==='cut'?'cut to':out==='hike'?'raised to':'held at'} ${M.bi.toFixed(2).replace('.',',')}%`;
@@ -877,7 +913,7 @@ function fire(e){const M=S.macro,P=M.plan,st=M.st[e.id]={done:true,imp:{}};let h
   if(e.id==='cpo'){const c=P.cpoCut;M.cpo=c?4380:3890;head=c?'CPO export levy cut to support planters':'CPO export levy raised to fund biodiesel';hit('AGRO',c?5.5:-5);
     body=c?'Exporters keep more of the world price. AGRO rallies.':'A higher levy cuts what planters earn on exports. AGRO drops.';
     why='Government policy can shift a whole sector in one announcement. Read the regulation, not just the headline.'}
-  if(e.id==='fx'){const weak=P.fedHawk?Math.random()<.7:Math.random()<.35;M.fxT+=weak?260:-220;head=`Rupiah ${weak?'weakens past':'strengthens to'} ${num(M.fxT)} per US$`;
+  if(e.id==='fx'){const weak=P.fedHawk?R()<.7:R()<.35;M.fxT+=weak?260:-220;head=`Rupiah ${weak?'weakens past':'strengthens to'} ${num(M.fxT)} per US$`;
     if(weak){market(-.8);hit('SHJY',-2.5);hit('RSIA',-1.5);hit('TMBG',2);hit('AGRO',2);M.flow-=200;body='Importers of raw materials and equipment lose; exporters of coal and palm oil gain in rupiah terms.'}
     else{market(.7);hit('SHJY',2);hit('RSIA',1.2);hit('TMBG',-1.5);hit('AGRO',-1);M.flow+=180;body='Importers gain from cheaper dollars; exporters earn fewer rupiah per dollar.'}
     why='The exchange rate is a cost for some firms and revenue for others. Check where a company buys and sells.'}
@@ -898,15 +934,26 @@ function fire(e){const M=S.macro,P=M.plan,st=M.st[e.id]={done:true,imp:{}};let h
   else if(e.call&&!M.calls[e.id])callTxt='You made no call on this one.';
   news(`<b>${e.kind}:</b> ${head}. ${body}`);jour('Macro',`${head}. ${body}`,why);
   showFlash(e,st,callTxt)}
-function macroTick(){const M=S.macro;if(!M)return;
+let CTL=null,CH=null,catching=false,myId='',lastPub=0,lastSave=0,BOARD=null;
+const gIdx=()=>(S.day-1)*TICKS_PER_DAY+S.t;
+function classEvents(late){if(!CTL||!S.room)return;if(!S.evDone)S.evDone=[];const g=gIdx();
+  for(const ev of CTL.events||[]){if(S.evDone.includes(ev.id))continue;if(ev.tick===g||(late&&ev.tick<g))applyIssue(ev)}}
+function applyIssue(ev){const M=S.macro;S.evDone.push(ev.id);const imp={};
+  if(ev.imp)for(const tk in ev.imp){if(!S.mk[tk])continue;shock(tk,ev.imp[tk]);imp[tk]=ev.imp[tk]}
+  if(ev.mkt)market(ev.mkt);if(ev.bi)M.bi=+(M.bi+ev.bi).toFixed(2);if(ev.fx)M.fxT+=ev.fx;if(ev.flow)M.flow+=ev.flow;
+  const lab=ev.kind==='note'?'Message from your lecturer':'Lecturer issue';
+  news(`<b>${lab}:</b> ${esc(ev.title)}${ev.body?'. '+esc(ev.body):''}`);
+  if(ev.kind!=='note')jour('Issue',`${ev.title}${ev.body?'. '+ev.body:''}`,ev.why||'Issue set by your lecturer');
+  showFlash({kind:lab,day:S.day,t:S.t},{head:esc(ev.title),body:esc(ev.body||''),why:esc(ev.why||(ev.kind==='note'?'':'Ask yourself: is this information, rumour, or noise? Does it change the company\'s value or only its price today?')),imp},'')}
+function macroTick(){classEvents(false);const M=S.macro;if(!M)return;
   for(const e of EVENTS){if(M.st[e.id])continue;
     if(e.warn&&S.day===e.warn[0]&&S.t===e.warn[1]){news(`<b>Coming up:</b> ${e.title}. Make your call in the economic calendar.`);if(!M.calls[e.id])showFlash(e,null,'')}
     if(S.day===e.day&&S.t===e.t)fire(e)}}
 // popup: one at a time, newest wins
 let flashT=null;
-function showFlash(e,st,callTxt){const f=$('flash');const tk=st?Object.entries(st.imp).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))[0]:null;
+function showFlash(e,st,callTxt){if(catching)return;const f=$('flash');const tk=st?Object.entries(st.imp).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))[0]:null;
   const chips=st?'<div class="imp">'+Object.entries(st.imp).map(([k,v])=>`<span class="${v>0?'up':'down'}">${k} ${v>0?'▲':'▼'} ${Math.abs(v).toFixed(1).replace('.',',')}%</span>`).join('')+'</div>':'';
-  f.innerHTML=st?`<div class="hd"><span class="brk">BREAKING</span><span class="est">${e.kind} · Day ${S.day} ${hhmm(phase(S.t).mins)}</span></div><h3>${st.head}</h3><p>${st.body}</p>${chips}<p class="why">${st.why}</p>${callTxt?`<p class="call ${st.ok?'up':st.ok===false?'down':''}">${callTxt}</p>`:''}
+  f.innerHTML=st?`<div class="hd"><span class="brk">BREAKING</span><span class="est">${e.kind} · Day ${S.day} ${hhmm(phase(S.t).mins)}</span></div><h3>${st.head}</h3>${st.body?`<p>${st.body}</p>`:''}${chips}${st.why?`<p class="why">${st.why}</p>`:''}${callTxt?`<p class="call ${st.ok?'up':st.ok===false?'down':''}">${callTxt}</p>`:''}
     <div class="btns">${tk?`<button type="button" class="primary" data-ftk="${tk[0]}">Trade ${tk[0]}</button>`:''}<button type="button" data-fclose>Got it</button></div><div class="bar"></div>`
    :`<div class="hd"><span class="brk" style="background:var(--gold);color:#10243f">SOON</span><span class="est">${e.kind} · Day ${e.day} ${hhmm(phase(e.t).mins)}</span></div><h3>${e.title}</h3><p>What is your call? You can change it until the announcement.</p>
     <div class="cal"><div class="opts">${e.call.map(([v,l])=>`<button type="button" data-call="${e.id}" data-v="${v}" aria-pressed="${S.macro.calls[e.id]===v}">${l}</button>`).join('')}</div></div>
@@ -976,7 +1023,7 @@ function render(){
   const ph=phase(S.t);
   $('phase').textContent=ph.name;$('phase').className='phase '+(ph.open?'open':'queue');
   const leftT=Math.max(0,(SESSION_DAYS-S.day)*TICKS_PER_DAY+(TICKS_PER_DAY-S.t)),leftS=Math.round(leftT*TICK_MS/1000);
-  $('left').textContent=S.over?'Session complete':String(Math.floor(leftS/60)).padStart(2,'0')+':'+String(leftS%60).padStart(2,'0')+' left';
+  $('left').textContent=S.over?'Session complete':S.free?'No time limit':(S.room&&CTL&&CTL.state!=='run'?(CTL.state==='lobby'?'Waiting to start':CTL.state==='pause'?'Paused':'Ended'):String(Math.floor(leftS/60)).padStart(2,'0')+':'+String(leftS%60).padStart(2,'0')+' left');
   $('simdate').textContent='Day '+Math.min(S.day,SESSION_DAYS)+' of '+SESSION_DAYS+' · '+dateOf(S.day);$('simclock').textContent=hhmm(ph.mins);
   let ci=0,ii=0;for(const s of STOCKS){if(s.ipo)continue;const q=S.mk[s.tk];ci+=q.p*s.sh;if(inDES(s))ii+=q.p*s.sh}
   const K=S.macro?S.macro.k:1,ixI=ii/base.issi*215*K,ixC=ci/base.comp*7250;
@@ -1068,7 +1115,7 @@ function renderIPO(){
       ${I.bb?`<p>Your bid: <b class="mono">${num(I.bb.lots)} lot at up to Rp${I.bb.price}</b>. You can revise it until Day 2 closes.</p>`:''}
       <p class="why">The final price is set where demand at that price or higher covers all 800 million shares. Institutional bids stay confidential until pricing.</p>`;
   }else if(st===3){
-    const lv=IPO.levels,dem=lv.map((p,k)=>I.inst[k]+(I.bb&&I.bb.price===p?I.bb.lots:0)),cum=lv.map((p,k)=>dem.slice(k).reduce((x,y)=>x+y,0)),mx=Math.max(...cum);
+    const lv=IPO.levels,dem=lv.map((p,k)=>I.inst[k]+(!S.room&&I.bb&&I.bb.price===p?I.bb.lots:0)),cum=lv.map((p,k)=>dem.slice(k).reduce((x,y)=>x+y,0)),mx=Math.max(...cum);
     h=`${I.screened!=='ok'?gate:''}<h3>Step 3 · Book-building result</h3>
       <div class="dem">${lv.map((p,k)=>`<span class="${p===I.final?'fp':''}">Rp${p}</span><span class="bar"><i class="${cum[k]>=IPO.offer?'ok':''}" style="width:${(cum[k]/mx*100).toFixed(1)}%"></i></span><span>${(cum[k]/IPO.offer).toFixed(2).replace('.',',')}×</span>`).join('')}</div>
       <p class="why">Bars show demand at that price or higher, as a multiple of the shares offered. Gold bars cover the offer. The final price is the highest gold level: <b>Rp${I.final}</b>.</p>
@@ -1136,7 +1183,7 @@ function setOtype(t,quiet){
   if(!quiet&&t!=='cash')msg(t==='margin'?`<b>Margin on.</b> You can buy beyond your cash with a broker loan at ${((S.macro?S.macro.bi:4.75)+7.25).toFixed(2).replace('.',',')}% a year. The journal tags it as riba.`:"<b>Short sell on.</b> You may sell shares you do not own. A lending fee and the dividend obligation apply; the journal tags it as bay' ma laysa 'indak.",'fatwa');
   save();updateEst()}
 document.querySelectorAll('[data-ot]').forEach(b=>b.onclick=()=>setOtype(b.dataset.ot));
-$('m-sots').onclick=()=>setMode('sots');$('m-reg').onclick=()=>setMode('reg');
+$('m-sots').onclick=()=>setMode('sots');$('m-reg').onclick=()=>{if(S.room&&CTL&&CTL.allowReg===false){msg('Your lecturer has disabled the Regular account in this class. Trade in SOTS only.','fatwa');return}setMode('reg')};
 $('use-margin').onchange=e=>{S.margin=e.target.checked;save();render()};
 $('px-up').onclick=()=>{const p=Number($('o-price').value)||S.mk[S.sel].p;$('o-price').value=snap(p+tickOf(p));updateEst()};
 $('px-down').onclick=()=>{const p=Number($('o-price').value)||S.mk[S.sel].p;$('o-price').value=snap(p-tickOf(p-1));updateEst()};
@@ -1183,9 +1230,9 @@ function renderScreen(){const show=$('show-res').checked;
 $('show-res').onchange=renderScreen;
 // reset with in-page confirm
 let armed=false;$('btn-reset').onclick=()=>{if(!armed){armed=true;$('btn-reset').textContent='Click again to erase all progress';setTimeout(()=>{armed=false;$('btn-reset').textContent='Reset simulation'},4000);return}
-  try{localStorage.removeItem(keyOf(USER.nim))}catch(e){}S=fresh();S.regAt=new Date().toLocaleString('id-ID');applyAdj();renderScreen();armed=false;$('btn-reset').textContent='Reset simulation';setMode('sots');setSide('buy');news('Simulation reset. You start with Rp100.000.000 in a SOTS account.');render()};
+  if(S.room)return;try{localStorage.removeItem(stateKey(USER))}catch(e){}S=fresh();S.free=USER.mode==='free';S.regAt=new Date().toLocaleString('id-ID');applyAdj();renderScreen();armed=false;$('btn-reset').textContent='Reset simulation';setMode('sots');setSide('buy');news('Simulation reset. You start with Rp100.000.000 in a SOTS account.');render()};
 
-function restart(){clearInterval(timer);timer=setInterval(()=>{if(paused||S.over)return;tick();if(S.t%20===0)save();const n=Date.now();if(n-lastR>280){render();lastR=n}},Math.round(TICK_MS/speed))}
+function restart(){if(S&&S.room)return;clearInterval(timer);timer=setInterval(()=>{if(paused||S.over)return;tick();if(S.t%20===0)save();const n=Date.now();if(n-lastR>280){render();lastR=n}},Math.round(TICK_MS/speed))}
 window.addEventListener('resize',drawChart);
 
 // ---------------------------------------------------------------- score, behaviour, PDF report
@@ -1363,24 +1410,65 @@ function pdfReport(){const J=window.jspdf&&window.jspdf.jsPDF;
   $('pdf-note').textContent=`Report downloaded: ${g.total}/100 (${g.letter}), ${b.lab}.${S.over?'':' This is provisional; download again after Day 10.'}`}
 document.addEventListener('click',e=>{if(e.target.closest('[data-pdf]')&&S&&USER)pdfReport()});
 
-function showEnd(){render();$('end-report').innerHTML=$('report').innerHTML;$('endwrap').hidden=false}
+function showEnd(){publishStatus(true);render();$('end-report').innerHTML=$('report').innerHTML;$('endwrap').hidden=false}
 $('end-review').onclick=()=>{$('endwrap').hidden=true;document.getElementById('tab-journal').click();$('p-journal').scrollIntoView({behavior:'smooth'})};
-$('end-new').onclick=()=>{try{localStorage.removeItem(keyOf(USER.nim))}catch(e){}S=fresh();S.regAt=new Date().toLocaleString('id-ID');applyAdj();renderScreen();$('endwrap').hidden=true;ipoSig='';
-  news('New session started. You have 20 minutes and Rp100.000.000 in a SOTS account.');setMode('sots');setSide('buy');select(S.sel);save();restart()};
+$('end-new').onclick=()=>{if(S.room)return;try{localStorage.removeItem(stateKey(USER))}catch(e){}S=fresh();S.free=USER.mode==='free';S.regAt=new Date().toLocaleString('id-ID');applyAdj();renderScreen();$('endwrap').hidden=true;ipoSig='';
+  news(S.free?'New session started with Rp100.000.000 in a SOTS account. Play at your own pace.':'New session started. You have 20 minutes and Rp100.000.000 in a SOTS account.');setMode('sots');setSide('buy');select(S.sel);save();restart()};
+function stateKey(u){return keyOf(u.nim)+(u.mode==='free'?'-free':u.mode==='class'?'-k-'+u.room:'')}
+let regMode='timed';
+function setRegMode(m){regMode=m;document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===m));$('code-wrap').hidden=m!=='class';
+  $('r-go').textContent=m==='class'?'Join the class':'Start with Rp100.000.000';if(m==='class')setTimeout(()=>$('r-code').focus(),0)}
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>setRegMode(b.dataset.mode));
+function applyModeUI(){const cls=!!S.room;
+  document.querySelectorAll('.ctrl [data-speed],#btn-pause,#btn-skip').forEach(b=>b.hidden=cls);$('sp4').hidden=!S.free;
+  $('classbar').hidden=!cls;$('lb').hidden=$('lb-h').hidden=!cls;$('btn-reset').hidden=cls;$('end-new').hidden=cls;
+  if(!S.free&&speed===4){speed=1;document.querySelectorAll('[data-speed]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.speed==='1'))}
+  $('who-nim').textContent=USER.nim+(cls?' · class '+S.room:S.free?' · no time limit':'')}
+function renderClass(online){if(!S.room)return;const st=!CTL?['off','Connecting']:CTL.state==='lobby'?['wait','Waiting for your lecturer']:CTL.state==='pause'?['wait','Paused by your lecturer']:CTL.state==='end'?['off','Class ended']:['','Live'];
+  $('classbar').innerHTML=`<span class="st ${st[0]}">${st[1]}</span><span>Class <b class="code">${esc(S.room)}</b>${CTL&&CTL.name?' · '+esc(CTL.name):''}</span>${CTL&&CTL.allowReg===false?'<span class="est">Regular account disabled by your lecturer</span>':''}<span class="est">${online===false?'Reconnecting…':'Your rank and return are shared with your lecturer.'}</span>`}
+function renderBoard(){if(!S.room||!BOARD)return;const rows=BOARD.rows||[],i=rows.findIndex(r=>r.id===myId);
+  const li=(r,k)=>`<li class="${r.id===myId?'me':''}"><span class="k">${k+1}</span><span class="n">${esc(r.n)}</span><span class="r ${sgn(r.r)}">${fpct(r.r)}</span></li>`;
+  let h=rows.slice(0,8).map(li).join('');if(i>=8)h+='<li class="gap">…</li>'+li(rows[i],i);
+  $('lb').innerHTML=h||'<li class="gap">No players yet.</li>';$('lb-me').textContent=i>=0?`You: #${i+1} of ${rows.length}`:`${rows.length} players`}
+function publishStatus(force){if(!CH||!S.room||!myId)return;const n=Date.now();if(!force&&n-lastPub<8000)return;lastPub=n;ensureStats();const g=grade(),b=behaviour();
+  CH.setStatus(myId,{n:USER.name,nim:USER.nim,cls:USER.cls||'',eq:Math.round(g.eq),r:+g.ret.toFixed(2),sc:g.total,gr:g.letter,bs:b.score,bl:b.lab,ms:g.nM,tr:S.stats.trades,d:Math.min(S.day,SESSION_DAYS),t:S.t,ac:S.mode,over:!!S.over,ts:CH.now()})}
+function classStep(){if(!S||!S.room||!CTL)return;const target=BSKelas.tickAt(CTL,BSKelas.now());let g=gIdx(),n=0;
+  catching=target-g>4;while(g<target&&!S.over&&n<2500){tick();g=gIdx();n++}catching=false;
+  classEvents(true);
+  if(CTL.state==='end'&&!S.over){S.over=true;news('Your lecturer has ended the class. See your report card.');save();showEnd()}
+  const t=Date.now();if(n||t-lastR>900){render();renderClass();lastR=t}if(t-lastSave>5000){save();lastSave=t}publishStatus(false)}
+async function joinClass(u){const m=$('r-msg');m.className='msg show ok';m.textContent='Connecting to the class…';$('r-go').disabled=true;
+  if(!window.BSKelas||!window.mqtt||!window.crypto||!crypto.subtle){m.className='msg show err';m.textContent='Class mode needs an internet connection and a modern browser. Reload the page and try again.';$('r-go').disabled=false;return}
+  let first=true;
+  try{CH=await BSKelas.join(u.room,{role:'student',
+      onCtl:o=>{const was=CTL;CTL=o;if(first){first=false;enterClass(u)}else if(was&&was.state!==o.state){news(o.state==='run'?(was.state==='lobby'?'Your lecturer has started the class. Trade!':'Your lecturer resumed the market.'):o.state==='pause'?'Your lecturer paused the market.':'Your lecturer has ended the class.');render()}
+        TICK_MS=o.tickMs||1000;if(S&&S.room){if(S.mode==='reg'&&o.allowReg===false)setMode('sots');renderClass()}},
+      onBoard:o=>{BOARD=o;renderBoard()},
+      onConn:on=>{renderClass(on);if(on)publishStatus(true)}})}
+  catch(e){CH=null;m.className='msg show err';m.textContent=e.message==='notfound'?`No open class with code ${u.room}. Check the code with your lecturer, or ask whether the class has been opened.`:'Cannot reach the class server. Your network may block it; try mobile data or another Wi-Fi.';$('r-go').disabled=false;return}
+  myId=(await BSKelas.sha('nim|'+u.nim)).slice(0,16)}
+function enterClass(u){$('r-go').disabled=false;let st=null;try{st=JSON.parse(localStorage.getItem(stateKey(u))||'null')}catch(e){}
+  TICK_MS=CTL.tickMs||1000;
+  if(st&&st.seed===CTL.seed&&st.mk){S=st}else{S={rng:CTL.seed};R=seeded;const n=fresh();n.rng=S.rng;n.seed=CTL.seed;n.room=u.room;S=n}
+  R=seeded;S.room=u.room;finishLogin(u);clearInterval(timer);timer=setInterval(classStep,250);classStep();publishStatus(true)}
 function login(u){
-  USER=u;let st=null;try{st=JSON.parse(localStorage.getItem(keyOf(u.nim))||'null')}catch(e){}
-  S=(st&&st.mk&&st.mk.HALA)?st:fresh();if(!S.ipo||!S.ipo.v2){const old=S.ipo||{};S.ipo=freshIpo();if(S.day>1||old.lots){S.ipo.legacy=true;S.ipo.final=250;if(old.locked){S.cash+=old.locked}S.ipo.dist=true;S.ipo.allotted=old.allotted||0;S.ipo.lots=old.lots||0}}if(!S.regAt)S.regAt=new Date().toLocaleString('id-ID');ensureMacro();ensureStats();applyAdj();renderScreen();
-  const list=users().filter(x=>x.nim!==u.nim);list.unshift(u);try{localStorage.setItem(UKEY,JSON.stringify(list.slice(0,40)))}catch(e){}
+  USER=u;clearInterval(timer);if(CH){try{CH.close()}catch(e){}CH=null;CTL=null;BOARD=null}R=Math.random;TICK_MS=1000;
+  if(u.mode==='class'){$('regwrap').hidden=false;joinClass(u);return}
+  let st=null;try{st=JSON.parse(localStorage.getItem(stateKey(u))||'null')}catch(e){}
+  S=(st&&st.mk&&st.mk.HALA)?st:fresh();S.free=u.mode==='free';finishLogin(u);restart();if(S.over)showEnd()}
+function finishLogin(u){if(!S.ipo||!S.ipo.v2){const old=S.ipo||{};S.ipo=freshIpo();if(S.day>1||old.lots){S.ipo.legacy=true;S.ipo.final=250;if(old.locked){S.cash+=old.locked}S.ipo.dist=true;S.ipo.allotted=old.allotted||0;S.ipo.lots=old.lots||0}}if(!S.regAt)S.regAt=new Date().toLocaleString('id-ID');ensureMacro();ensureStats();applyAdj();renderScreen();
+  const list=users().filter(x=>!(x.nim===u.nim&&(x.mode||'timed')===(u.mode||'timed')&&(x.room||'')===(u.room||'')));list.unshift(u);try{localStorage.setItem(UKEY,JSON.stringify(list.slice(0,40)))}catch(e){}
   try{localStorage.setItem(KEY+'-last',u.nim)}catch(e){}
   $('who-name').textContent=u.name;$('who-nim').textContent=u.nim;$('regwrap').hidden=true;
   if(!S.news.length) news(`Welcome, ${esc(u.name)}. You start with Rp100.000.000 in a SOTS account. The HALA IPO starts today: read the prospectus in the IPO process tab. Watch the economic calendar: BPS inflation is out at 10:55, and Bank Indonesia decides the BI Rate tomorrow.`);
   ipoSig='';paused=false;$('btn-pause').setAttribute('aria-pressed','false');$('btn-pause').textContent='Pause';
-  setMode(S.mode);otype=S.margin&&S.mode==='reg'?'margin':'cash';document.querySelectorAll('[data-ot]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ot===otype));$('use-margin').checked=!!S.margin;setSide('buy');select(S.sel);save();restart();
-  if(S.over)showEnd();
+  setMode(S.mode);otype=S.margin&&S.mode==='reg'?'margin':'cash';document.querySelectorAll('[data-ot]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ot===otype));$('use-margin').checked=!!S.margin;setSide('buy');select(S.sel);save();
+  applyModeUI();renderClass();if(S.room&&S.over)showEnd();
 }
-function showReg(){clearInterval(timer);save();$('flash').hidden=true;$('endwrap').hidden=true;
+function showReg(){clearInterval(timer);save();if(CH){try{CH.close()}catch(e){}CH=null;CTL=null}$('flash').hidden=true;$('endwrap').hidden=true;
   const list=users();
-  $('known').innerHTML=list.length?'<p>Or continue on this device as:</p>'+list.map(u=>`<button type="button" data-nim="${esc(u.nim)}"><span>${esc(u.name)}</span><span>${esc(u.nim)}</span></button>`).join(''):'';
+  $('known').innerHTML=list.length?'<p>Or continue on this device as:</p>'+list.map((u,i)=>`<button type="button" data-nim="${esc(u.nim)}" data-i="${i}"><span>${esc(u.name)}</span><span>${esc(u.nim)} · ${u.mode==='class'?'class '+esc(u.room):u.mode==='free'?'no time limit':'20 minutes'}</span></button>`).join(''):'';
+  const qk=new URLSearchParams(location.search).get('kelas');if(qk){setRegMode('class');$('r-code').value=qk.toUpperCase().slice(0,8)}
   $('r-name').value='';$('r-nim').value='';$('r-msg').className='msg';$('regwrap').hidden=false;$('r-name').focus();
 }
 $('reg-form').addEventListener('submit',e=>{e.preventDefault();
@@ -1388,14 +1476,16 @@ $('reg-form').addEventListener('submit',e=>{e.preventDefault();
   const m=$('r-msg');
   if(name.length<3){m.className='msg show err';m.textContent='Enter your full name (at least 3 letters).';return}
   if(!/^[0-9A-Za-z.\-]{5,20}$/.test(nim)){m.className='msg show err';m.textContent='Enter a valid NIM: 5 to 20 digits or letters, no spaces.';return}
-  const old=users().find(u=>u.nim===nim);
+  const old=users().find(u=>u.nim===nim);if(old&&old.name.toLowerCase()===name.toLowerCase()&&!cls&&old.cls)$('r-cls').value=old.cls;
   if(old&&old.name.toLowerCase()!==name.toLowerCase()){m.className='msg show err';m.textContent=`NIM ${nim} is already registered on this device as ${old.name}. Pick it from the list below, or check your NIM.`;return}
-  login({name,nim,cls:cls||(old&&old.cls)||''});
+  const u={name,nim,cls:cls||(old&&old.cls)||'',mode:regMode};
+  if(regMode==='class'){const code=BSKelas?BSKelas.cleanCode($('r-code').value):'';if(code.length<4){m.className='msg show err';m.textContent='Enter the class code from your lecturer.';return}u.room=code}
+  login(u);
 });
-$('known').addEventListener('click',e=>{const b=e.target.closest('[data-nim]');if(!b)return;const u=users().find(x=>x.nim===b.dataset.nim);if(u)login(u)});
+$('known').addEventListener('click',e=>{const b=e.target.closest('[data-nim]');if(!b)return;const u=users()[Number(b.dataset.i)];if(u)login(u)});
 $('btn-switch').onclick=showReg;
 (function(){let last=null;try{last=localStorage.getItem(KEY+'-last')}catch(e){}
-  const u=last&&users().find(x=>x.nim===last);if(u)login(u);else showReg()})();
+  const u=last&&users().find(x=>x.nim===last);if(u&&u.mode!=='class'&&!new URLSearchParams(location.search).get('kelas'))login(u);else showReg()})();
 
 })();
 </script>

@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../../assets/logo-tazkia.png">
+<title>Kelas Bursa Syariah (Dosen)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Lecturer console: class code + controls on the left, leaderboard on the right, issues below. Same palette as the simulator. */
+:root{--bg:#eef1f6;--surface:#fff;--surface2:#f6f8fb;--ink:#14233a;--muted:#5d6b80;--line:#d9e0ea;--navy:#10243f;--gold:#c9960a;--gold-soft:#fbf1d0;
+  --up:#0f8a4f;--down:#c4362b;--up-soft:#e2f4ea;--down-soft:#fbe6e3;--halal:#0f6e6a;--halal-soft:#dff1ef;--warn:#a15c00;--warn-soft:#fdf0db;
+  --display:"Archivo","Segoe UI",system-ui,sans-serif;--body:"Source Sans 3","Segoe UI",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0b1422;--surface:#122036;--surface2:#172843;--ink:#e7edf6;--muted:#9aa9be;--line:#25385a;--navy:#0a1730;--gold:#f2c200;--gold-soft:#3a3010;
+  --up:#3cc684;--down:#ff6b5e;--up-soft:#103426;--down-soft:#3d1a18;--halal:#4fc7bf;--halal-soft:#0f302e;--warn:#ffb54a;--warn-soft:#3a2a10;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0b1422;--surface:#122036;--surface2:#172843;--ink:#e7edf6;--muted:#9aa9be;--line:#25385a;--navy:#0a1730;--gold:#f2c200;--gold-soft:#3a3010;
+  --up:#3cc684;--down:#ff6b5e;--up-soft:#103426;--down-soft:#3d1a18;--halal:#4fc7bf;--halal-soft:#0f302e;--warn:#ffb54a;--warn-soft:#3a2a10;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3{font-family:var(--display);margin:0}
+.wrap{max-width:1320px;margin:0 auto;padding:0 16px 40px}
+.top{background:var(--navy);color:#fff;margin-inline:-16px;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px}
+.top h1{font-size:1.25rem}.top small{color:#c7d2e2}.top a{color:#f2c200}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;min-width:0}
+.panel>header{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.panel>header h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-family:var(--body);font-weight:700}
+.pad{padding:14px}
+.grid{display:grid;grid-template-columns:360px minmax(0,1fr);gap:14px;margin-top:14px;align-items:start}
+@media (max-width:980px){.grid{grid-template-columns:minmax(0,1fr)}}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.field label{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+input[type=text],input[type=number],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+textarea{min-height:56px;resize:vertical}
+.btn{border:0;border-radius:7px;padding:10px 14px;font-weight:700;background:var(--navy);color:#fff}
+.btn.gold{background:var(--gold);color:#10243f}.btn.red{background:var(--down)}.btn.green{background:var(--up)}.btn.line{background:var(--surface2);color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.code{font-family:var(--mono);font-size:3rem;font-weight:600;letter-spacing:.18em;text-align:center;line-height:1.1;color:var(--navy);background:var(--gold-soft);border-radius:8px;padding:10px 6px}
+@media (prefers-color-scheme: dark){.code{color:#fff}}
+.qr{display:flex;justify-content:center;padding:10px;background:#fff;border-radius:8px;margin:10px auto;width:max-content}
+.link{font-family:var(--mono);font-size:.78rem;word-break:break-all;color:var(--muted);text-align:center}
+.status{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.status div{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.status span{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.status b{font-family:var(--mono);font-size:.95rem;white-space:nowrap}
+.pill{display:inline-block;font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:4px;background:var(--warn);color:#fff}
+.pill.run{background:var(--up)}.pill.end{background:var(--down)}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.n,th.n{text-align:right;font-family:var(--mono)}
+tr.off td{opacity:.55}
+.up{color:var(--up)}.down{color:var(--down)}
+.rank{font-family:var(--mono);font-weight:700;width:34px}
+.medal{display:inline-block;width:22px;height:22px;border-radius:50%;text-align:center;line-height:22px;font-size:.78rem;color:#10243f;background:var(--line)}
+.m1{background:#f2c200}.m2{background:#c9d1dc}.m3{background:#d9a067}
+.beh{font-size:.78rem;font-weight:700;padding:1px 6px;border-radius:4px;white-space:nowrap}
+.beh.i{background:var(--up-soft);color:var(--up)}.beh.m{background:var(--warn-soft);color:var(--warn)}.beh.e{background:var(--down-soft);color:var(--down)}
+.scroll{overflow:auto}
+.presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.presets button{text-align:left;border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:9px 11px;display:flex;flex-direction:column;gap:3px}
+.presets button:hover{border-color:var(--gold)}
+.presets b{font-size:.9rem;line-height:1.25}.presets span{font-size:.76rem;font-family:var(--mono)}
+.issues{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:14px}
+@media (max-width:980px){.issues{grid-template-columns:minmax(0,1fr)}}
+.log{list-style:none;margin:0;padding:0;font-size:.86rem;max-height:300px;overflow:auto}
+.log li{padding:7px 0;border-bottom:1px solid var(--line)}
+.log time{font-family:var(--mono);font-size:.75rem;color:var(--muted);margin-right:6px}
+.msg{font-size:.88rem;border-radius:6px;padding:8px 10px;margin-top:8px;display:none}.msg.show{display:block}
+.msg.err{background:var(--down-soft);color:var(--down)}.msg.ok{background:var(--up-soft);color:var(--up)}
+.est{font-size:.85rem;color:var(--muted)}
+.chk{display:flex;gap:8px;align-items:center;font-size:.92rem}
+[hidden]{display:none!important}
+.big{font-size:1.05rem}
+.slider{display:flex;gap:8px;align-items:center}.slider input{flex:1}.slider output{font-family:var(--mono);min-width:56px;text-align:right}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1>Bursa Syariah · Konsol Dosen</h1><small><a href="./">← Simulasi Saham Syariah</a> · mode kelas (mabar)</small></div>
+    <span class="est" id="conn" style="margin-left:auto;color:#c7d2e2">Belum terhubung</span>
+  </div>
+
+  <!-- setup -->
+  <section class="panel" id="setup" style="max-width:560px;margin:24px auto 0">
+    <header><h2>Buka kelas baru</h2></header>
+    <div class="pad">
+      <div class="field"><label for="c-name">Nama kelas</label><input type="text" id="c-name" maxlength="50" placeholder="Misal: PLKI FEB UI · Kelas A"></div>
+      <div class="field"><label for="c-dur">Durasi permainan (10 hari bursa)</label>
+        <select id="c-dur"><option value="500">10 menit</option><option value="750">15 menit</option><option value="1000" selected>20 menit</option><option value="1500">30 menit</option><option value="2000">40 menit</option></select></div>
+      <label class="chk"><input type="checkbox" id="c-reg" checked> Izinkan akun Regular (margin dan short selling sebagai pembanding)</label>
+      <div class="row" style="margin-top:14px"><button class="btn gold big" id="c-go" type="button">Buka kelas dan buat kode</button></div>
+      <div class="msg" id="c-msg"></div>
+      <p class="est" style="margin-top:14px">Mahasiswa bergabung dengan kode kelas. Pasar dimulai saat Anda menekan <b>Mulai</b>. Semua mahasiswa melihat pasar yang sama, dan isu yang Anda kirim menggerakkan harga di semua layar. Data dikirim terenkripsi lewat server MQTT publik; jangan tutup halaman ini selama kelas berjalan agar papan peringkat terus diperbarui.</p>
+      <div id="resume" hidden style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px"><p class="est" id="resume-txt"></p><div class="row"><button class="btn line" id="resume-go" type="button">Lanjutkan kelas ini</button><button class="btn line" id="resume-drop" type="button">Lupakan</button></div></div>
+    </div>
+  </section>
+
+  <!-- live console -->
+  <div id="live" hidden>
+    <div class="grid">
+      <section class="panel">
+        <header><h2>Kode kelas</h2><span class="pill" id="st-pill">Lobi</span></header>
+        <div class="pad">
+          <div class="code" id="code">——————</div>
+          <div class="qr" id="qr"></div>
+          <div class="link" id="joinlink"></div>
+          <div class="row" style="justify-content:center;margin-top:8px"><button class="btn line" id="copy" type="button">Salin tautan</button></div>
+          <div class="status">
+            <div><span>Waktu pasar</span><b id="clk">Hari 1 · 08:45</b></div>
+            <div><span>Sisa waktu</span><b id="left">20:00</b></div>
+            <div><span>Peserta</span><b id="cnt">0</b></div>
+            <div><span>Online</span><b id="onl">0</b></div>
+          </div>
+          <div class="row">
+            <button class="btn green big" id="b-start" type="button" style="flex:1">Mulai</button>
+            <button class="btn line big" id="b-pause" type="button" style="flex:1" hidden>Jeda</button>
+            <button class="btn red" id="b-end" type="button">Akhiri kelas</button>
+          </div>
+          <label class="chk" style="margin-top:12px"><input type="checkbox" id="l-reg"> Akun Regular diizinkan</label>
+          <p class="est" id="cls-name" style="margin:10px 0 0"></p>
+          <div class="row" style="margin-top:12px"><button class="btn line" id="b-csv" type="button">Unduh nilai (CSV)</button><button class="btn line" id="b-new" type="button">Kelas baru</button><button class="btn line" id="b-wipe" type="button">Hapus data kelas</button></div>
+          <div class="msg" id="l-msg"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <header><h2>Papan peringkat</h2>
+          <div class="row" style="align-items:center"><label class="est" for="sort">Urutkan</label><select id="sort" style="width:auto"><option value="r">Imbal hasil</option><option value="sc">Nilai simulasi</option><option value="bs">Profil perilaku</option><option value="ms">Misi</option></select></div></header>
+        <div class="scroll"><table>
+          <thead><tr><th>#</th><th>Mahasiswa</th><th class="n">Imbal hasil</th><th class="n">Ekuitas</th><th class="n">Nilai</th><th>Perilaku</th><th class="n">Misi</th><th class="n">Trade</th><th>Posisi</th></tr></thead>
+          <tbody id="board"><tr><td colspan="9" class="est" style="padding:24px;text-align:center">Belum ada mahasiswa. Tampilkan kode di layar kelas.</td></tr></tbody>
+        </table></div>
+      </section>
+    </div>
+
+    <section class="panel" style="margin-top:14px">
+      <header><h2>Kirim isu ke pasar</h2><span class="est">Isu berlaku sekitar 8 detik setelah dikirim, serentak di semua layar mahasiswa.</span></header>
+      <div class="pad issues">
+        <div>
+          <p class="est" style="margin:0 0 8px">Isu siap pakai (teks untuk mahasiswa dalam bahasa Inggris, sesuai antarmuka simulasi):</p>
+          <div class="presets" id="presets"></div>
+        </div>
+        <div>
+          <p class="est" style="margin:0 0 8px">Atau buat isu sendiri:</p>
+          <div class="field"><label for="i-title">Judul berita</label><input type="text" id="i-title" maxlength="120" placeholder="Misal: Rumour: SHJY wins a big export contract"></div>
+          <div class="field"><label for="i-body">Keterangan (opsional)</label><textarea id="i-body" maxlength="300"></textarea></div>
+          <div class="row"><div class="field" style="flex:1"><label for="i-tk">Saham</label><select id="i-tk"></select></div>
+            <div class="field" style="flex:1.4"><label for="i-pct">Dampak harga saham</label><div class="slider"><input type="range" id="i-pct" min="-20" max="20" step="1" value="5"><output id="i-pct-o">+5%</output></div></div></div>
+          <div class="field"><label for="i-mkt">Dampak ke seluruh pasar</label><div class="slider"><input type="range" id="i-mkt" min="-4" max="4" step=".5" value="0"><output id="i-mkt-o">0%</output></div></div>
+          <div class="row"><button class="btn gold" id="i-go" type="button">Kirim isu</button><button class="btn line" id="n-go" type="button">Kirim sebagai pengumuman saja</button></div>
+          <div class="msg" id="i-msg"></div>
+        </div>
+      </div>
+      <div class="pad" style="border-top:1px solid var(--line)"><h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-family:var(--body);margin-bottom:6px">Riwayat isu</h3><ul class="log" id="log"><li class="est">Belum ada isu.</li></ul></div>
+    </section>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="kelas.js"></script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const TK=[['SHJY','Sehat Jaya (halal food)'],['TMBG','Tambang Nusantara (coal)'],['TLKS','Telekomunika Satu'],['BSYR','Bank Syariah Madani'],['RSIA','RS Insan Amanah'],['AGRO','Agro Sawit Lestari'],['PRPT','Properti Graha'],['RKKN','Rokok Kencana'],['SEMN','Semen Pertiwi'],['DGTL','Digital Niaga'],['BKNV','Bank Konvensional Raya'],['BRWX','Bir Tropika'],['HALA','Halal Logistik (IPO, lists Day 6)']];
+const PRESETS=[
+ {title:'Rumour: BSYR to be acquired by a large state bank',body:'Nothing is confirmed. The company says it "does not comment on market speculation".',why:'Trading on an unverified rumour is close to gharar. Ask: is there disclosure, or only talk?',imp:{BSYR:8}},
+ {title:'Fire at SHJY\'s main factory',body:'Production stops for about two weeks. Insurance covers part of the loss.',why:'A real loss of value, but a temporary one. Separate the lasting damage from the panic.',imp:{SHJY:-9}},
+ {title:'IDX suspends DGTL after a pump-and-dump probe',body:'OJK investigates fake bids (najsy) and coordinated buying. Trading resumes with a wide price drop.',why:'Najsy, bidding up a price without intending to buy, is prohibited (Fatwa 80/2011).',imp:{DGTL:-14},mkt:-.5},
+ {title:'Coal price crash as China cuts imports',body:'HBA is expected to fall sharply next month.',why:'Commodity stocks follow world prices. Diversification across sectors matters.',imp:{TMBG:-9,AGRO:-2}},
+ {title:'Emergency BI Rate hike of 50 bp to defend the rupiah',body:'Bank Indonesia acts outside its regular meeting.',why:'Higher rates raise the discount rate and the cost of debt. Margin loans now cost more (riba).',imp:{PRPT:-8,DGTL:-6,SEMN:-4,BSYR:-2},mkt:-2,bi:.5,fx:-150},
+ {title:'Government doubles incentives for halal certification',body:'New funding for halal food and logistics firms.',why:'Policy can reward the halal economy. Read who benefits directly.',imp:{SHJY:5,HALA:6,BSYR:2}},
+ {title:'Large foreign fund buys Indonesian bank stocks',body:'Net foreign buying reaches Rp1,2 trillion in one session.',why:'Foreign flows move prices without any change in the companies themselves.',imp:{BSYR:4,BKNV:5},mkt:.8,flow:600},
+ {title:'Hospital chain RSIA wins a large BPJS contract',body:'Revenue is expected to grow 15% next year.',why:'New information about future cash flows: a fundamental reason for the price to move.',imp:{RSIA:8}},
+ {title:'Cement oversupply pushes prices down',body:'Producers cut prices to keep market share.',why:'Lower margins reduce value. Check the debt ratio too: SEMN is outside the DES.',imp:{SEMN:-7,PRPT:-2}},
+ {title:'Fake bids detected in PRPT (najsy)',body:'IDX flags unusual market activity; large bids vanish before matching.',why:'A price pushed up by fake demand is not value. Investors who chase it often lose.',imp:{PRPT:-6}},
+ {title:'MUI reminds investors to purify dividends',body:'A public reminder on tathir of non-halal income from sharia stocks.',why:'Check your purification due in the account panel and pay it.',kind:'note'},
+ {title:'Market-wide sell-off on global recession fears',body:'Asian markets drop 2 to 3 percent.',why:'A broad fall hits almost everything. Panic selling locks in losses; ask whether values changed.',imp:{},mkt:-3,flow:-500,fx:200}
+];
+let CH=null,ctl=null,code='',students={},log=[],lastBoard='',armed=null;
+const SAVE='bs-dosen-kelas';
+const fmt=n=>Math.round(n).toLocaleString('id-ID');
+const fp=v=>(v>0?'+':'')+Number(v||0).toFixed(2).replace('.',',')+'%';
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function msg(id,t,k){const m=$(id);m.className='msg show '+(k||'ok');m.textContent=t}
+function phaseMins(t){return t<8?525+t*15/8:t<58?540+(t-8)*180/50:t<68?720+(t-58)*90/10:t<114?810+(t-68)*140/46:950+(t-114)*10/6}
+const hhmm=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(Math.floor(m%60)).padStart(2,'0');
+const tickNow=()=>BSKelas.tickAt(ctl,BSKelas.now());
+function when(g){const d=Math.min(ctl.days,Math.floor(g/ctl.tpd)+1),t=g>=ctl.days*ctl.tpd?ctl.tpd-1:g%ctl.tpd;return `Hari ${d} · ${hhmm(phaseMins(t))}`}
+function store(){try{localStorage.setItem(SAVE,JSON.stringify({code,name:ctl&&ctl.name,created:ctl&&ctl.created}))}catch(e){}}
+
+// ---------- connect
+async function connect(c,create){$('conn').textContent='Menghubungkan…';
+  CH=await BSKelas.join(c,{role:'host',findOnly:!create,
+    onCtl:o=>{if(!ctl){ctl=o;draw()}},
+    onStatus:(id,o)=>{if(o)students[id]=o;else delete students[id]},
+    onConn:on=>{$('conn').textContent=on?'Terhubung':'Menyambung ulang…'}});
+  $('conn').textContent='Terhubung';code=c}
+async function publish(){await CH.setCtl(ctl);store();draw()}
+$('c-go').onclick=async()=>{$('c-go').disabled=true;msg('c-msg','Membuka kelas…');
+  try{code=BSKelas.newCode();await connect(code,true);
+    const seed=crypto.getRandomValues(new Uint32Array(1))[0]|0;
+    ctl={v:1,name:$('c-name').value.trim()||'Kelas Bursa Syariah',seed,days:10,tpd:120,tickMs:Number($('c-dur').value)||1000,allowReg:$('c-reg').checked,state:'lobby',baseTick:0,baseTime:BSKelas.now(),events:[],created:Date.now()};
+    await publish();showLive()}
+  catch(e){msg('c-msg',e.message==='lib'?'Pustaka koneksi gagal dimuat. Periksa internet lalu muat ulang halaman.':'Tidak bisa terhubung ke server kelas. Jaringan kampus mungkin memblokir port 8084/8884; coba data seluler atau Wi-Fi lain.','err');$('c-go').disabled=false}};
+(function(){let sv=null;try{sv=JSON.parse(localStorage.getItem(SAVE)||'null')}catch(e){}
+  if(sv&&sv.code){$('resume').hidden=false;$('resume-txt').textContent=`Kelas terakhir: ${sv.name||''} (kode ${sv.code}), dibuka ${new Date(sv.created||Date.now()).toLocaleString('id-ID')}.`}
+  $('resume-go').onclick=async()=>{$('resume-go').disabled=true;msg('c-msg','Mencari kelas…');
+    try{ctl=null;await connect(sv.code,false);const t0=Date.now();while(!ctl&&Date.now()-t0<5000)await new Promise(r=>setTimeout(r,200));
+      if(!ctl)throw new Error('notfound');showLive()}
+    catch(e){msg('c-msg',e.message==='notfound'?'Kelas tidak ditemukan lagi di server. Buka kelas baru.':'Tidak bisa terhubung ke server kelas.','err');$('resume-go').disabled=false}};
+  $('resume-drop').onclick=()=>{try{localStorage.removeItem(SAVE)}catch(e){}$('resume').hidden=true}})();
+
+function showLive(){$('setup').hidden=true;$('live').hidden=false;$('code').textContent=code;
+  const url=new URL('main.html?kelas='+code,location.href).href;$('joinlink').textContent=url;$('qr').innerHTML='';
+  try{new QRCode($('qr'),{text:url,width:170,height:170,correctLevel:QRCode.CorrectLevel.M})}catch(e){$('qr').hidden=true}
+  $('copy').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(url);$('copy').textContent='Tersalin';setTimeout(()=>$('copy').textContent='Salin tautan',1500)};
+  $('cls-name').textContent=ctl.name+' · '+Math.round(ctl.days*ctl.tpd*ctl.tickMs/60000)+' menit';
+  log=(ctl.events||[]).slice();draw();setInterval(loop,1000)}
+
+// ---------- controls
+$('b-start').onclick=async()=>{if(ctl.state==='lobby'){ctl.state='run';ctl.baseTick=0;ctl.baseTime=BSKelas.now()}else if(ctl.state==='pause'){ctl.state='run';ctl.baseTime=BSKelas.now()}await publish()};
+$('b-pause').onclick=async()=>{if(ctl.state!=='run')return;ctl.baseTick=tickNow();ctl.state='pause';await publish()};
+$('b-end').onclick=async()=>{if(armed!=='end'){armed='end';$('b-end').textContent='Klik lagi untuk mengakhiri';setTimeout(()=>{armed=null;$('b-end').textContent='Akhiri kelas'},4000);return}
+  armed=null;$('b-end').textContent='Akhiri kelas';ctl.baseTick=tickNow();ctl.state='end';await publish()};
+$('l-reg').onchange=async e=>{ctl.allowReg=e.target.checked;await publish()};
+$('b-new').onclick=()=>{if(armed!=='new'){armed='new';$('b-new').textContent='Klik lagi: buka kelas baru';setTimeout(()=>{armed=null;$('b-new').textContent='Kelas baru'},4000);return}
+  try{CH.close()}catch(e){}location.reload()};
+$('b-wipe').onclick=async()=>{if(armed!=='wipe'){armed='wipe';$('b-wipe').textContent='Klik lagi: hapus semua data';setTimeout(()=>{armed=null;$('b-wipe').textContent='Hapus data kelas'},4000);return}
+  armed=null;await CH.wipe(Object.keys(students));try{localStorage.removeItem(SAVE)}catch(e){}msg('l-msg','Data kelas dihapus dari server. Unduh CSV dulu jika Anda memerlukan nilainya.');students={};setTimeout(()=>location.reload(),1800)};
+
+// ---------- issues
+$('presets').innerHTML=PRESETS.map((p,i)=>{const im=Object.entries(p.imp||{}).map(([k,v])=>`${k} ${v>0?'+':''}${v}%`).concat(p.mkt?[`pasar ${p.mkt>0?'+':''}${p.mkt}%`]:[]).join(' · ');
+  return `<button type="button" data-p="${i}"><b>${esc(p.title)}</b><span class="${p.kind==='note'?'':((p.mkt||0)+Object.values(p.imp||{}).reduce((a,b)=>a+b,0))>=0?'up':'down'}">${p.kind==='note'?'pengumuman, tanpa dampak harga':esc(im)}</span></button>`}).join('');
+$('presets').onclick=e=>{const b=e.target.closest('[data-p]');if(b)send(Object.assign({},PRESETS[Number(b.dataset.p)]))};
+$('i-tk').innerHTML='<option value="">(tidak ada saham tertentu)</option>'+TK.map(([k,n])=>`<option value="${k}">${k} · ${n}</option>`).join('');
+const sync=()=>{const v=Number($('i-pct').value),m=Number($('i-mkt').value);$('i-pct-o').textContent=(v>0?'+':'')+v+'%';$('i-mkt-o').textContent=(m>0?'+':'')+String(m).replace('.',',')+'%'};
+$('i-pct').oninput=sync;$('i-mkt').oninput=sync;sync();
+$('i-go').onclick=()=>{const t=$('i-title').value.trim();if(t.length<5){msg('i-msg','Tulis judul berita dulu.','err');return}
+  const tk=$('i-tk').value,imp={};if(tk)imp[tk]=Number($('i-pct').value);const mkt=Number($('i-mkt').value);
+  if(!tk&&!mkt){msg('i-msg','Pilih saham atau atur dampak ke seluruh pasar, atau kirim sebagai pengumuman saja.','err');return}
+  send({title:t,body:$('i-body').value.trim(),imp,mkt})};
+$('n-go').onclick=()=>{const t=$('i-title').value.trim();if(t.length<5){msg('i-msg','Tulis isi pengumuman di kolom judul.','err');return}send({title:t,body:$('i-body').value.trim(),kind:'note'})};
+async function send(p){if(!ctl)return;if(ctl.state==='end'){msg('i-msg','Kelas sudah berakhir.','err');return}
+  const ev=Object.assign({kind:'issue'},p,{id:'e'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36),tick:tickNow()+8,at:Date.now()});
+  ctl.events=(ctl.events||[]).concat([ev]);log=ctl.events.slice();await publish();
+  msg('i-msg',`Terkirim: "${p.title}". Berlaku di ${when(ev.tick)}${ctl.state==='run'?'':' (setelah pasar berjalan)'}.`);$('i-title').value='';$('i-body').value=''}
+
+// ---------- leaderboard
+const behC=s=>s>=60?'i':s>=40?'m':'e';
+function rows(){const key=$('sort').value,now=BSKelas.now();
+  return Object.entries(students).map(([id,o])=>Object.assign({id,on:now-(o.ts||0)<25000},o)).sort((a,b)=>(b[key]||0)-(a[key]||0)||(b.r||0)-(a.r||0))}
+function drawBoard(){const rs=rows();$('cnt').textContent=rs.length;$('onl').textContent=rs.filter(r=>r.on).length;
+  $('board').innerHTML=rs.length?rs.map((r,i)=>`<tr class="${r.on||r.over?'':'off'}"><td class="rank">${i<3?`<span class="medal m${i+1}">${i+1}</span>`:i+1}</td>
+    <td><b>${esc(r.n)}</b><br><span class="est">${esc(r.nim)}${r.cls?' · '+esc(r.cls):''}</span></td><td class="n ${r.r>0?'up':r.r<0?'down':''}">${fp(r.r)}</td><td class="n">Rp${fmt(r.eq)}</td>
+    <td class="n">${r.sc} <span class="est">${esc(r.gr)}</span></td><td><span class="beh ${behC(r.bs)}">${esc(r.bl)} · ${r.bs}</span></td><td class="n">${r.ms}/15</td><td class="n">${r.tr}</td>
+    <td class="est">${r.over?'Selesai':'Hari '+r.d}${r.ac==='reg'?' · Regular':''}${r.on||r.over?'':' · offline'}</td></tr>`).join('')
+   :'<tr><td colspan="9" class="est" style="padding:24px;text-align:center">Belum ada mahasiswa. Tampilkan kode di layar kelas.</td></tr>'}
+function pushBoard(){const b=Object.entries(students).map(([id,o])=>({id,n:o.n,r:o.r})).sort((a,b)=>b.r-a.r).slice(0,80);const sig=JSON.stringify(b);if(sig===lastBoard)return;lastBoard=sig;CH.setBoard({rows:b,at:Date.now()})}
+$('sort').onchange=drawBoard;
+$('b-csv').onclick=()=>{const rs=rows();const head=['Peringkat','Nama','NIM','Kelas','Imbal hasil (%)','Ekuitas (Rp)','Nilai simulasi','Huruf','Skor perilaku','Profil perilaku','Misi','Jumlah trade','Akun terakhir','Hari','Selesai'];
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const csv=[head.map(q).join(';')].concat(rs.map((r,i)=>[i+1,r.n,r.nim,r.cls,String(r.r).replace('.',','),Math.round(r.eq),r.sc,r.gr,r.bs,r.bl,r.ms,r.tr,r.ac==='reg'?'Regular':'SOTS',r.d,r.over?'ya':'belum'].map(q).join(';'))).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));a.download=`Nilai-Bursa-Syariah-${code}.csv`;a.click()};
+
+// ---------- draw
+function draw(){if(!ctl)return;const st=ctl.state,g=tickNow(),max=ctl.days*ctl.tpd;
+  $('st-pill').textContent=st==='lobby'?'Lobi':st==='run'?'Berjalan':st==='pause'?'Dijeda':'Selesai';$('st-pill').className='pill '+(st==='run'?'run':st==='end'?'end':'');
+  $('b-start').hidden=st==='run'||st==='end';$('b-start').textContent=st==='pause'?'Lanjutkan':'Mulai';$('b-pause').hidden=st!=='run';$('b-end').disabled=st==='end';$('l-reg').checked=!!ctl.allowReg;
+  $('clk').textContent=g>=max?'Hari 10 · tutup':when(g);const ls=Math.max(0,Math.round((max-g)*ctl.tickMs/1000));$('left').textContent=st==='end'?'Selesai':String(Math.floor(ls/60)).padStart(2,'0')+':'+String(ls%60).padStart(2,'0');
+  $('log').innerHTML=log.length?log.slice().reverse().map(e=>`<li><time>${when(e.tick)}</time><b>${esc(e.title)}</b> <span class="est">${e.kind==='note'?'pengumuman':Object.entries(e.imp||{}).map(([k,v])=>k+' '+(v>0?'+':'')+v+'%').concat(e.mkt?['pasar '+(e.mkt>0?'+':'')+e.mkt+'%']:[]).join(' · ')} · ${e.tick<=g?'sudah berlaku':'menunggu'}</span></li>`).join(''):'<li class="est">Belum ada isu.</li>';
+  if(st==='run'&&g>=max){ctl.baseTick=max;ctl.state='end';publish()}}
+let n=0;function loop(){draw();drawBoard();if(++n%10===0)pushBoard()}
+})();
+</script>
+</body>
+</html>
