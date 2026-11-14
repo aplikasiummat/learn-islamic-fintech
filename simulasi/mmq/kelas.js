@@ -37,49 +37,63 @@ window.PNMKelas = (function () {
     });
   }
 
-  /* join(code, {role:'host'|'player', onCtl, onStatus, onPair, onConn}) -> channel
-     host  : membuat kelas di broker pertama yang menjawab; menerima status semua kelompok (s/+) dan paket (p/+).
+  /* join(code, {role:'host'|'player', findOnly, onCtl, onStatus, onPair, onConn}) -> channel
+     host  : membuka kelas di SEMUA broker yang dapat dijangkau, lalu meneruskan (relay) pesan kontrol dan paket pasangan
+             antar-broker, sehingga dua gawai yang tersambung ke broker berbeda tetap dapat bertukar paket.
      player: mencari pesan kontrol kelas di tiap broker; menerima kontrol (ctl) dan semua paket pasangan (p/+). */
   async function join(code, h) {
     for (let i = 0; i < 50 && !window.mqtt; i++) await new Promise(r => setTimeout(r, 200));
     if (!window.mqtt) throw new Error('lib');
     code = cleanCode(code); const key = await keyFor(code);
     const base = 'pnmmmq/v1/' + (await sha('pnm-mmq|' + code)).slice(0, 24);
-    let client = null;
-    for (let round = 0; round < (h.role === 'host' ? 1 : 3) && !client; round++)
-    for (const url of BROKERS) {
-      const c = await tryBroker(url, 6000); if (!c) continue;
-      if (h.role === 'host' && !h.findOnly) { client = c; break }
-      const found = await new Promise(res => {
-        let done = false; const fin = v => { if (!done) { done = true; c.unsubscribe(base + '/ctl'); c.removeListener('message', onm); res(v) } };
-        const onm = (t, m) => { if (t === base + '/ctl' && m.length) fin(true) };
-        c.on('message', onm); c.subscribe(base + '/ctl', { qos: 1 }); setTimeout(() => fin(false), 5000);
-      });
-      if (found) { client = c; break }
-      c.end(true);
+    const hasCtl = c => new Promise(res => {
+      let done = false; const fin = v => { if (!done) { done = true; c.unsubscribe(base + '/ctl'); c.removeListener('message', onm); res(v) } };
+      const onm = (t, m) => { if (t === base + '/ctl' && m.length) fin(true) };
+      c.on('message', onm); c.subscribe(base + '/ctl', { qos: 1 }); setTimeout(() => fin(false), 5000);
+    });
+    let clients = [];
+    if (h.role === 'host') {
+      clients = (await Promise.all(BROKERS.map(u => tryBroker(u, 6000)))).filter(Boolean);
+      if (!clients.length) throw new Error('net');
+      if (h.findOnly) { const f = await Promise.all(clients.map(hasCtl)); if (!f.some(Boolean)) { clients.forEach(c => c.end(true)); throw new Error('notfound') } }
+    } else {
+      for (let round = 0; round < 3 && !clients.length; round++)
+        for (const url of BROKERS) {
+          const c = await tryBroker(url, 6000); if (!c) continue;
+          if (await hasCtl(c)) { clients = [c]; break }
+          c.end(true);
+        }
+      if (!clients.length) throw new Error('notfound');
     }
-    if (!client) throw new Error(h.role === 'host' ? 'net' : 'notfound');
-    client.on('message', async (t, m) => {
+    const last = {};  // topik -> isi mentah terakhir, untuk membuang pesan ganda dan pantulan relay
+    const handle = async (t, m, from) => {
+      const raw = m.toString(); if (last[t] === raw) return; last[t] = raw;
       const sub = t.slice(base.length + 1);
-      if (!m.length) { if (sub.startsWith('s/') && h.onStatus) h.onStatus(sub.slice(2), null); return }
-      let o; try { o = await open(key, m.toString()) } catch (e) { return }
+      if (h.role === 'host' && clients.length > 1 && (sub === 'ctl' || sub.startsWith('p/')))
+        clients.forEach(c => { if (c !== from) c.publish(t, raw, { qos: 1, retain: true }) });
+      if (!raw.length) { if (sub.startsWith('s/') && h.onStatus) h.onStatus(sub.slice(2), null); return }
+      let o; try { o = await open(key, raw) } catch (e) { return }
       if (sub === 'ctl' && h.onCtl) h.onCtl(o);
       else if (sub.startsWith('s/') && h.onStatus) h.onStatus(sub.slice(2), o);
       else if (sub.startsWith('p/') && h.onPair) h.onPair(sub.slice(2), o);
+    };
+    const up = () => clients.some(c => c.connected);
+    clients.forEach(c => {
+      c.on('message', (t, m) => handle(t, m, c));
+      c.on('connect', () => { h.onConn && h.onConn(true) });
+      c.on('offline', () => { h.onConn && h.onConn(up()) });
+      c.on('reconnect', () => { h.onConn && h.onConn(up()) });
+      c.subscribe([base + '/ctl', base + '/p/+'].concat(h.role === 'host' ? [base + '/s/+'] : []), { qos: 1 });
     });
-    client.on('connect', () => { h.onConn && h.onConn(true) });
-    client.on('offline', () => { h.onConn && h.onConn(false) });
-    client.on('reconnect', () => { h.onConn && h.onConn(false) });
-    client.subscribe([base + '/ctl', base + '/p/+'].concat(h.role === 'host' ? [base + '/s/+'] : []), { qos: 1 });
-    const pub = async (path, obj, retain) => client.publish(base + '/' + path, obj === null ? '' : await seal(key, obj), { qos: 1, retain: !!retain });
+    const pub = async (path, obj, retain) => { const raw = obj === null ? '' : await seal(key, obj); clients.forEach(c => c.publish(base + '/' + path, raw, { qos: 1, retain: !!retain })) };
     return {
-      code,
+      code, brokers: clients.length,
       setCtl: o => pub('ctl', o, true),
       setStatus: (id, o) => pub('s/' + id, o, true),
       setPair: (k, o) => pub('p/' + k, o, true),
       clear: id => pub('s/' + id, null, true),
       clearPair: k => pub('p/' + k, null, true),
-      close: () => client.end(),
+      close: () => clients.forEach(c => c.end()),
     };
   }
   return { newCode, cleanCode, join, sha };
