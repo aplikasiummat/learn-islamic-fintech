@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jejak Audit MMQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="gaya.css?v=3">
+<script async src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="data.js?v=3"></script>
+<script src="kelas.js?v=4"></script>
+</head>
+<body>
+<div class="top"><a class="chip" href="index.html" style="color:#fff;text-decoration:none">☰ Menu</a><div class="t">Jejak Audit MMQ<span class="sub"> · Sesi Risiko dan Audit</span></div><span class="chip" id="hdrGroup">–</span><span class="chip" id="hdrScore">0 poin</span><span class="conn" id="conn" title="Papan skor kelas"></span></div>
+<div class="wrap" id="app"></div>
+
+<script>
+'use strict';
+const D = window.PNMDATA, $ = s => document.querySelector(s), app = $('#app');
+const DETIK = 90;
+const store = { get(k, d) { try { const v = localStorage.getItem('pnmaudit.' + k); return v ? JSON.parse(v) : d } catch (e) { return d } },
+                set(k, v) { try { localStorage.setItem('pnmaudit.' + k, JSON.stringify(v)) } catch (e) { } } };
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const qs = new URLSearchParams(location.search);
+let S = store.get('state', null), CH = null, tick = null;
+
+function hdr() { $('#hdrGroup').textContent = S ? S.nama : '–'; $('#hdrScore').textContent = (S ? S.skor : 0) + ' poin' }
+function save() { store.set('state', S); hdr(); kirim() }
+function kirim() { if (CH && S) CH.setStatus('audit-' + S.id, { g: 'audit', nama: S.nama, ronde: S.i, skor: S.skor, jawab: S.jawab, selesai: S.fase === 'akhir', t: Date.now() }) }
+async function sambung() {
+  if (!S || !S.kode || !window.mqtt) return;
+  try { CH = await PNMKelas.join(S.kode, { role: 'player', onConn: v => $('#conn').classList.toggle('on', v) }); $('#conn').classList.add('on'); kirim() }
+  catch (e) { CH = null; $('#conn').classList.remove('on'); setTimeout(() => { if (!CH && S) sambung() }, 4000) }
+}
+/* urutan pilihan tindakan diacak tetap per berkas */
+const urut = i => { const n = D.BERKAS[i].tindakan.length; const a = [...Array(n).keys()]; return a.map((x, k) => (k + i) % n) };
+function poin(i, j) {
+  const b = D.BERKAS[i]; if (!j || j.t == null) return 0;
+  if (j.t !== b.temuan) return 0;
+  if (!b.temuan) return 10;
+  let p = 4; if (j.r != null && b.risiko.includes(j.r)) p += 3; if (j.a != null && b.tindakan[j.a][1]) p += 3; return p;
+}
+
+function layarAwal() {
+  app.innerHTML = `
+  <div class="card">
+    <h1>Jejak Audit MMQ</h1>
+    <p class="lead">Kelompok berperan sebagai auditor syariah. Delapan berkas MMQ dari ULaMM dan Mekaar menunggu diperiksa, dan sebagian kejadiannya sudah Bapak dan Ibu temui di permainan Cabang vs Pusat tadi pagi.</p>
+    <div class="fact">Untuk setiap berkas, ada tiga keputusan dalam ${DETIK} detik: <b>ada temuan atau tidak</b>, <b>jenis risikonya</b>, dan <b>tindakan perbaikannya</b>. Tidak semua berkas bermasalah, sehingga auditor juga harus berani menyatakan berkas bersih.</div>
+    <label for="nama">Nama kelompok</label>
+    <input id="nama" maxlength="30" placeholder="contoh: Kelompok Audit 2">
+    <label for="kode">Kode kelas dari fasilitator <span class="muted">(boleh dikosongkan)</span></label>
+    <input id="kode" maxlength="8" value="${esc(qs.get('kelas') || '')}" placeholder="contoh: K7PQ2" style="text-transform:uppercase">
+    <p></p><button class="btn gold wide" id="mulai">Mulai memeriksa</button>
+  </div>`;
+  $('#mulai').onclick = () => {
+    S = { id: Math.random().toString(36).slice(2, 9), nama: $('#nama').value.trim() || 'Kelompok', kode: PNMKelas.cleanCode($('#kode').value), i: 0, skor: 0, jawab: [], fase: 'main', sisa: DETIK };
+    save(); sambung(); render();
+  };
+}
+
+function render() {
+  clearInterval(tick);
+  if (!S) return layarAwal();
+  if (S.fase === 'akhir') return akhir();
+  const i = S.i, b = D.BERKAS[i], j = S.jawab[i] || (S.jawab[i] = {});
+  const selesai = j.done;
+  const step = j.t == null ? 1 : (j.t && b.temuan && j.r == null) ? 2 : (j.t && b.temuan && j.a == null) ? 3 : 4;
+  let q = '';
+  if (!selesai && step === 1) q = `<h3>1. Apakah berkas ini mengandung temuan?</h3>
+      <div class="row"><button class="opt" data-t="1"><b>Ada temuan</b></button><button class="opt" data-t="0"><b>Tidak ada temuan</b></button></div>`;
+  else if (!selesai && step === 2) q = `<h3>2. Jenis risiko utamanya</h3>${D.RISIKO.map((x, k) => `<button class="opt" data-r="${k}">${esc(x)}</button>`).join('')}`;
+  else if (!selesai && step === 3) q = `<h3>3. Tindakan perbaikan yang paling tepat</h3>${urut(i).map(k => `<button class="opt" data-a="${k}">${esc(b.tindakan[k][0])}</button>`).join('')}`;
+  app.innerHTML = `
+  <div class="card">
+    <div class="row" style="align-items:center"><div><span class="pill">Berkas ${i + 1} dari ${D.BERKAS.length} · ${esc(b.seg)}</span></div><div style="text-align:right"><span class="timer" id="tm">${S.sisa}</span></div></div>
+    <div style="display:flex;gap:14px;align-items:center;margin-top:10px"><div class="ic">${b.ikon}</div><h2 style="margin:0">${esc(b.judul)}</h2></div>
+    <div class="fact"><b>Isi berkas</b><ul style="margin:6px 0 0;padding-left:22px">${b.isi.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
+    ${q}<div id="fb"></div>
+  </div>`;
+  app.querySelectorAll('[data-t]').forEach(x => x.onclick = () => { j.t = x.dataset.t === '1'; if (j.t !== b.temuan || !b.temuan) selesai1(); else { save(); render() } });
+  app.querySelectorAll('[data-r]').forEach(x => x.onclick = () => { j.r = +x.dataset.r; save(); render() });
+  app.querySelectorAll('[data-a]').forEach(x => x.onclick = () => { j.a = +x.dataset.a; selesai1() });
+  if (selesai) bahas(); else {
+    tick = setInterval(() => { S.sisa--; store.set('state', S); const t = $('#tm'); if (t) { t.textContent = S.sisa; t.classList.toggle('low', S.sisa <= 15) } if (S.sisa <= 0) selesai1() }, 1000);
+  }
+}
+function selesai1() {
+  clearInterval(tick);
+  const i = S.i, j = S.jawab[i] || (S.jawab[i] = {});
+  if (!j.done) { j.done = true; j.p = poin(i, j); S.skor += j.p }
+  save(); render();
+}
+function bahas() {
+  const i = S.i, b = D.BERKAS[i], j = S.jawab[i];
+  const ok = (c, t) => `<li class="${c ? 'ok' : 'no'}">${c ? '✓' : '✗'} ${t}</li>`;
+  let rinci = ok(j.t === b.temuan, (b.temuan ? 'Berkas ini memang mengandung temuan.' : 'Berkas ini bersih, tidak ada temuan.'));
+  if (b.temuan && j.t) {
+    rinci += ok(j.r != null && b.risiko.includes(j.r), 'Jenis risiko: ' + b.risiko.map(k => D.RISIKO[k]).join(' atau ') + '.');
+    rinci += ok(j.a != null && b.tindakan[j.a][1], 'Tindakan: ' + b.tindakan.find(x => x[1])[0]);
+  }
+  $('#fb').innerHTML = `<div class="card" style="box-shadow:none;margin:14px 0 0">
+      <div class="row" style="align-items:center"><div><h3 style="margin:0">Pembahasan</h3></div><div style="text-align:right;flex:0 0 auto"><span class="big ${j.p >= 7 ? 'ok' : j.p >= 4 ? '' : 'no'}" style="font-size:2.2rem">+${j.p}</span></div></div>
+      <ul style="list-style:none;padding:0;margin:8px 0">${rinci}</ul>
+      <p>${esc(b.bahas)}</p><p class="note">Rujukan: ${esc(b.rujukan)}</p>
+      <button class="btn gold wide" id="lanjut">${i + 1 < D.BERKAS.length ? 'Berkas berikutnya' : 'Lihat hasil akhir'}</button></div>`;
+  app.querySelectorAll('.opt').forEach(x => x.disabled = true); const tm = $('#tm'); if (tm) tm.style.visibility = 'hidden';
+  $('#lanjut').onclick = () => { S.i++; S.sisa = DETIK; if (S.i >= D.BERKAS.length) S.fase = 'akhir'; save(); render() };
+}
+function akhir() {
+  const benar = S.jawab.filter((j, i) => j && j.t === D.BERKAS[i].temuan).length;
+  app.innerHTML = `
+  <div class="card center"><div class="muted">Skor akhir ${esc(S.nama)}</div><div class="big">${S.skor}</div><div class="muted">dari ${D.BERKAS.length * 10} poin · ${benar} dari ${D.BERKAS.length} berkas dinilai tepat</div></div>
+  <div class="card"><h3>Ringkasan berkas</h3><table>${D.BERKAS.map((b, i) => { const j = S.jawab[i] || {}; return `<tr><td><b>${esc(b.judul)}</b><br><span class="muted">${esc(b.seg)} · ${b.temuan ? 'ada temuan' : 'bersih'}</span></td><td class="center"><b>${j.p ?? 0}</b>/10</td></tr>` }).join('')}</table></div>
+  <div class="card"><div class="fact"><b>Pesan sesi ini.</b> ${esc(D.PESAN.audit)}</div><button class="btn ghost wide" id="ulang">Main ulang dari awal</button></div>`;
+  $('#ulang').onclick = () => { const b = $('#ulang'); if (!b.dataset.y) { b.dataset.y = 1; b.textContent = 'Ketuk sekali lagi untuk menghapus skor dan mulai ulang'; return } store.set('state', null); S = null; hdr(); render() };
+}
+hdr(); if (S) sambung(); render();
+</script>
+</body>
+</html>

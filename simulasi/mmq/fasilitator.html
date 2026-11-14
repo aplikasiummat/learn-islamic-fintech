@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Konsol Fasilitator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="gaya.css?v=3">
+<script async src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="data.js?v=3"></script>
+<script src="kelas.js?v=4"></script>
+<style>
+  .wrap{max-width:1280px}
+  .tabs{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+  .tabs .btn{min-height:48px;padding:10px 18px}
+  #qr img,#qr canvas{background:#fff;padding:10px;border-radius:12px;max-width:220px}
+  .code{font-family:'JetBrains Mono',monospace;font-size:3rem;font-weight:800;letter-spacing:.12em}
+  td.n{font-family:'JetBrains Mono',monospace;font-weight:700;text-align:right}
+</style>
+</head>
+<body>
+<div class="top"><div class="t">Konsol Fasilitator · Pelatihan MMQ PNM</div><span class="chip" id="hdrCode">belum ada kelas</span><span class="conn" id="conn"></span></div>
+<div class="wrap">
+  <div class="card" id="setup">
+    <h2>Buka kelas</h2>
+    <p>Buat kode kelas baru untuk setiap sesi, sehingga skor latihan tidak tercampur. Peserta memindai QR atau membuka tautan, lalu memasukkan kode kelas.</p>
+    <div class="row">
+      <button class="btn gold" id="baru">Buat kode kelas baru</button>
+      <div><input id="kodeLama" placeholder="atau ketik kode yang sudah ada" maxlength="8" style="text-transform:uppercase"></div>
+      <button class="btn ghost" id="lama">Buka kode ini</button>
+    </div>
+    <p class="no" id="err"></p>
+    <p class="note">Tanpa internet: kelompok tetap bisa bermain di gawai masing-masing; skor akhir diisi manual di bagian bawah halaman ini.</p>
+  </div>
+
+  <div class="card hide" id="kelas">
+    <div class="row" style="align-items:center">
+      <div id="qr" style="flex:0 0 240px"></div>
+      <div><div class="muted">Kode kelas</div><div class="code" id="code"></div>
+        <p class="lead" style="word-break:break-all">Buka: <b id="url"></b></p>
+        <p class="muted">Game 1 dan Game 2 memakai kode yang sama.</p></div>
+    </div>
+  </div>
+
+  <div class="tabs"><button class="btn" data-t="g1">Game 1 · Maqasid dan Pemilihan Akad</button><button class="btn ghost" data-t="g2">Game 2 · Cabang vs Pusat</button><button class="btn ghost" data-t="g3">Game 3 · Jejak Audit MMQ</button><button class="btn ghost" data-t="man">Isian manual</button></div>
+
+  <div id="g1">
+    <div class="card"><h2>Papan skor Maqasid dan Pemilihan Akad</h2><div id="g1tab"><p class="muted">Belum ada kelompok.</p></div></div>
+    <div class="grid2">
+      <div class="card"><h3>Pilihan kelas per ronde</h3><div id="g1dist"></div></div>
+      <div class="card"><h3>Nilai kumulatif akad, ronde 1–7</h3><div id="g1kum"></div>
+        <div class="fact"><b>Penutup.</b> <span id="pesan1"></span></div></div>
+    </div>
+  </div>
+
+  <div id="g2" class="hide">
+    <div class="card"><h2>Papan skor satu PNM per pasangan</h2><div id="g2tab"><p class="muted">Belum ada pasangan.</p></div></div>
+    <div class="grid2">
+      <div class="card"><h3>Temuan audit yang muncul di kelas</h3><div id="g2tem"><p class="muted">Belum ada.</p></div><p class="note">Daftar ini menjadi bahan pembuka sesi Bu Dina.</p></div>
+      <div class="card"><h3>Kebijakan pusat yang paling sering dipilih</h3><div id="g2pol"><p class="muted">Belum ada.</p></div></div>
+    </div>
+  </div>
+
+  <div id="g3" class="hide">
+    <div class="card"><h2>Papan skor Jejak Audit MMQ</h2><div id="g3tab"><p class="muted">Belum ada kelompok.</p></div></div>
+    <div class="card"><h3>Ketepatan kelas per berkas</h3><div id="g3ber"></div><p class="note">Berkas dengan ketepatan rendah adalah bahan pembahasan utama.</p></div>
+  </div>
+
+  <div id="man" class="hide">
+    <div class="card"><h2>Isian manual</h2>
+      <p>Dipakai bila ada kelompok yang bermain tanpa internet. Kelompok membacakan skor akhir dari layarnya.</p>
+      <div class="row"><div><label>Nama</label><input id="mNama"></div>
+        <div><label>Game</label><select id="mGame"><option value="akad">Game 1 · Maqasid dan Pemilihan Akad</option><option value="cp">Game 2 · Cabang vs Pusat</option><option value="audit">Game 3 · Jejak Audit MMQ</option></select></div>
+        <div><label>Skor (Game 2: skor ULaMM)</label><input id="mS1" inputmode="decimal"></div>
+        <div><label>Skor Mekaar (Game 2 saja)</label><input id="mS2" inputmode="decimal"></div></div>
+      <p></p><button class="btn gold" id="mAdd">Tambahkan</button> <button class="btn ghost" id="mClear">Hapus semua isian manual</button>
+      <div id="mList"></div>
+    </div>
+    <div class="card"><h3>Bersihkan data kelas</h3><p>Menghapus status semua kelompok dari kelas ini. Pakai setelah gladi atau sebelum sesi berikutnya bila memakai kode yang sama.</p><button class="btn ghost" id="wipe">Hapus data kelas ini</button></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const D = window.PNMDATA, $ = s => document.querySelector(s);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const store = { get(k, d) { try { const v = localStorage.getItem('pnmfas.' + k); return v ? JSON.parse(v) : d } catch (e) { return d } }, set(k, v) { try { localStorage.setItem('pnmfas.' + k, JSON.stringify(v)) } catch (e) { } } };
+const ST = {}; let CH = null; let MAN = store.get('manual', []);
+$('#pesan1').textContent = D.PESAN.akad;
+
+document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[data-t]').forEach(x => x.classList.toggle('ghost', x !== b));
+  ['g1', 'g2', 'g3', 'man'].forEach(id => $('#' + id).classList.toggle('hide', id !== b.dataset.t));
+});
+
+async function buka(code, create) {
+  $('#err').textContent = 'Menghubungkan…';
+  try {
+    CH = await PNMKelas.join(code, { role: 'host', findOnly: !create, onConn: v => $('#conn').classList.toggle('on', v),
+      onStatus: (id, o) => { if (o) ST[id] = o; else delete ST[id]; gambar() } });
+    if (create) await CH.setCtl({ dibuat: Date.now(), v: 1 });
+    store.set('kode', code);
+    $('#err').textContent = ''; $('#conn').classList.add('on');
+    $('#hdrCode').textContent = 'Kelas ' + code; $('#code').textContent = code; $('#kelas').classList.remove('hide'); $('#setup').classList.add('hide');
+    const base = location.href.replace(/fasilitator\.html.*$/, '');
+    const url = base + 'index.html?kelas=' + code; $('#url').textContent = url;
+    for (let i = 0; i < 25 && !window.QRCode; i++) await new Promise(r => setTimeout(r, 200));
+    $('#qr').innerHTML = ''; if (window.QRCode) new QRCode($('#qr'), { text: url, width: 220, height: 220 });
+  } catch (e) {
+    $('#err').textContent = e.message === 'notfound' ? 'Kode tidak ditemukan. Buat kode baru.' : 'Tidak dapat terhubung ke internet. Gunakan isian manual.';
+  }
+}
+$('#baru').onclick = () => buka(PNMKelas.newCode(), true);
+$('#lama').onclick = () => { const c = PNMKelas.cleanCode($('#kodeLama').value); if (c) buka(c, false) };
+const lama = store.get('kode', ''); if (lama) $('#kodeLama').value = lama;
+
+function gambar() { g1(); g2(); g3(); manList() }
+function g3() {
+  const rows = Object.values(ST).filter(o => o.g === 'audit').map(o => ({ nama: o.nama, skor: o.skor, pos: o.selesai ? 'selesai' : 'berkas ' + Math.min(o.ronde + 1, D.BERKAS.length), jawab: o.jawab || [] }))
+    .concat(MAN.filter(m => m.g === 'audit').map(m => ({ nama: m.nama, skor: m.s1, pos: 'manual', jawab: [] }))).sort((a, b) => b.skor - a.skor);
+  $('#g3tab').innerHTML = rows.length ? `<table><tr><th>#</th><th>Kelompok</th><th>Posisi</th><th style="text-align:right">Skor</th></tr>${rows.map((r, i) => `<tr><td>${i + 1}</td><td><b>${esc(r.nama)}</b></td><td>${esc(r.pos)}</td><td class="n">${r.skor}</td></tr>`).join('')}</table>` : '<p class="muted">Belum ada kelompok.</p>';
+  $('#g3ber').innerHTML = `<table><tr><th>Berkas</th><th>Kunci</th><th style="text-align:right">Dijawab</th><th style="text-align:right">Rata-rata poin</th></tr>${D.BERKAS.map((b, i) => { const js = rows.map(r => r.jawab[i]).filter(j => j && j.done); const avg = js.length ? Math.round(js.reduce((s, j) => s + (j.p || 0), 0) / js.length * 10) / 10 : '–';
+    return `<tr><td><b>${esc(b.judul)}</b><br><span class="muted">${esc(b.seg)}</span></td><td>${b.temuan ? 'Ada temuan' : 'Bersih'}</td><td class="n">${js.length}</td><td class="n">${avg}</td></tr>` }).join('')}</table>`;
+}
+
+function g1() {
+  const rows = Object.values(ST).filter(o => o.g === 'akad').map(o => ({ nama: o.nama, skor: o.skor, ronde: o.selesai ? 'selesai' : 'ronde ' + Math.min(o.ronde + 1, D.KARTU.length), pilih: o.pilih || [], live: 1 }))
+    .concat(MAN.filter(m => m.g === 'akad').map(m => ({ nama: m.nama, skor: m.s1, ronde: 'manual', pilih: [] })))
+    .sort((a, b) => b.skor - a.skor);
+  $('#g1tab').innerHTML = rows.length ? `<table><tr><th>#</th><th>Kelompok</th><th>Posisi</th><th style="text-align:right">Skor</th></tr>${rows.map((r, i) => `<tr><td>${i + 1}</td><td><b>${esc(r.nama)}</b></td><td>${esc(r.ronde)}</td><td class="n">${r.skor}</td></tr>`).join('')}</table>` : '<p class="muted">Belum ada kelompok.</p>';
+  const dist = D.KARTU.map((k, r) => D.AKAD.map((a, j) => rows.filter(x => x.pilih[r] === j).length));
+  $('#g1dist').innerHTML = `<table><tr><th>Ronde</th>${D.AKAD.map(a => `<th title="${esc(a.nama)}">${a.id}</th>`).join('')}</tr>${dist.map((d, r) => `<tr><td>${r + 1}. ${esc(D.KARTU[r].judul)}</td>${d.map(x => `<td class="n">${x || ''}</td>`).join('')}</tr>`).join('')}</table>
+    <p class="note">${D.AKAD.map(a => a.id + ' = ' + esc(a.nama)).join(' · ')}</p>`;
+  const n7 = D.KARTU.length - 1, tot = v => v.reduce((a, b) => a + b, 0);
+  const kum = D.AKAD.map((a, j) => D.KARTU.slice(0, n7).reduce((s, k) => s + tot(k.nilai[j]), 0)); const mx = Math.max(...kum);
+  $('#g1kum').innerHTML = D.AKAD.map((a, j) => `<div><b>${esc(a.nama)}</b> <span class="muted">${kum[j]}</span><div class="bar"><i style="width:${kum[j] / mx * 100}%;background:${a.warna}"></i></div></div>`).join('');
+}
+
+function g2() {
+  const P = {};
+  Object.values(ST).filter(o => o.g === 'cp').forEach(o => {
+    const key = o.mode === 'dua' ? 'Pasangan ' + o.pasangan : o.nama;
+    const p = P[key] = P[key] || { nama: key, anggota: new Set(), h: [null, null], fase: '' };
+    p.anggota.add(o.nama + (o.mode === 'dua' ? ' (' + o.sisi + ')' : ''));
+    (o.hasil || []).forEach((h, i) => { if (h) p.h[i] = h });
+    p.fase = o.fase === 'akhir' ? 'selesai' : (o.babak === 0 ? 'ULaMM' : 'Mekaar') + ' · ' + o.peran;
+  });
+  MAN.filter(m => m.g === 'cp').forEach(m => { P['m' + m.nama] = { nama: m.nama, anggota: new Set(['manual']), h: [m.s1 != null ? { total: m.s1, temuan: [] } : null, m.s2 != null ? { total: m.s2, temuan: [] } : null], fase: 'manual' } });
+  const rows = Object.values(P).map(p => { const hs = p.h.filter(Boolean); p.rata = hs.length ? Math.round(hs.reduce((s, x) => s + x.total, 0) / hs.length * 10) / 10 : 0; return p }).sort((a, b) => b.rata - a.rata);
+  $('#g2tab').innerHTML = rows.length ? `<table><tr><th>#</th><th>Pasangan</th><th>Anggota</th><th>Posisi</th><th style="text-align:right">ULaMM</th><th style="text-align:right">Mekaar</th><th style="text-align:right">Rata-rata</th></tr>
+    ${rows.map((p, i) => `<tr><td>${i + 1}</td><td><b>${esc(p.nama)}</b></td><td>${esc([...p.anggota].join(', '))}</td><td>${esc(p.fase)}</td><td class="n">${p.h[0] ? p.h[0].total : '–'}</td><td class="n">${p.h[1] ? p.h[1].total : '–'}</td><td class="n">${p.rata}</td></tr>`).join('')}</table>` : '<p class="muted">Belum ada pasangan.</p>';
+  const tem = {}; rows.forEach(p => p.h.forEach(h => h && (h.temuan || []).forEach(t => tem[t] = (tem[t] || 0) + 1)));
+  const tl = Object.entries(tem).sort((a, b) => b[1] - a[1]);
+  $('#g2tem').innerHTML = tl.length ? `<table>${tl.map(([t, n]) => `<tr><td>${esc(t)}</td><td class="n">${n}×</td></tr>`).join('')}</table>` : '<p class="muted">Belum ada.</p>';
+  const pol = {};
+  /* paket kebijakan dibaca dari hasil yang dikirim cabang */
+  const seen = new Set();
+  rows.forEach(p => p.h.forEach((h, bi) => { if (!h || !h.paket) return; const id = p.nama + bi; if (seen.has(id)) return; seen.add(id);
+    D.BABAK[bi].kebijakan.forEach(k => { const t = k.judul + ': ' + k.pilihan[h.paket[k.k] || 0].t; pol[t] = (pol[t] || 0) + 1 }) }));
+  const pl = Object.entries(pol).sort((a, b) => b[1] - a[1]).slice(0, 12);
+  $('#g2pol').innerHTML = pl.length ? `<table>${pl.map(([t, n]) => `<tr><td>${esc(t)}</td><td class="n">${n}×</td></tr>`).join('')}</table>` : '<p class="muted">Belum ada.</p>';
+}
+
+function manList() {
+  $('#mList').innerHTML = MAN.length ? `<table><tr><th>Nama</th><th>Game</th><th>Skor</th><th></th></tr>${MAN.map((m, i) => `<tr><td>${esc(m.nama)}</td><td>${m.g === 'akad' ? 'Game 1' : m.g === 'cp' ? 'Game 2' : 'Game 3'}</td><td>${m.s1 ?? ''}${m.s2 != null ? ' / ' + m.s2 : ''}</td><td><button class="btn ghost" data-del="${i}" style="min-height:40px;padding:6px 12px">hapus</button></td></tr>`).join('')}</table>` : '';
+  document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { MAN.splice(+b.dataset.del, 1); store.set('manual', MAN); gambar() });
+}
+const num = v => { const x = parseFloat(String(v).replace(',', '.')); return isNaN(x) ? null : x };
+$('#mAdd').onclick = () => { const n = $('#mNama').value.trim(); if (!n) return; MAN.push({ nama: n, g: $('#mGame').value, s1: num($('#mS1').value), s2: num($('#mS2').value) }); store.set('manual', MAN); ['#mNama', '#mS1', '#mS2'].forEach(s => $(s).value = ''); gambar() };
+$('#mClear').onclick = () => { MAN = []; store.set('manual', MAN); gambar() };
+$('#wipe').onclick = async () => { if (!CH) return; for (const id of Object.keys(ST)) await CH.clear(id); for (let p = 1; p <= 6; p++) for (let b = 0; b < 2; b++) { await CH.clearPair(p + '-' + b); await CH.clearPair(p + '-' + b + '-hasil') } };
+gambar();
+</script>
+</body>
+</html>

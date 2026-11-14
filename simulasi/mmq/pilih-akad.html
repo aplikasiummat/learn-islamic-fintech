@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Maqasid dan Pemilihan Akad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="gaya.css?v=3">
+<script async src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="data.js?v=3"></script>
+<script src="kelas.js?v=4"></script>
+</head>
+<body>
+<div class="top"><a class="chip" href="index.html" style="color:#fff;text-decoration:none">☰ Menu</a><div class="t">Maqasid dan Pemilihan Akad<span class="sub"> · Pelatihan Pembiayaan Syariah PNM</span></div><span class="chip" id="hdrGroup">–</span><span class="chip" id="hdrScore">0 poin</span><span class="conn" id="conn" title="Papan skor kelas"></span></div>
+<div class="wrap" id="app"></div>
+
+<script>
+'use strict';
+const D = window.PNMDATA, $ = s => document.querySelector(s), app = $('#app');
+const DETIK = 75;
+const store = { get(k, d) { try { const v = localStorage.getItem('pnmakad.' + k); return v ? JSON.parse(v) : d } catch (e) { return d } },
+                set(k, v) { try { localStorage.setItem('pnmakad.' + k, JSON.stringify(v)) } catch (e) { } } };
+let S = store.get('state', null);
+let CH = null, tick = null;
+const qs = new URLSearchParams(location.search);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const tot = arr => arr.reduce((a, b) => a + b, 0);
+const nilaiAkad = (k, i) => tot(D.KARTU[k].nilai[i]);
+const poinRonde = (r, i) => i == null ? 0 : nilaiAkad(r, i) + (terbaik(r).includes(i) ? 2 : 0);
+const terbaik = k => { const v = D.KARTU[k].nilai.map(tot); const m = Math.max(...v); return v.map((x, i) => x === m ? i : -1).filter(i => i >= 0) };
+
+function save() { store.set('state', S); hdr(); kirim() }
+function hdr() { $('#hdrGroup').textContent = S ? S.nama : '–'; $('#hdrScore').textContent = (S ? S.skor : 0) + ' poin' }
+async function sambung(code) {
+  if (!code || !window.mqtt) return;
+  try {
+    CH = await PNMKelas.join(code, { role: 'player', onConn: v => $('#conn').classList.toggle('on', v) });
+    $('#conn').classList.add('on'); kirim();
+  } catch (e) { CH = null; $('#conn').classList.remove('on'); setTimeout(() => { if (!CH && S) sambung(S.kode) }, 4000) }
+}
+function kirim() { if (CH && S) CH.setStatus('akad-' + S.id, { g: 'akad', nama: S.nama, ronde: S.ronde, skor: S.skor, pilih: S.pilih, selesai: S.selesai, t: Date.now() }) }
+
+function layarAwal() {
+  const kode = qs.get('kelas') || '';
+  app.innerHTML = `
+  <div class="card">
+    <h1>Maqasid dan Pemilihan Akad</h1>
+    <p class="lead">Delapan nasabah datang ke PNM dengan kebutuhan yang berbeda. Kelompok memilih satu akad untuk setiap nasabah dalam ${DETIK} detik, lalu melihat skornya pada lima kriteria model bisnis PNM.</p>
+    <div class="fact">Lima pilihan akad: <b>Ijarah/IMBT</b>, <b>Mudharabah</b>, <b>Musyarakah</b>, <b>Murabahah</b>, dan <b>Murabahah bil Wakalah / Wakalah Muallaqah</b>. Skor tertinggi per ronde 10, ditambah bonus 2 bila memilih akad terbaik.</div>
+    <label for="nama">Nama kelompok</label>
+    <input id="nama" maxlength="30" placeholder="contoh: Kelompok 3 Cempaka">
+    <label for="kode">Kode kelas dari fasilitator <span class="muted">(boleh dikosongkan)</span></label>
+    <input id="kode" maxlength="8" value="${esc(kode)}" placeholder="contoh: K7PQ2" style="text-transform:uppercase">
+    <p></p>
+    <button class="btn gold wide" id="mulai">Mulai bermain</button>
+  </div>`;
+  $('#mulai').onclick = () => {
+    const nama = $('#nama').value.trim() || 'Kelompok';
+    S = { id: Math.random().toString(36).slice(2, 9), nama, kode: PNMKelas.cleanCode($('#kode').value), ronde: 0, skor: 0, pilih: [], fase: 'main', selesai: false, sisa: DETIK };
+    save(); sambung(S.kode); ronde();
+  };
+}
+
+function ronde() {
+  clearInterval(tick);
+  const k = D.KARTU[S.ronde];
+  app.innerHTML = `
+  <div class="card">
+    <div class="row" style="align-items:center"><div><span class="pill">Ronde ${S.ronde + 1} dari ${D.KARTU.length}</span></div><div style="text-align:right"><span class="timer" id="tm">${S.sisa}</span></div></div>
+    <div style="display:flex;gap:14px;align-items:center;margin-top:10px"><div class="ic">${k.ikon}</div><h2 style="margin:0">${esc(k.judul)}</h2></div>
+    <p class="lead">${esc(k.cerita)}</p>
+    <div class="fact"><b>Fakta PNM.</b> ${esc(k.fakta)}</div>
+    <h3>Akad mana yang kelompok pilih?</h3>
+    ${D.AKAD.map((a, i) => `<button class="opt" data-i="${i}"><b>${esc(a.nama)}</b><small>${esc(a.rumpun)}</small></button>`).join('')}
+  </div>`;
+  app.querySelectorAll('.opt').forEach(b => b.onclick = () => pilih(+b.dataset.i));
+  tick = setInterval(() => {
+    S.sisa--; const t = $('#tm'); if (t) { t.textContent = S.sisa; t.classList.toggle('low', S.sisa <= 15) }
+    store.set('state', S);
+    if (S.sisa <= 0) pilih(null);
+  }, 1000);
+}
+
+function pilih(i) {
+  clearInterval(tick);
+  const r = S.ronde;
+  const poin = poinRonde(r, i);
+  S.pilih[r] = i; S.skor += poin; S.fase = 'hasil'; save(); hasil(i, poin);
+}
+
+function hasil(i, poin) {
+  const r = S.ronde, k = D.KARTU[r], best = terbaik(r);
+  const urut = D.AKAD.map((a, j) => j).sort((a, b) => nilaiAkad(r, b) - nilaiAkad(r, a));
+  const pilihan = i == null ? null : D.AKAD[i];
+  app.innerHTML = `
+  <div class="card">
+    <span class="pill">Ronde ${r + 1} · ${esc(k.judul)}</span>
+    <div class="row" style="align-items:center;margin-top:10px">
+      <div><div class="muted">Pilihan kelompok</div><h2 style="margin:4px 0">${pilihan ? esc(pilihan.nama) : 'Waktu habis'}</h2></div>
+      <div style="text-align:right;flex:0 0 auto"><div class="muted">Poin ronde ini</div><div class="big ${poin >= 10 ? 'ok' : poin >= 7 ? '' : 'no'}">+${poin}</div></div>
+    </div>
+    ${i != null ? `<table><tr><th>Kriteria</th><th style="text-align:center">Nilai</th></tr>${D.KRITERIA.map((kr, j) => { const v = k.nilai[i][j]; return `<tr><td>${esc(kr)}</td><td style="text-align:center" class="${v === 2 ? 'ok' : v === 0 ? 'no' : ''}">${v === 2 ? '●●' : v === 1 ? '●○' : '○○'}</td></tr>` }).join('')}</table>` : ''}
+  </div>
+  <div class="card">
+    <h3>Skor kelima akad untuk nasabah ini</h3>
+    ${urut.map(j => { const a = D.AKAD[j], v = nilaiAkad(r, j); return `
+      <div style="margin-top:10px"><b>${esc(a.nama)}</b> ${best.includes(j) ? '<span class="pill" style="background:#dff3e6;color:#1f7a4d">terbaik</span>' : ''} ${j === i ? '<span class="pill">pilihan kelompok</span>' : ''}
+      <div class="bar"><i style="width:${v * 10}%;background:${a.warna}"></i></div>
+      <div class="muted" style="margin-top:-6px">${v}/10 · ${esc(k.alasan[j])}</div></div>` }).join('')}
+    <p class="note" style="margin-top:14px">Rujukan: ${esc(k.rujukan)}</p>
+    ${k.catatan ? `<div class="fact"><b>Catatan.</b> ${esc(k.catatan)}</div>` : ''}
+    <button class="btn gold wide" id="lanjut">${r + 1 < D.KARTU.length ? 'Ronde berikutnya' : 'Lihat hasil akhir'}</button>
+  </div>`;
+  $('#lanjut').onclick = () => {
+    S.ronde++; S.sisa = DETIK; S.fase = 'main';
+    if (S.ronde >= D.KARTU.length) { S.selesai = true; S.fase = 'akhir'; save(); akhir() } else { save(); ronde() }
+  };
+}
+
+function akhir() {
+  const n7 = D.KARTU.length - 1;
+  const kum = D.AKAD.map((a, j) => D.KARTU.slice(0, n7).reduce((s, k, r) => s + nilaiAkad(r, j), 0));
+  const r8 = D.AKAD.map((a, j) => nilaiAkad(n7, j));
+  const maks = D.KARTU.length * 12;
+  const mx = Math.max(...kum);
+  app.innerHTML = `
+  <div class="card center">
+    <div class="muted">Skor akhir ${esc(S.nama)}</div>
+    <div class="big">${S.skor}</div><div class="muted">dari ${maks} poin</div>
+  </div>
+  <div class="card">
+    <h3>Nilai kumulatif tiap akad pada ronde 1 sampai ${n7}</h3>
+    ${D.AKAD.map((a, j) => `<div><b>${esc(a.nama)}</b> <span class="muted">${kum[j]} dari ${n7 * 10}</span><div class="bar"><i style="width:${kum[j] / mx * 100}%;background:${a.warna}"></i></div></div>`).join('')}
+    <p>Pada tujuh ronde pertama, Murabahah bil Wakalah dan Wakalah Muallaqah unggul karena paling sejalan dengan model bisnis PNM: nasabah memerlukan uang, dana PNM berbiaya tetap, dan akad harus dapat dijalankan massal di pertemuan kelompok.</p>
+  </div>
+  <div class="card" style="border-color:var(--red)">
+    <h3>Ronde ${n7 + 1}: saat nasabah kesulitan membayar</h3>
+    ${D.AKAD.map((a, j) => `<div><b>${esc(a.nama)}</b> <span class="muted">${r8[j]}/10</span><div class="bar"><i style="width:${r8[j] * 10}%;background:${a.warna}"></i></div></div>`).join('')}
+    <p>Pada ronde terakhir urutannya berbalik. Tagihan Murabahah terkunci sejak akad, sehingga ruang restrukturisasi, penjadwalan ulang, dan persyaratan ulang (3R) menjadi sempit. Dengan kata lain, tidak ada akad yang unggul di delapan ronde sekaligus. Akad yang menggabungkan kepastian Murabahah dan keluwesan Musyarakah dibahas di Sesi 1, yaitu Musyarakah Mutanaqishah.</p>
+    <div class="fact"><b>Maqasid.</b> ${esc(D.PESAN.maqasid)}</div>
+    <div class="fact"><b>Pesan pagi ini.</b> ${esc(D.PESAN.akad)}</div>
+  </div>
+  <div class="card"><button class="btn ghost wide" id="ulang">Main ulang dari awal</button></div>`;
+  $('#ulang').onclick = () => { if (confirmUlang()) { store.set('state', null); S = null; hdr(); layarAwal() } };
+}
+function confirmUlang() { const b = $('#ulang'); if (b.dataset.y) return true; b.dataset.y = 1; b.textContent = 'Ketuk sekali lagi untuk menghapus skor dan mulai ulang'; return false }
+
+hdr();
+if (!S) layarAwal();
+else { sambung(S.kode); if (S.fase === 'akhir') akhir(); else if (S.fase === 'hasil') hasil(S.pilih[S.ronde], poinRonde(S.ronde, S.pilih[S.ronde])); else ronde() }
+</script>
+</body>
+</html>

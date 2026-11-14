@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulasi Musyarakah Mutanaqishah · Learn Islamic Fintech with Tazkia</title>
+<meta name="description" content="Tiga permainan kelompok tentang Musyarakah Mutanaqishah (MMQ): Maqasid dan Pemilihan Akad, Cabang vs Pusat, dan Jejak Audit MMQ, dengan konsol fasilitator dan papan skor kelas.">
+<link rel="icon" href="../../assets/logo-tazkia.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="../../assets/site.css?v=20261112">
+<style>
+.facts4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:34px;max-width:900px}
+.facts4 div{border-top:1px solid var(--gold);padding-top:12px}
+.facts4 b{display:block;font-family:var(--serif);font-size:38px;line-height:1;color:#fff}
+.facts4 span{font-size:13.5px;color:#a9b4ab}
+@media (max-width:700px){.facts4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;margin-top:10px}
+.game{border:1px solid var(--gold);padding:26px 24px;background:rgba(255,255,255,.6);display:flex;flex-direction:column;gap:10px}
+.game small{font-family:var(--cinzel);font-size:11.5px;letter-spacing:.16em;color:var(--gold3,#8a6520);text-transform:uppercase}
+.game h3{font-family:var(--serif);font-size:28px;line-height:1.1;margin:0}
+.game p{margin:0;color:var(--muted);font-size:16px;line-height:1.55;flex:1}
+.game .ar{font-family:var(--ar);font-size:30px;color:var(--gold3,#8a6520);line-height:1}
+.note2{max-width:820px;margin:34px auto 0;border-left:3px solid var(--gold);padding:6px 0 6px 18px;color:var(--muted)}
+</style>
+</head>
+<body data-page="mmq" data-base="../../">
+
+<div class="topbar"><div class="wrap">
+  <span><span data-i="topbar"></span> · <span data-i="topbar2"></span></span>
+  <span class="ar">رَبِّ زِدْنِيْ عِلْمًا</span>
+</div></div>
+
+<header class="nav"><div class="wrap">
+  <a class="logo" href="../../" aria-label="Learn Islamic Fintech with Tazkia">
+    <span class="chip"><img src="../../assets/logo-tazkia.png" alt="Universitas Tazkia" width="600" height="206"></span>
+    <span><b>LEARN ISLAMIC FINTECH</b><small>WITH TAZKIA</small></span>
+  </a>
+  <nav class="menu" aria-label="Menu">
+    <a href="../../" data-i="nav0"></a>
+    <div class="dd"><a href="../../#selayang"><span data-i="menuAbout"></span><span>▼</span></a>
+      <div class="sub"><a href="../../#selayang" data-i="mKisah"></a><a href="../../#tentang" data-i="mPenyusun"></a><a href="../../#cara" data-i="mCara"></a><a href="../../#kolom" data-i="mKolom"></a></div></div>
+    <a href="../../bahan-ajar/" data-i="nav1"></a>
+    <div class="dd"><a href="./" class="on"><span data-i="nav2"></span><span>▼</span></a>
+      <div class="sub"><a href="../dbcf/" data-i="mSimDbcf"></a><a href="../saham/" data-i="mSimSaham"></a><a href="./" data-i="mSimMmq"></a></div></div>
+    <a href="../../#peta" data-i="nav3"></a>
+  </nav>
+  <button class="icobtn" type="button" data-search aria-label="Cari">⌕</button>
+  <div class="lang" role="group" aria-label="Bahasa / Language"><button type="button" data-lang="id" aria-pressed="true">ID</button><button type="button" data-lang="en" aria-pressed="false">EN</button></div>
+  <button class="burger" type="button" aria-label="Menu" aria-expanded="false">☰</button>
+</div></header>
+
+<main>
+  <section class="dark pbanner">
+    <div class="wm">مُشَارَكَة مُتَنَاقِصَة</div>
+    <div class="wrap" style="position:relative">
+      <div class="crumb"><a href="../../" data-i="nav0"></a><i>◆</i><span data-i="nav2"></span><i>◆</i><span>Musyarakah Mutanaqishah</span></div>
+      <h1 class="foil">Simulasi Musyarakah Mutanaqishah</h1>
+      <p class="lead">Akad itu mudah dipahami. Yang menentukan kepatuhan syariah adalah proses bisnis yang menyertainya. Tiga permainan kelompok ini mengajak peserta memilih akad, menyusun kebijakan kantor pusat, menjalankannya di cabang, lalu memeriksanya sebagai auditor syariah.</p>
+      <div class="cta" style="margin-top:26px"><a class="btn gold gm" href="pilih-akad.html">Mulai Game 1</a><a class="btn line" href="#permainan">Lihat ketiga permainan</a></div>
+      <p id="kodeInfo" style="color:#e2c77a;margin-top:14px"></p>
+      <div class="facts4">
+        <div><b>3</b><span>permainan berurutan</span></div>
+        <div><b>60</b><span>menit total di kelas</span></div>
+        <div><b>1</b><span>gawai per kelompok</span></div>
+        <div><b>Live</b><span>papan skor fasilitator</span></div>
+      </div>
+    </div>
+  </section>
+  <div class="zellige thin"></div>
+
+  <section id="permainan">
+    <div class="wrap">
+      <div class="center reveal" style="margin-bottom:34px"><div class="eyebrow">Tiga Sesi Permainan</div><h2 class="h2">Dari memilih akad sampai memeriksa berkas</h2></div>
+      <div class="games">
+        <div class="game reveal">
+          <span class="ar">مَقَاصِد</span><small>Game 1 · Sesi pembuka · 15 menit</small>
+          <h3>Maqasid dan Pemilihan Akad</h3>
+          <p>Delapan nasabah Mekaar dan ULaMM, lima pilihan akad, dan lima kriteria model bisnis. Murabahah bil Wakalah unggul pada tujuh ronde pertama, tetapi kalah ketika nasabah kesulitan membayar, sehingga peserta menemukan sendiri alasan peralihan ke MMQ.</p>
+          <a class="btn gold gm" href="pilih-akad.html">Main Game 1</a>
+        </div>
+        <div class="game reveal">
+          <span class="ar">إِدَارَة</span><small>Game 2 · Sesi 2 · 30 menit</small>
+          <h3>Cabang vs Pusat</h3>
+          <p>Kelompok berpasangan. Kantor pusat menyusun paket kebijakan MMQ dengan anggaran terbatas, cabang menjalankannya menghadapi enam kejadian lapangan, dan skor dihitung untuk satu lembaga. Dua babak: ULaMM lalu Mekaar, dengan peran bertukar.</p>
+          <a class="btn gold gm" href="cabang-pusat.html">Main Game 2</a>
+        </div>
+        <div class="game reveal">
+          <span class="ar">رَقَابَة</span><small>Game 3 · Sesi risiko dan audit · 15 menit</small>
+          <h3>Jejak Audit MMQ</h3>
+          <p>Kelompok berperan sebagai auditor syariah dan memeriksa delapan berkas MMQ: ada temuan atau tidak, jenis risikonya, dan tindakan perbaikannya. Sebagian berkas adalah kelanjutan kejadian di Game 2.</p>
+          <a class="btn gold gm" href="jejak-audit.html">Main Game 3</a>
+        </div>
+      </div>
+      <div class="note2 reveal"><b>Untuk fasilitator.</b> Buka konsol fasilitator, buat kode kelas, lalu tampilkan QR di layar. Peserta memindai QR, mengisi nama kelompok, dan bermain. Papan skor ketiga game, temuan audit yang muncul di kelas, serta isian manual untuk kelompok yang terputus internetnya tersedia di konsol yang sama.
+        <div class="cta" style="margin-top:12px"><a class="btn gold" href="fasilitator.html">Buka konsol fasilitator</a></div></div>
+      <p class="note2 reveal">Permainan ini pertama kali disusun untuk Pelatihan Penguatan Kompetensi Pembiayaan Syariah PT PNM, 19 November 2026. Rujukan utama: Fatwa DSN-MUI 73/DSN-MUI/XI/2008, 89/DSN-MUI/XII/2013, Keputusan DSN-MUI 01/DSN-MUI/X/2013, dan Pedoman Produk Pembiayaan Musyarakah Perbankan Syariah (OJK, 2024). Nama nasabah, cabang, dan angka dalam permainan bersifat fiktif.</p>
+    </div>
+  </section>
+
+  <div class="zellige"></div>
+  <section class="dark ctaband">
+    <div class="wrap">
+      <div class="center"><div class="eyebrow">Wakaf Ilmu</div></div>
+      <h2>Akad itu mudah. Proses bisnisnya yang menentukan.</h2>
+      <div class="cta"><a class="btn gold gm" href="pilih-akad.html">Mulai Game 1</a><a class="btn line" href="../saham/" data-i="mSimSaham"></a></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="logo" href="../../"><span class="chip"><img src="../../assets/logo-tazkia.png" alt="Universitas Tazkia" width="600" height="206"></span><span><b>LEARN ISLAMIC FINTECH</b><small>WITH TAZKIA</small></span></a>
+      <p style="margin-top:18px" data-i="footAbout"></p>
+      <p data-i="footAddr" style="font-size:13.5px;color:#93a097"></p>
+      <div class="ar">وَلَا غَالِبَ إِلَّا اللّٰهُ</div>
+    </div>
+    <div>
+      <h4 data-i="footNav"></h4>
+      <ul><li><a href="../../bahan-ajar/" data-i="nav1"></a></li><li><a href="../dbcf/" data-i="mSimDbcf"></a></li><li><a href="../saham/" data-i="mSimSaham"></a></li><li><a href="./" data-i="mSimMmq"></a></li><li><a href="../../#peta" data-i="nav3"></a></li><li><a href="../../#tentang" data-i="nav4"></a></li></ul>
+    </div>
+    <div>
+      <h4 data-i="footRel"></h4>
+      <ul><li><a href="https://tazkia.ac.id/" target="_blank" rel="noopener">Universitas Tazkia</a></li><li><a href="https://dsnmui.or.id/" target="_blank" rel="noopener">DSN-MUI</a></li><li><a href="https://www.ojk.go.id/" target="_blank" rel="noopener">Otoritas Jasa Keuangan</a></li></ul>
+      <h4 style="margin-top:22px" data-i="footLic"></h4>
+      <p style="font-size:13.5px;margin:0" data-i="footLicTxt"></p>
+    </div>
+    <div class="bottom"><span data-i="footBottom"></span><span data-i="topbar"></span></div>
+  </div>
+</footer>
+<button class="totop" type="button" aria-label="Ke atas">↑</button>
+
+<script src="../../assets/site.js?v=20261112"></script>
+<script>
+const k = new URLSearchParams(location.search).get('kelas');
+if (k) { document.getElementById('kodeInfo').textContent = 'Kode kelas ' + k + ' sudah terisi otomatis di setiap game.';
+  document.querySelectorAll('a.gm').forEach(a => a.href += '?kelas=' + encodeURIComponent(k)) }
+</script>
+</body>
+</html>

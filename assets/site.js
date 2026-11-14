@@ -74,7 +74,8 @@ const T = {
   cntEyebrow:"Capaian", cntTitle:"Belajar tanpa biaya, kapan saja",
   newsEyebrow:"Bahan Ajar Terbaru", newsTitle:"Deck kuliah terbaru", seeAll:"Selengkapnya",
   footRel:"Situs Terkait", footAddr:"Universitas Tazkia · Sentul City, Bogor, Jawa Barat",
-  mSimDbcf:"Simulasi Donasi (DBCF)", mSimSaham:"Simulasi Saham Syariah",
+  mSimDbcf:"Simulasi Donasi (DBCF)", mSimSaham:"Simulasi Saham Syariah", mSimMmq:"Simulasi Musyarakah Mutanaqishah",
+  sim3CardT:"Simulasi Musyarakah Mutanaqishah (MMQ)", sim3CardD:"Tiga permainan kelompok tentang MMQ: Maqasid dan Pemilihan Akad, Cabang vs Pusat, dan Jejak Audit MMQ, lengkap dengan konsol fasilitator dan papan skor kelas.", sim3Meta:"3 permainan · 15–30 menit",
   ssCrumb:"Saham Syariah", ssTitle:"Bursa Syariah", ssStart:"Mulai Simulasi", ssHow:"Cara Bermain",
   ssLead:"Rasakan jual beli saham seperti di Bursa Efek Indonesia, dengan aturan syariah yang benar-benar bekerja. Dua puluh menit, sepuluh hari bursa, dan modal virtual Rp100 juta di akun SOTS.",
   ssF1:"menit untuk satu sesi", ssF2:"hari bursa simulasi", ssF3:"modal virtual awal", ssF4:"misi pembelajaran",
@@ -177,7 +178,8 @@ const T = {
   cntEyebrow:"Milestones", cntTitle:"Learn at no cost, anytime",
   newsEyebrow:"Latest Materials", newsTitle:"Latest lecture decks", seeAll:"See all",
   footRel:"Related Sites", footAddr:"Universitas Tazkia · Sentul City, Bogor, West Java",
-  mSimDbcf:"Donation Simulation (DBCF)", mSimSaham:"Islamic Stock Simulation",
+  mSimDbcf:"Donation Simulation (DBCF)", mSimSaham:"Islamic Stock Simulation", mSimMmq:"Diminishing Partnership (MMQ) Simulation",
+  sim3CardT:"Diminishing Partnership (MMQ) Simulation", sim3CardD:"Three group games on musyarakah mutanaqishah: Maqasid and Contract Choice, Branch vs Head Office, and MMQ Audit Trail, with a facilitator console and class scoreboard. Interface in Indonesian.", sim3Meta:"3 games · 15–30 minutes",
   ssCrumb:"Islamic Stocks", ssTitle:"Bursa Syariah", ssStart:"Start the Simulation", ssHow:"How to Play",
   ssLead:"Trade stocks the way the Indonesia Stock Exchange works, with Shariah rules that actually bite. Twenty minutes, ten trading days, and Rp100 million of virtual capital in a SOTS account.",
   ssF1:"minutes per session", ssF2:"simulated trading days", ssF3:"virtual starting capital", ssF4:"learning missions",
@@ -299,6 +301,14 @@ function simCard2(){
     <h3 style="color:#fff">${L.sim2CardT}</h3><p style="color:#c3cec6">${L.sim2CardD}</p>
     <div class="acts"><a class="btn gold sm" href="${BASE}simulasi/saham/">${L.play}</a></div></div></article>`;
 }
+function simCard3(){
+  const L = T[lang];
+  return `<article class="mod corner reveal" style="background:radial-gradient(ellipse at 30% 0%,#3a2a10,#1a1206 70%);border-color:var(--gold);color:#e9e4d5">
+    <a class="thumb" href="${BASE}simulasi/mmq/" style="display:grid;place-items:center;background:radial-gradient(ellipse at 50% 30%,#4a3412,#120c04)"><span class="foil" style="font-family:var(--ar);font-size:54px;line-height:1">مُتَنَاقِصَة</span><span class="tag m">${L.lvlSim}</span></a>
+    <div class="body"><div class="meta" style="color:#a9b4ab">${L.sim3Meta}</div>
+    <h3 style="color:#fff">${L.sim3CardT}</h3><p style="color:#c3cec6">${L.sim3CardD}</p>
+    <div class="acts"><a class="btn gold sm" href="${BASE}simulasi/mmq/">${L.play}</a></div></div></article>`;
+}
 function renderMods(){
   const featBox = $("#featMods");
   if (featBox) featBox.innerHTML = MODS.slice().reverse().filter(m => !m.extra).slice(0,3).map(modCard).join("");
@@ -313,6 +323,8 @@ function renderMods(){
     if (simOk) html += simCard();
     const sim2Ok = (filter==="all" || filter==="sim") && (!q || (T.id.sim2CardT+" "+T.id.sim2CardD+" "+T.en.sim2CardD+" saham stock bursa").toLowerCase().includes(q));
     if (sim2Ok) html += simCard2();
+    const sim3Ok = (filter==="all" || filter==="sim") && (!q || (T.id.sim3CardT+" "+T.id.sim3CardD+" mmq musyarakah mutanaqishah pnm audit akad").toLowerCase().includes(q));
+    if (sim3Ok) html += simCard3();
     cat.innerHTML = html || `<div class="empty">${T[lang].empty}</div>`;
   }
   const reads = $("#reads");

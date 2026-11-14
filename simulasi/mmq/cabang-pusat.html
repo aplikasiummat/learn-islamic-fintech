@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cabang vs Pusat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="gaya.css?v=3">
+<script async src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="data.js?v=3"></script>
+<script src="kelas.js?v=4"></script>
+</head>
+<body>
+<div class="top"><a class="chip" href="index.html" style="color:#fff;text-decoration:none">☰ Menu</a><div class="t">Cabang vs Pusat<span class="sub"> · Menjalankan MMQ</span></div><span class="chip" id="hdrGroup">–</span><span class="chip" id="hdrRole">–</span><span class="conn" id="conn" title="Papan skor kelas"></span></div>
+<div class="wrap" id="app"></div>
+
+<script>
+'use strict';
+const D = window.PNMDATA, $ = s => document.querySelector(s), app = $('#app');
+const DT_PUSAT = 240, DT_CABANG = 360;
+const store = { get(k, d) { try { const v = localStorage.getItem('pnmcp.' + k); return v ? JSON.parse(v) : d } catch (e) { return d } },
+                set(k, v) { try { localStorage.setItem('pnmcp.' + k, JSON.stringify(v)) } catch (e) { } } };
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const qs = new URLSearchParams(location.search);
+let S = store.get('state', null), CH = null, tick = null;
+const PAKET = {};   // kunci pasangan-babak -> paket dari Pusat
+const HASIL = {};   // kunci pasangan-babak -> hasil dari Cabang
+
+const peran = (st = S) => st.mode === 'satu' ? (st.fase === 'pusat' ? 'Pusat' : 'Cabang') : ((st.babak === 0) === (st.sisi === 'A') ? 'Pusat' : 'Cabang');
+const kunci = () => S.pasangan + '-' + S.babak;
+function save() { store.set('state', S); hdr(); kirim() }
+function hdr() {
+  $('#hdrGroup').textContent = S ? S.nama + (S.mode === 'dua' ? ' · Pasangan ' + S.pasangan + S.sisi : '') : '–';
+  $('#hdrRole').textContent = S && S.fase !== 'akhir' ? D.BABAK[S.babak].nama.split('·')[1].trim() + ' · ' + peran() : '–';
+}
+function kirim() {
+  if (!CH || !S) return;
+  CH.setStatus('cp-' + S.id, { g: 'cp', nama: S.nama, pasangan: S.pasangan, sisi: S.sisi, mode: S.mode, babak: S.babak, peran: peran(), fase: S.fase,
+    hasil: S.hasil.map(h => h ? { total: h.skor.total, skor: h.skor, temuan: h.temuan.map(x => x.t), pusat: h.pusat, cabang: h.cabang, paket: h.paket } : null), t: Date.now() });
+}
+async function sambung() {
+  if (!S.kode || !window.mqtt || S.mode !== 'dua') return;
+  try {
+    CH = await PNMKelas.join(S.kode, { role: 'player', onConn: v => $('#conn').classList.toggle('on', v),
+      onPair: (k, o) => { if (!o) return; if (k.endsWith('-hasil')) HASIL[k.slice(0, -6)] = o; else PAKET[k] = o; cekPasangan() } });
+    $('#conn').classList.add('on'); kirim(); kirimTertunda(); cekPasangan();
+  } catch (e) { CH = null; $('#conn').classList.remove('on'); if (S.fase === 'tunggu' || S.fase === 'tungguHasil') render(); setTimeout(() => { if (!CH && S && S.mode === 'dua') sambung() }, 4000) }
+}
+/* bila paket atau hasil dibuat saat belum tersambung, kirim begitu koneksi tersedia */
+function kirimTertunda() {
+  if (!CH || !S) return;
+  if (S.fase === 'tungguHasil') CH.setPair(kunci(), { paket: S.paket, nama: S.nama, t: Date.now() });
+  if (S.fase === 'hasil' && peran() === 'Cabang' && S.hasil[S.babak]) CH.setPair(kunci() + '-hasil', { res: S.hasil[S.babak], t: Date.now() });
+}
+function cekPasangan() {
+  if (!S) return;
+  if (S.fase === 'tunggu' && PAKET[kunci()]) { S.paket = PAKET[kunci()].paket; S.namaPusat = PAKET[kunci()].nama; S.fase = 'cabang'; S.sisa = DT_CABANG; S.pilihan = []; S.langkah = 0; save(); render() }
+  else if (S.fase === 'tungguHasil' && HASIL[kunci()]) { S.hasil[S.babak] = HASIL[kunci()].res; S.fase = 'hasil'; save(); render() }
+}
+
+/* ---------- layar ---------- */
+function render() {
+  clearInterval(tick);
+  if (!S) return layarAwal();
+  ({ pusat: layarPusat, tunggu: layarTunggu, cabang: layarCabang, serah: layarSerah, tungguHasil: layarTungguHasil, hasil: layarHasil, akhir: layarAkhir })[S.fase]();
+}
+
+function layarAwal() {
+  app.innerHTML = `
+  <div class="card">
+    <h1>Cabang vs Pusat</h1>
+    <p class="lead">Kantor pusat menyusun paket kebijakan MMQ dengan anggaran terbatas, lalu cabang menjalankannya menghadapi enam kejadian lapangan. Skor dihitung untuk <b>satu PNM</b>: pusat dan cabang menang atau kalah bersama.</p>
+    <div class="fact">Dua babak, peran bertukar. <b>Babak 1 ULaMM</b>: kelompok A menjadi Pusat, kelompok B menjadi Cabang. <b>Babak 2 Mekaar</b>: kelompok A menjadi Cabang, kelompok B menjadi Pusat. Pusat bekerja ${DT_PUSAT / 60} menit, Cabang ${DT_CABANG / 60} menit.</div>
+    <label for="nama">Nama kelompok</label>
+    <input id="nama" maxlength="30" placeholder="contoh: Kelompok Melati">
+    <label>Cara bermain</label>
+    <div class="row">
+      <button class="opt on" data-m="dua"><b>Dua gawai</b><small>Satu gawai per kelompok, terhubung lewat kode kelas</small></button>
+      <button class="opt" data-m="satu"><b>Satu gawai</b><small>Satu gawai untuk satu pasangan, dioper bergantian; tanpa internet pun jalan</small></button>
+    </div>
+    <div id="duaBox">
+      <label for="kode">Kode kelas dari fasilitator</label>
+      <input id="kode" maxlength="8" value="${esc(qs.get('kelas') || '')}" placeholder="contoh: K7PQ2" style="text-transform:uppercase">
+      <label>Nomor pasangan</label>
+      <div class="row" id="noPas">${[1, 2, 3, 4, 5, 6].map(n => `<button class="opt center" data-n="${n}" style="flex:1 1 60px"><b>${n}</b></button>`).join('')}</div>
+      <label>Kelompok A atau B dalam pasangan</label>
+      <div class="row" id="sisi"><button class="opt center" data-s="A"><b>A</b><small>Babak 1 Pusat, Babak 2 Cabang</small></button><button class="opt center" data-s="B"><b>B</b><small>Babak 1 Cabang, Babak 2 Pusat</small></button></div>
+    </div>
+    <p class="no" id="err"></p>
+    <button class="btn gold wide" id="mulai">Mulai</button>
+  </div>`;
+  let mode = 'dua', n = null, sisi = null;
+  app.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { mode = b.dataset.m; app.querySelectorAll('[data-m]').forEach(x => x.classList.toggle('on', x === b)); $('#duaBox').classList.toggle('hide', mode === 'satu') });
+  app.querySelectorAll('[data-n]').forEach(b => b.onclick = () => { n = +b.dataset.n; app.querySelectorAll('[data-n]').forEach(x => x.classList.toggle('on', x === b)) });
+  app.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { sisi = b.dataset.s; app.querySelectorAll('[data-s]').forEach(x => x.classList.toggle('on', x === b)) });
+  $('#mulai').onclick = () => {
+    const kode = PNMKelas.cleanCode($('#kode').value);
+    if (mode === 'dua' && (!kode || !n || !sisi)) { $('#err').textContent = 'Isi kode kelas, nomor pasangan, dan A atau B. Bila tidak ada internet, pilih Satu gawai.'; return }
+    S = { id: Math.random().toString(36).slice(2, 9), nama: $('#nama').value.trim() || 'Kelompok', mode, kode: mode === 'dua' ? kode : '', pasangan: n || 0, sisi: sisi || 'A',
+          babak: 0, fase: 'pusat', paket: {}, pilihan: [], langkah: 0, hasil: [null, null], sisa: DT_PUSAT };
+    if (mode === 'dua' && peran() === 'Cabang') S.fase = 'tunggu';
+    save(); sambung(); render();
+  };
+}
+
+function timer(onHabis) {
+  tick = setInterval(() => {
+    S.sisa--; store.set('state', S);
+    const t = $('#tm'); if (t) { t.textContent = Math.floor(Math.max(0, S.sisa) / 60) + ':' + String(Math.max(0, S.sisa) % 60).padStart(2, '0'); t.classList.toggle('low', S.sisa <= 30) }
+    if (S.sisa <= 0) { clearInterval(tick); onHabis() }
+  }, 1000);
+}
+const fmt = s => Math.floor(Math.max(0, s) / 60) + ':' + String(Math.max(0, s) % 60).padStart(2, '0');
+
+function biaya(B, p) { return B.kebijakan.reduce((s, k) => s + k.pilihan[p[k.k] || 0].b, 0) }
+function layarPusat() {
+  const B = D.BABAK[S.babak];
+  const draw = () => {
+    const pakai = biaya(B, S.paket), sisa = D.ANGGARAN - pakai;
+    app.innerHTML = `
+    <div class="card">
+      <div class="row" style="align-items:center"><div><span class="pill">${esc(B.nama)} · Kantor Pusat</span></div><div style="text-align:right"><span class="timer" id="tm">${fmt(S.sisa)}</span></div></div>
+      <h2>Susun paket kebijakan MMQ</h2>
+      <p>${esc(B.sub)} Anggaran implementasi ${D.ANGGARAN} poin. Setiap pilihan memakai anggaran; sisa anggaran menjadi poin, tetapi kebijakan yang terlalu hemat akan diuji oleh cabang.</p>
+      <div style="position:sticky;top:64px;background:var(--card);padding:8px 0;z-index:3"><b>Anggaran terpakai ${pakai} dari ${D.ANGGARAN}</b> · sisa ${sisa}<div class="bar"><i style="width:${Math.min(100, pakai)}%;background:${sisa < 0 ? 'var(--red)' : 'var(--navy)'}"></i></div></div>
+    </div>
+    ${B.kebijakan.map((k, ki) => `<div class="card"><h3>${ki + 1}. ${esc(k.judul)}</h3>
+      ${k.pilihan.map((o, oi) => { const cur = S.paket[k.k] || 0; const jadi = pakai - k.pilihan[cur].b + o.b; const on = cur === oi;
+        return `<button class="opt ${on ? 'on' : ''}" data-k="${k.k}" data-o="${oi}" ${!on && jadi > D.ANGGARAN ? 'disabled' : ''}>${esc(o.t)}<small>Biaya ${o.b} poin${!on && jadi > D.ANGGARAN ? ' · melebihi anggaran' : ''}</small></button>` }).join('')}
+    </div>`).join('')}
+    <div class="card"><button class="btn gold wide" id="kirim">Kirim paket ke Cabang</button></div>`;
+    app.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { S.paket[b.dataset.k] = +b.dataset.o; store.set('state', S); const y = scrollY; draw(); scrollTo(0, y) });
+    $('#kirim').onclick = kirimPaket;
+  };
+  draw(); timer(kirimPaket);
+}
+function kirimPaket() {
+  clearInterval(tick);
+  if (S.mode === 'satu') { S.fase = 'serah'; save(); return render() }
+  const pk = { paket: S.paket, nama: S.nama, t: Date.now() };
+  if (CH) CH.setPair(kunci(), pk);
+  PAKET[kunci()] = pk; S.fase = 'tungguHasil'; save(); render();
+}
+function layarSerah() {
+  app.innerHTML = `<div class="card center"><div class="ic">🤝</div><h2>Paket kebijakan terkunci</h2><p class="lead">Serahkan gawai ini kepada kelompok yang berperan sebagai <b>Cabang</b>. Cabang akan melihat paket kebijakan pusat, lalu menghadapi enam kejadian lapangan dalam ${DT_CABANG / 60} menit.</p>
+    <button class="btn gold wide" id="go">Kami kelompok Cabang, mulai</button></div>`;
+  $('#go').onclick = () => { S.fase = 'cabang'; S.sisa = DT_CABANG; S.pilihan = []; S.langkah = 0; S.namaPusat = 'Pusat'; save(); render() };
+}
+function layarTunggu() {
+  app.innerHTML = `<div class="card center"><div class="ic">⏳</div><h2>Menunggu paket kebijakan dari Pusat</h2>
+    <p class="lead">Pasangan ${S.pasangan}: kelompok ${S.sisi === 'A' ? 'B' : 'A'} sedang menyusun kebijakan MMQ untuk ${esc(D.BABAK[S.babak].nama.split('·')[1].trim())}. Sambil menunggu, diskusikan apa yang paling sering menyulitkan cabang ketika kebijakan baru turun.</p>
+    <p class="note">${CH ? 'Terhubung ke kelas ' + esc(S.kode) + '.' : 'Belum terhubung ke kelas. Periksa internet atau kode kelas.'}</p>
+    <button class="btn ghost" id="kosong">Pusat tidak terhubung: lanjut dengan paket tanpa kebijakan</button></div>`;
+  $('#kosong').onclick = () => { S.paket = {}; S.namaPusat = '(tanpa paket)'; S.fase = 'cabang'; S.sisa = DT_CABANG; S.pilihan = []; S.langkah = 0; save(); render() };
+}
+function layarTungguHasil() {
+  app.innerHTML = `<div class="card center"><div class="ic">📨</div><h2>Paket sudah terkirim ke Cabang</h2>
+    <p class="lead">Kelompok Cabang sedang menjalankan kebijakan Bapak dan Ibu menghadapi enam kejadian lapangan. Hasil satu PNM akan muncul di layar ini.</p>
+    <div class="fact">Sambil menunggu: tuliskan satu kebijakan yang menurut kelompok paling mungkin <b>tidak bisa dijalankan</b> di lapangan, beserta alasannya.</div></div>`;
+}
+
+function layarCabang() {
+  const B = D.BABAK[S.babak];
+  if (S.langkah >= B.kejadian.length) return selesaiCabang();
+  const e = B.kejadian[S.langkah], ada = S.pilihan[S.langkah] != null;
+  app.innerHTML = `
+  <div class="card">
+    <div class="row" style="align-items:center"><div><span class="pill">${esc(B.nama)} · Cabang · Kejadian ${S.langkah + 1} dari ${B.kejadian.length}</span></div><div style="text-align:right"><span class="timer" id="tm">${fmt(S.sisa)}</span></div></div>
+    <details style="margin-top:10px"><summary><b>Paket kebijakan dari Pusat</b> <span class="muted">(${esc(S.namaPusat || '')})</span></summary>
+      <table>${B.kebijakan.map(k => `<tr><td><b>${esc(k.judul)}</b></td><td>${esc(k.pilihan[S.paket[k.k] || 0].t)}</td></tr>`).join('')}</table></details>
+    <div style="display:flex;gap:14px;align-items:center;margin-top:14px"><div class="ic">${e.ikon}</div><h2 style="margin:0">${esc(e.judul)}</h2></div>
+    <p class="lead">${esc(e.cerita)}</p>
+    ${e.pilihan.map((t, i) => `<button class="opt ${ada && S.pilihan[S.langkah] === i ? 'on' : ''}" data-i="${i}" ${ada ? 'disabled' : ''}>${esc(t)}</button>`).join('')}
+    <div id="fb"></div>
+  </div>`;
+  const tampil = i => {
+    const r = e.hasil(S.paket, i); const pen = ['pny', 'npf', 'aud', 'sys'].filter(x => r[x]).map(x => D.KATEGORI.find(k => k.id === x).nama + ' −' + r[x]).join(' · ');
+    $('#fb').innerHTML = `<div class="fact"><b>${pen ? 'Akibat:' : 'Tanpa penalti.'}</b> ${esc(pen)}<br>${esc(r.m)}${r.tem ? `<br><span class="no">Temuan audit: ${esc(r.tem)}</span>` : ''}</div>
+      <button class="btn gold wide" id="next">${S.langkah + 1 < B.kejadian.length ? 'Kejadian berikutnya' : 'Lihat hasil satu PNM'}</button>`;
+    $('#next').onclick = () => { S.langkah++; save(); render() };
+  };
+  if (ada) tampil(S.pilihan[S.langkah]);
+  app.querySelectorAll('.opt[data-i]').forEach(b => b.onclick = () => { S.pilihan[S.langkah] = +b.dataset.i; save(); app.querySelectorAll('.opt[data-i]').forEach(x => { x.disabled = true; x.classList.toggle('on', x === b) }); tampil(+b.dataset.i) });
+  timer(selesaiCabang);
+}
+function selesaiCabang() {
+  clearInterval(tick);
+  const res = D.nilaiBabak(S.babak, S.paket, D.BABAK[S.babak].kejadian.map((e, i) => S.pilihan[i]));
+  res.pusat = S.mode === 'satu' ? S.nama : (S.namaPusat || ''); res.cabang = S.nama; res.paket = S.paket; res.pilihan = S.pilihan;
+  S.hasil[S.babak] = res; S.fase = 'hasil';
+  if (CH) CH.setPair(kunci() + '-hasil', { res, t: Date.now() });
+  save(); render();
+}
+
+function blokHasil(res, judul) {
+  return `<div class="card">
+    <span class="pill">${esc(judul)}</span>
+    <div class="row" style="align-items:center;margin-top:8px"><div><div class="muted">Skor satu PNM</div><div class="big">${res.skor.total}</div><div class="muted">dari 100 · Pusat: ${esc(res.pusat || '-')} · Cabang: ${esc(res.cabang || '-')}</div></div>
+    <div>${D.KATEGORI.map(k => `<div><b>${k.nama}</b> <span class="muted">${res.skor[k.id]} / ${k.maks}</span><div class="bar"><i style="width:${res.skor[k.id] / k.maks * 100}%;background:${res.skor[k.id] / k.maks >= .8 ? 'var(--green)' : res.skor[k.id] / k.maks >= .5 ? 'var(--amber)' : 'var(--red)'}"></i></div></div>`).join('')}</div></div>
+  </div>
+  <div class="card"><h3>Temuan audit syariah (${res.temuan.length})</h3>
+    ${res.temuan.length ? '<table>' + res.temuan.map(t => `<tr><td><span class="pill">${esc(t.dari)}</span></td><td>${esc(t.t)}</td></tr>`).join('') + '</table>' : '<p class="ok">Tidak ada temuan.</p>'}
+    <h3 style="margin-top:16px">Jejak keputusan cabang</h3>
+    <table>${res.cat.map(c => `<tr><td><b>${esc(c.e)}</b><br><span class="muted">${esc(c.pilih || '-')}</span></td><td>${esc(c.m)}</td></tr>`).join('')}</table>
+  </div>`;
+}
+function layarHasil() {
+  const res = S.hasil[S.babak], B = D.BABAK[S.babak];
+  app.innerHTML = blokHasil(res, B.nama) + `<div class="card"><div class="fact"><b>Pesan babak ini.</b> ${esc(D.PESAN.cp)}</div>
+    <button class="btn gold wide" id="lanjut">${S.babak === 0 ? 'Lanjut ke Babak 2 · Mekaar (peran bertukar)' : 'Lihat hasil akhir'}</button></div>`;
+  $('#lanjut').onclick = () => {
+    if (S.babak === 1) { S.fase = 'akhir'; save(); return render() }
+    S.babak = 1; S.paket = {}; S.pilihan = []; S.langkah = 0;
+    if (S.mode === 'satu') { S.fase = 'pusat'; S.sisa = DT_PUSAT }
+    else if (peran() === 'Pusat') { S.fase = 'pusat'; S.sisa = DT_PUSAT } else { S.fase = 'tunggu' }
+    save(); render(); cekPasangan();
+  };
+}
+function layarAkhir() {
+  const h = S.hasil.filter(Boolean); const rata = h.length ? Math.round(h.reduce((s, x) => s + x.skor.total, 0) / h.length * 10) / 10 : 0;
+  app.innerHTML = `<div class="card center"><div class="muted">Skor akhir pasangan ${S.mode === 'dua' ? S.pasangan : ''} · rata-rata dua babak</div><div class="big">${rata}</div>
+    <p>ULaMM ${S.hasil[0] ? S.hasil[0].skor.total : '-'} · Mekaar ${S.hasil[1] ? S.hasil[1].skor.total : '-'}</p>
+    <div class="fact" style="text-align:left"><b>Untuk pembahasan.</b> ${esc(D.PESAN.cp)} Bawa satu temuan audit dari permainan ini ke sesi Bu Dina.</div></div>`
+    + S.hasil.map((r, i) => r ? blokHasil(r, D.BABAK[i].nama) : '').join('')
+    + `<div class="card"><button class="btn ghost wide" id="ulang">Main ulang dari awal</button></div>`;
+  $('#ulang').onclick = () => { const b = $('#ulang'); if (!b.dataset.y) { b.dataset.y = 1; b.textContent = 'Ketuk sekali lagi untuk menghapus skor dan mulai ulang'; return } store.set('state', null); S = null; hdr(); render() };
+}
+
+hdr();
+if (S) sambung();
+render();
+</script>
+</body>
+</html>
