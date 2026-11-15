@@ -7,9 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="gaya.css?v=3">
-<script async src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="../saham/lib/mqtt-5.10.1.min.js"></script>
 <script src="data.js?v=3"></script>
 <script src="kelas.js?v=5"></script>
+<script src="riwayat.js?v=1"></script>
 </head>
 <body>
 <div class="top"><a class="chip" href="index.html" style="color:#fff;text-decoration:none">☰ Menu</a><div class="t">Cabang vs Pusat<span class="sub"> · Menjalankan MMQ</span></div><span class="chip" id="hdrGroup">–</span><span class="chip" id="hdrRole">–</span><span class="conn" id="conn" title="Papan skor kelas"></span></div>
@@ -36,7 +37,7 @@ function hdr() {
 }
 function kirim() {
   if (!CH || !S) return;
-  CH.setStatus('cp-' + S.id, { g: 'cp', nama: S.nama, pasangan: S.pasangan, sisi: S.sisi, mode: S.mode, babak: S.babak, peran: peran(), fase: S.fase,
+  CH.setStatus('cp-' + S.id, { g: 'cp', nama: PNMRiwayat.label('cp', S.id, S.nama), pasangan: S.pasangan, sisi: S.sisi, mode: S.mode, babak: S.babak, peran: peran(), fase: S.fase,
     hasil: S.hasil.map(h => h ? { total: h.skor.total, skor: h.skor, temuan: h.temuan.map(x => x.t), pusat: h.pusat, cabang: h.cabang, paket: h.paket } : null), t: Date.now() });
 }
 async function sambung() {
@@ -89,7 +90,7 @@ function layarAwal() {
     </div>
     <p class="no" id="err"></p>
     <button class="btn gold wide" id="mulai">Mulai</button>
-  </div>`;
+  </div>${PNMRiwayat.html('cp')}`;
   let mode = 'dua', n = null, sisi = null;
   app.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { mode = b.dataset.m; app.querySelectorAll('[data-m]').forEach(x => x.classList.toggle('on', x === b)); $('#duaBox').classList.toggle('hide', mode === 'satu') });
   app.querySelectorAll('[data-n]').forEach(b => b.onclick = () => { n = +b.dataset.n; app.querySelectorAll('[data-n]').forEach(x => x.classList.toggle('on', x === b)) });
@@ -100,7 +101,7 @@ function layarAwal() {
     S = { id: Math.random().toString(36).slice(2, 9), nama: $('#nama').value.trim() || 'Kelompok', mode, kode: mode === 'dua' ? kode : '', pasangan: n || 0, sisi: sisi || 'A',
           babak: 0, fase: 'pusat', paket: {}, pilihan: [], langkah: 0, hasil: [null, null], sisa: DT_PUSAT };
     if (mode === 'dua' && peran() === 'Cabang') S.fase = 'tunggu';
-    save(); sambung(); render();
+    PNMRiwayat.mulai('cp', S.id, S.nama); save(); sambung(); render();
   };
 }
 
@@ -219,12 +220,13 @@ function layarHasil() {
 }
 function layarAkhir() {
   const h = S.hasil.filter(Boolean); const rata = h.length ? Math.round(h.reduce((s, x) => s + x.skor.total, 0) / h.length * 10) / 10 : 0;
+  PNMRiwayat.selesai('cp', S.id, S.nama, rata, 100);
   app.innerHTML = `<div class="card center"><div class="muted">Skor akhir pasangan ${S.mode === 'dua' ? S.pasangan : ''} · rata-rata dua babak</div><div class="big">${rata}</div>
     <p>ULaMM ${S.hasil[0] ? S.hasil[0].skor.total : '-'} · Mekaar ${S.hasil[1] ? S.hasil[1].skor.total : '-'}</p>
     <div class="fact" style="text-align:left"><b>Untuk pembahasan.</b> ${esc(D.PESAN.cp)} Bawa satu temuan audit dari permainan ini ke sesi Bu Dina.</div></div>`
     + S.hasil.map((r, i) => r ? blokHasil(r, D.BABAK[i].nama) : '').join('')
-    + `<div class="card"><button class="btn ghost wide" id="ulang">Main ulang dari awal</button></div>`;
-  $('#ulang').onclick = () => { const b = $('#ulang'); if (!b.dataset.y) { b.dataset.y = 1; b.textContent = 'Ketuk sekali lagi untuk menghapus skor dan mulai ulang'; return } store.set('state', null); S = null; hdr(); render() };
+    + PNMRiwayat.html('cp', S.id) + `<div class="card"><button class="btn ghost wide" id="ulang">Main ulang (retake)</button></div>`;
+  $('#ulang').onclick = () => { const b = $('#ulang'); if (!b.dataset.y) { b.dataset.y = 1; b.textContent = 'Ketuk sekali lagi: mulai percobaan baru (skor ini tetap tercatat)'; return } store.set('state', null); S = null; hdr(); render() };
 }
 
 hdr();

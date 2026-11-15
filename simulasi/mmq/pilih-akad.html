@@ -7,9 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="gaya.css?v=3">
-<script async src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="../saham/lib/mqtt-5.10.1.min.js"></script>
 <script src="data.js?v=3"></script>
 <script src="kelas.js?v=5"></script>
+<script src="riwayat.js?v=1"></script>
 </head>
 <body>
 <div class="top"><a class="chip" href="index.html" style="color:#fff;text-decoration:none">☰ Menu</a><div class="t">Maqasid dan Pemilihan Akad<span class="sub"> · Pelatihan Pembiayaan Syariah PNM</span></div><span class="chip" id="hdrGroup">–</span><span class="chip" id="hdrScore">0 poin</span><span class="conn" id="conn" title="Papan skor kelas"></span></div>
@@ -39,7 +40,7 @@ async function sambung(code) {
     $('#conn').classList.add('on'); kirim();
   } catch (e) { CH = null; $('#conn').classList.remove('on'); setTimeout(() => { if (!CH && S) sambung(S.kode) }, 4000) }
 }
-function kirim() { if (CH && S) CH.setStatus('akad-' + S.id, { g: 'akad', nama: S.nama, ronde: S.ronde, skor: S.skor, pilih: S.pilih, selesai: S.selesai, t: Date.now() }) }
+function kirim() { if (CH && S) CH.setStatus('akad-' + S.id, { g: 'akad', nama: PNMRiwayat.label('akad', S.id, S.nama), ronde: S.ronde, skor: S.skor, pilih: S.pilih, selesai: S.selesai, t: Date.now() }) }
 
 function layarAwal() {
   const kode = qs.get('kelas') || '';
@@ -54,11 +55,11 @@ function layarAwal() {
     <input id="kode" maxlength="8" value="${esc(kode)}" placeholder="contoh: K7PQ2" style="text-transform:uppercase">
     <p></p>
     <button class="btn gold wide" id="mulai">Mulai bermain</button>
-  </div>`;
+  </div>${PNMRiwayat.html('akad')}`;
   $('#mulai').onclick = () => {
     const nama = $('#nama').value.trim() || 'Kelompok';
     S = { id: Math.random().toString(36).slice(2, 9), nama, kode: PNMKelas.cleanCode($('#kode').value), ronde: 0, skor: 0, pilih: [], fase: 'main', selesai: false, sisa: DETIK };
-    save(); sambung(S.kode); ronde();
+    PNMRiwayat.mulai('akad', S.id, nama); save(); sambung(S.kode); ronde();
   };
 }
 
@@ -124,6 +125,7 @@ function akhir() {
   const r8 = D.AKAD.map((a, j) => nilaiAkad(n7, j));
   const maks = D.KARTU.length * 12;
   const mx = Math.max(...kum);
+  PNMRiwayat.selesai('akad', S.id, S.nama, S.skor, maks);
   app.innerHTML = `
   <div class="card center">
     <div class="muted">Skor akhir ${esc(S.nama)}</div>
@@ -141,10 +143,10 @@ function akhir() {
     <div class="fact"><b>Maqasid.</b> ${esc(D.PESAN.maqasid)}</div>
     <div class="fact"><b>Pesan pagi ini.</b> ${esc(D.PESAN.akad)}</div>
   </div>
-  <div class="card"><button class="btn ghost wide" id="ulang">Main ulang dari awal</button></div>`;
+  ${PNMRiwayat.html('akad', S.id)}<div class="card"><button class="btn ghost wide" id="ulang">Main ulang (retake)</button></div>`;
   $('#ulang').onclick = () => { if (confirmUlang()) { store.set('state', null); S = null; hdr(); layarAwal() } };
 }
-function confirmUlang() { const b = $('#ulang'); if (b.dataset.y) return true; b.dataset.y = 1; b.textContent = 'Ketuk sekali lagi untuk menghapus skor dan mulai ulang'; return false }
+function confirmUlang() { const b = $('#ulang'); if (b.dataset.y) return true; b.dataset.y = 1; b.textContent = 'Ketuk sekali lagi: mulai percobaan baru (skor ini tetap tercatat)'; return false }
 
 hdr();
 if (!S) layarAwal();

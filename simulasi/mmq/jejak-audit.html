@@ -7,9 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="gaya.css?v=3">
-<script async src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="../saham/lib/mqtt-5.10.1.min.js"></script>
 <script src="data.js?v=3"></script>
 <script src="kelas.js?v=5"></script>
+<script src="riwayat.js?v=1"></script>
 </head>
 <body>
 <div class="top"><a class="chip" href="index.html" style="color:#fff;text-decoration:none">☰ Menu</a><div class="t">Jejak Audit MMQ<span class="sub"> · Sesi Risiko dan Audit</span></div><span class="chip" id="hdrGroup">–</span><span class="chip" id="hdrScore">0 poin</span><span class="conn" id="conn" title="Papan skor kelas"></span></div>
@@ -27,7 +28,7 @@ let S = store.get('state', null), CH = null, tick = null;
 
 function hdr() { $('#hdrGroup').textContent = S ? S.nama : '–'; $('#hdrScore').textContent = (S ? S.skor : 0) + ' poin' }
 function save() { store.set('state', S); hdr(); kirim() }
-function kirim() { if (CH && S) CH.setStatus('audit-' + S.id, { g: 'audit', nama: S.nama, ronde: S.i, skor: S.skor, jawab: S.jawab, selesai: S.fase === 'akhir', t: Date.now() }) }
+function kirim() { if (CH && S) CH.setStatus('audit-' + S.id, { g: 'audit', nama: PNMRiwayat.label('audit', S.id, S.nama), ronde: S.i, skor: S.skor, jawab: S.jawab, selesai: S.fase === 'akhir', t: Date.now() }) }
 async function sambung() {
   if (!S || !S.kode || !window.mqtt) return;
   try { CH = await PNMKelas.join(S.kode, { role: 'player', onConn: v => $('#conn').classList.toggle('on', v) }); $('#conn').classList.add('on'); kirim() }
@@ -53,10 +54,10 @@ function layarAwal() {
     <label for="kode">Kode kelas dari fasilitator <span class="muted">(boleh dikosongkan)</span></label>
     <input id="kode" maxlength="8" value="${esc(qs.get('kelas') || '')}" placeholder="contoh: K7PQ2" style="text-transform:uppercase">
     <p></p><button class="btn gold wide" id="mulai">Mulai memeriksa</button>
-  </div>`;
+  </div>${PNMRiwayat.html('audit')}`;
   $('#mulai').onclick = () => {
     S = { id: Math.random().toString(36).slice(2, 9), nama: $('#nama').value.trim() || 'Kelompok', kode: PNMKelas.cleanCode($('#kode').value), i: 0, skor: 0, jawab: [], fase: 'main', sisa: DETIK };
-    save(); sambung(); render();
+    PNMRiwayat.mulai('audit', S.id, S.nama); save(); sambung(); render();
   };
 }
 
@@ -110,11 +111,12 @@ function bahas() {
 }
 function akhir() {
   const benar = S.jawab.filter((j, i) => j && j.t === D.BERKAS[i].temuan).length;
+  PNMRiwayat.selesai('audit', S.id, S.nama, S.skor, D.BERKAS.length * 10);
   app.innerHTML = `
   <div class="card center"><div class="muted">Skor akhir ${esc(S.nama)}</div><div class="big">${S.skor}</div><div class="muted">dari ${D.BERKAS.length * 10} poin · ${benar} dari ${D.BERKAS.length} berkas dinilai tepat</div></div>
   <div class="card"><h3>Ringkasan berkas</h3><table>${D.BERKAS.map((b, i) => { const j = S.jawab[i] || {}; return `<tr><td><b>${esc(b.judul)}</b><br><span class="muted">${esc(b.seg)} · ${b.temuan ? 'ada temuan' : 'bersih'}</span></td><td class="center"><b>${j.p ?? 0}</b>/10</td></tr>` }).join('')}</table></div>
-  <div class="card"><div class="fact"><b>Pesan sesi ini.</b> ${esc(D.PESAN.audit)}</div><button class="btn ghost wide" id="ulang">Main ulang dari awal</button></div>`;
-  $('#ulang').onclick = () => { const b = $('#ulang'); if (!b.dataset.y) { b.dataset.y = 1; b.textContent = 'Ketuk sekali lagi untuk menghapus skor dan mulai ulang'; return } store.set('state', null); S = null; hdr(); render() };
+  <div class="card"><div class="fact"><b>Pesan sesi ini.</b> ${esc(D.PESAN.audit)}</div><button class="btn ghost wide" id="ulang">Main ulang (retake)</button></div>${PNMRiwayat.html('audit', S.id)}`;
+  $('#ulang').onclick = () => { const b = $('#ulang'); if (!b.dataset.y) { b.dataset.y = 1; b.textContent = 'Ketuk sekali lagi: mulai percobaan baru (skor ini tetap tercatat)'; return } store.set('state', null); S = null; hdr(); render() };
 }
 hdr(); if (S) sambung(); render();
 </script>
