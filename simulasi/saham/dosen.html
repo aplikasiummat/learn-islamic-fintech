@@ -6,7 +6,7 @@
 <link rel="icon" href="../../assets/logo-tazkia.png">
 <title>Kelas Bursa Syariah (Dosen)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"></noscript>
 <style>
 /* Lecturer console: class code + controls on the left, leaderboard on the right, issues below. Same palette as the simulator. */
 :root{--bg:#eef1f6;--surface:#fff;--surface2:#f6f8fb;--ink:#14233a;--muted:#5d6b80;--line:#d9e0ea;--navy:#10243f;--gold:#c9960a;--gold-soft:#fbf1d0;
@@ -161,9 +161,9 @@ tr.off td{opacity:.55}
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="kelas.js?v=1.3.2"></script>
+<script src="lib/mqtt-5.10.1.min.js" defer></script>
+<script src="lib/qrcode-1.0.0.min.js" defer></script>
+<script src="kelas.js?v=1.4.0" defer></script>
 <script>
 (function(){
 'use strict';
@@ -205,7 +205,7 @@ async function connect(c,create){$('conn').textContent='Menghubungkan…';
     onConn:on=>{$('conn').textContent=on?'Terhubung':'Menyambung ulang…'}});
   $('conn').textContent='Terhubung';code=c}
 async function publish(){await CH.setCtl(ctl);store();draw()}
-$('c-go').onclick=async()=>{$('c-go').disabled=true;msg('c-msg','Membuka kelas…');
+$('c-go').onclick=async()=>{$('c-go').disabled=true;msg('c-msg','Membuka kelas…');for(let i=0;i<80&&!(window.BSKelas&&window.mqtt);i++)await new Promise(r=>setTimeout(r,250));
   try{code=BSKelas.newCode();await connect(code,true);
     const seed=crypto.getRandomValues(new Uint32Array(1))[0]|0;
     ctl={v:1,name:$('c-name').value.trim()||'Kelas Bursa Syariah',seed,days:10,tpd:120,tickMs:Number($('c-dur').value)||1000,allowReg:$('c-reg').checked,state:'lobby',baseTick:0,baseTime:BSKelas.now(),events:[],created:Date.now()};
@@ -213,7 +213,7 @@ $('c-go').onclick=async()=>{$('c-go').disabled=true;msg('c-msg','Membuka kelas�
   catch(e){msg('c-msg',e.message==='lib'?'Pustaka koneksi gagal dimuat. Periksa internet lalu muat ulang halaman.':'Tidak bisa terhubung ke server kelas. Jaringan kampus mungkin memblokir port 8084/8884; coba data seluler atau Wi-Fi lain.','err');$('c-go').disabled=false}};
 (function(){let sv=null;try{sv=JSON.parse(localStorage.getItem(SAVE)||'null')}catch(e){}
   if(sv&&sv.code){$('resume').hidden=false;$('resume-txt').textContent=`Kelas terakhir: ${sv.name||''} (kode ${sv.code}), dibuka ${new Date(sv.created||Date.now()).toLocaleString('id-ID')}.`}
-  $('resume-go').onclick=async()=>{$('resume-go').disabled=true;msg('c-msg','Mencari kelas…');
+  $('resume-go').onclick=async()=>{$('resume-go').disabled=true;msg('c-msg','Mencari kelas…');for(let i=0;i<80&&!(window.BSKelas&&window.mqtt);i++)await new Promise(r=>setTimeout(r,250));
     try{ctl=null;await connect(sv.code,false);const t0=Date.now();while(!ctl&&Date.now()-t0<5000)await new Promise(r=>setTimeout(r,200));
       if(!ctl)throw new Error('notfound');showLive()}
     catch(e){msg('c-msg',e.message==='notfound'?'Kelas tidak ditemukan lagi di server. Buka kelas baru.':'Tidak bisa terhubung ke server kelas.','err');$('resume-go').disabled=false}};

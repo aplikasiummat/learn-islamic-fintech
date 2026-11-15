@@ -10,7 +10,7 @@
 <title>Donation Based Crowdfunding Simulation</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@500;700&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@500;700&display=swap"></noscript>
 <style>
 /* Layout: papan kendali lembaga filantropi. Atas = peta alur DBCF, kiri = indikator dan register risiko, kanan = meja keputusan bulanan. Satu tampilan gelap bernuansa Tazkia (navy + emas). */
 :root{
@@ -84,7 +84,16 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .clock div.warn b{color:var(--red)}
 .cbar{height:6px;background:var(--panel);border-radius:99px;overflow:hidden;margin:-6px 0 16px}
 .cbar span{display:block;height:100%;background:var(--gold);transition:width .5s linear}
-.wait{font-size:14px;background:var(--ink);border-left:4px solid var(--gold);border-radius:8px;padding:10px 14px;font-variant-numeric:tabular-nums}
+.wait{font-size:14px;background:var(--ink);border-left:4px solid var(--gold);border-radius:8px;padding:10px 14px;font-variant-numeric:tabular-nums;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.wait span{flex:1 1 260px}
+.wait .next{margin:0}
+.att{width:100%;border-collapse:collapse;font-size:13.5px}
+.att th{text-align:left;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+.att td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.att td.n{font-family:var(--mono);white-space:nowrap}
+.att tr.now td{background:rgba(242,194,0,.08)}
+.att .tag{font-size:11.5px;font-weight:700;padding:1px 7px;border-radius:4px;white-space:nowrap}
+.att .ok{background:rgba(60,198,132,.15);color:var(--green)}.att .no{background:rgba(255,107,94,.15);color:var(--red)}.att .go{background:rgba(242,194,0,.15);color:var(--gold)}
 .months i{width:30px;height:24px;border-radius:5px;background:var(--panel);font-style:normal;font-size:10.5px;display:grid;place-items:center;color:var(--dim);font-family:var(--mono)}
 .months i.done{background:var(--panel2);color:var(--muted)}
 .months i.now{background:var(--gold);color:var(--ink);font-weight:700}
@@ -273,7 +282,8 @@ body{padding-bottom:180px}
       <div class="rule"><b>Kepatuhan syariah dan hukum</b><span>Mencakup akad, PP No. 29 Tahun 1980, UU Yayasan, dan UU Pelindungan Data Pribadi. Apabila turun di bawah 15, kegiatan lembaga dihentikan regulator.</span></div>
       <div class="rule"><b>Misi sosial</b><span>Berkurang setiap kali logika bisnis mengambil alih arah lembaga. Indikator ini menjadi ukuran Mission Drift.</span></div>
       <div class="rule"><b>Kas operasional</b><span>Defisit selama dua bulan berturut-turut membuat lembaga berhenti beroperasi.</span></div>
-      <div class="rule"><b>Waktu</b><span>Kuis yang belum dijawab di akhir bulan dihitung salah, dan keputusan yang tidak diambil menurunkan kepercayaan serta kepatuhan.</span></div>
+      <div class="rule"><b>Waktu</b><span>Setelah kuis dijawab dan keputusan diambil, Anda bisa langsung lanjut ke bulan berikutnya tanpa menunggu jam habis. Kuis yang belum dijawab di akhir bulan dihitung salah, dan keputusan yang tidak diambil menurunkan kepercayaan serta kepatuhan.</span></div>
+      <div class="rule"><b>Mengulang</b><span>Anda boleh mengulang permainan (retake) sebanyak yang diperlukan. Setiap percobaan tercatat dengan waktu dan nilainya, dan seluruh riwayat ikut tercetak di PDF untuk dosen.</span></div>
     </div>
     <div class="compare" id="introCompare" hidden></div>
     <p class="note" style="margin-top:18px">Lumbung Amanah merupakan lembaga fiktif, dan seluruh angka serta peristiwa di dalamnya merupakan simulasi untuk kepentingan pembelajaran. Disusun berdasarkan materi kuliah Dr. Yaser Taufik Syamlan, ME, CIFP.</p>
@@ -340,7 +350,7 @@ body{padding-bottom:180px}
   <div class="gbtn"><button type="button" id="gGo">Tunjukkan</button></div>
 </aside>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="../saham/lib/jspdf-2.5.1.umd.min.js" defer></script>
 <script>
 (() => {
 const MONTHS = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
@@ -539,10 +549,27 @@ const clamp = (v,a=0,b=100) => Math.max(a,Math.min(b,v));
 const rp = v => (Math.abs(v)>=10? v.toLocaleString("id-ID",{maximumFractionDigits:1}) : v.toLocaleString("id-ID",{minimumFractionDigits:2,maximumFractionDigits:2}));
 const rng = () => 0.93 + Math.random()*0.14;
 
+// ---------- riwayat percobaan (retake): semua percobaan tersimpan dan tidak pernah dihapus ----------
+const ATT = "ifg-dbcf-att";
+function attempts(){
+  let a = [];
+  try { a = JSON.parse(localStorage.getItem(ATT)||"[]"); } catch(e){}
+  if (!a.length){ // bawa hasil versi lama (tanpa nilai) agar riwayat tidak hilang
+    try { const old = JSON.parse(localStorage.getItem("ifg-dbcf")||"[]"); a = old.slice().reverse().map((r,i) => ({n:i+1, start:"-", end:"-", status:"selesai", verdict:r.verdict, model:r.model, quiz:r.quiz, months:r.months, sc:null, letter:"", lama:true})); } catch(e){}
+  }
+  return a;
+}
+function saveAttempts(a){ try { localStorage.setItem(ATT, JSON.stringify(a.slice(-200))); } catch(e){} }
+const nowTxt = () => new Date().toLocaleString("id-ID",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
 function newGame(){
+  const prev = attempts();
+  prev.forEach(r => { if (r.status==="berjalan") r.status = "tidak selesai"; });
+  const n = prev.reduce((m,r) => Math.max(m, r.n||0), 0) + 1;
+  prev.push({n, start:nowTxt(), end:"", status:"berjalan", verdict:"", model:"", quiz:"0/0", months:0, sc:null, letter:""});
+  saveAttempts(prev);
   S = {month:0, trust:BASE.trust, comp:BASE.comp, drift:BASE.drift, kas:BASE.kas, fee:BASE.fee, pt:BASE.pt, growth:1,
        hist:[], total:0, pen:0, deficit:0, pending:[], log:[], qlog:[], chosen:null, qa:null, quizScore:0, quizN:0, risk:{},
-       hasPT:false, ai:false, aggressive:false, insurer:false, bundle:false, over:null, t0:Date.now(), m0:Date.now(), late:0, forced:false};
+       hasPT:false, ai:false, aggressive:false, insurer:false, bundle:false, over:null, t0:Date.now(), m0:Date.now(), late:0, forced:false, att:n};
   gameSel = null;
   $("fee").value = S.fee;
   show("game");
@@ -621,8 +648,8 @@ function updateClock(el){
   $("clkBar").style.width = (el / MONTH_MS * 100) + "%";
   const w = $("waitMsg");
   if (w) w.textContent = S.month===11
-    ? "Keputusan tercatat. Buku 2026 ditutup otomatis dalam " + fmt(left) + ". Gunakan waktu ini untuk membaca lensa dan berdiskusi."
-    : "Keputusan tercatat. Bulan " + MONTHS[S.month+1] + " dimulai otomatis dalam " + fmt(left) + ". Gunakan waktu ini untuk membaca lensa dan berdiskusi.";
+    ? "Keputusan tercatat. Baca lensanya, lalu klik tombol untuk menutup buku 2026, atau buku tertutup otomatis dalam " + fmt(left) + "."
+    : "Keputusan tercatat. Baca lensanya, lalu klik Lanjut bila sudah siap, atau bulan " + MONTHS[S.month+1] + " dimulai otomatis dalam " + fmt(left) + ".";
 }
 function timeUp(){
   const ev = eventFor(S.month);
@@ -807,8 +834,9 @@ function showLens(){
       <div><b style="color:var(--red)">Lensa Risiko</b>${rk}. Status lengkap dapat dilihat pada register risiko di panel kiri.</div>
     </div>
     <p class="ref"><b>Rujukan materi:</b> deck DBCF slide ${ev.sl}.</p>
-    <div class="wait" id="waitMsg"></div>
+    <div class="wait"><span id="waitMsg"></span><button class="next" type="button" id="goNext">${S.month===11?"Tutup buku 2026 sekarang →":"Lanjut ke "+MONTHS[S.month+1]+" →"}</button></div>
   </div>`;
+  $("goNext").addEventListener("click", () => { if (S && !S.over && S.chosen!==null) tick(); });
   updateClock(Date.now() - S.m0);
 }
 
@@ -892,7 +920,10 @@ function finish(reason){
   const [mh, mb] = modelShape();
   const sc = scoreOf();
   const res = {model:mh, verdict:h, trust:Math.round(S.trust), comp:Math.round(S.comp), mis:Math.round(100-S.drift), total:S.total, months:S.month, quiz:S.quizScore+"/"+S.quizN};
-  try { const all = JSON.parse(localStorage.getItem("ifg-dbcf")||"[]"); all.unshift(res); localStorage.setItem("ifg-dbcf", JSON.stringify(all.slice(0,4))); } catch(e){}
+  { const a = attempts(); let r = a.find(x => x.n===S.att);
+    if (!r){ r = {n:S.att || (a.reduce((m,x) => Math.max(m,x.n||0),0)+1), start:"-"}; a.push(r); S.att = r.n; }
+    Object.assign(r, {end:nowTxt(), status: reason ? "berhenti: "+h : "selesai 12 bulan", verdict:h, model:mh, quiz:res.quiz, months:S.month, sc:sc.total, letter:sc.letter, trust:res.trust, comp:res.comp, mis:res.mis});
+    saveAttempts(a); }
   const stLabel = k => { const s = STAGES.find(x => x.k===k); return s ? (s.k==="L" ? "Tata kelola" : "Tahap "+s.k+" · "+s.t) : ""; };
   $("end").innerHTML = `
     <div class="verdict" style="border-color:${col}">
@@ -944,7 +975,7 @@ function finish(reason){
     </div>
     <p style="margin:0;font-family:var(--display);font-size:18px;color:var(--gold-soft)">Wallahu a'lam.</p>
     <div class="btns">
-      <button class="next" type="button" id="replay">Main kembali dengan strategi berbeda →</button>
+      <button class="next" type="button" id="replay">Ulangi permainan (retake) →</button>
       <button class="ghost" type="button" id="home">Kembali ke awal</button>
     </div>`;
   $("cmpBox").innerHTML = compareHTML();
@@ -990,7 +1021,8 @@ async function makePdf(verdictTitle, modelTitle, sc){
   const row = (k, v) => { need(6); doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(...GREY); doc.text(k, M, y); doc.setTextColor(30,30,30); doc.setFont("helvetica","bold"); const lines = doc.splitTextToSize(v, CWm-50); doc.text(lines, M+50, y); y += Math.max(1, lines.length)*5.2; };
   const now = new Date();
   const tgl = now.toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"}) + ", " + now.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
-  const code = vcode([nama,nim,sc.total,S.quizScore,S.quizN,Math.round(S.trust),Math.round(S.comp),Math.round(S.drift),S.month,modelTitle].join("|"));
+  const atts = attempts(), done = atts.filter(r => r.sc!==null && r.sc!==undefined), best = done.length ? Math.max(...done.map(r => r.sc)) : sc.total;
+  const code = vcode([nama,nim,sc.total,S.quizScore,S.quizN,Math.round(S.trust),Math.round(S.comp),Math.round(S.drift),S.month,modelTitle,S.att,atts.length].join("|"));
   // kop
   doc.setFillColor(...NAVYc); doc.rect(0,0,W,30,"F");
   doc.setTextColor(242,194,0); doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.text("DONATION BASED CROWDFUNDING SIMULATION", M, 11);
@@ -999,7 +1031,7 @@ async function makePdf(verdictTitle, modelTitle, sc){
   y = 40;
   head("Identitas");
   row("Nama", nama); row("NIM", nim); if (kelas) row("Kelas", kelas); if (kel) row("Kelompok", kel);
-  row("Waktu penyelesaian", tgl); row("Kode verifikasi", code);
+  row("Waktu penyelesaian", tgl); row("Percobaan", "ke-" + (S.att||1) + " dari " + atts.length + " percobaan di perangkat ini (nilai terbaik " + best + ")"); row("Kode verifikasi", code);
   y += 2;
   head("Nilai Permainan");
   need(24);
@@ -1019,6 +1051,9 @@ async function makePdf(verdictTitle, modelTitle, sc){
   (S.qlog||[]).forEach(x => para(x.mo + " - " + (x.ok ? "Tepat" : "Perlu diulang") + ". " + x.q + " Jawaban yang tepat: " + x.a + ".", 9.5));
   head("Jejak Keputusan");
   S.log.forEach(l => para(l.mo + " - " + l.t, 9.5));
+  head("Riwayat Percobaan di Perangkat Ini");
+  para("Semua percobaan tercatat, termasuk yang dihentikan atau tidak selesai. Percobaan yang dilaporkan di berkas ini ditandai (*).", 9, GREY);
+  atts.forEach(r => para((r.n===S.att?"(*) ":"") + "Percobaan " + r.n + " | mulai " + (r.start||"-") + " | selesai " + (r.end||"-") + " | " + r.status + " | nilai " + (r.sc!==null&&r.sc!==undefined ? r.sc + " (" + r.letter + ")" : "-") + (r.verdict ? " | " + r.verdict : "") + " | kuis " + (r.quiz||"-"), 9.2));
   head("Refleksi");
   REFL.forEach((q,i) => { para((i+1) + ". " + q, 10, NAVYc, true); para(ans[i], 10); });
   need(14);
@@ -1042,9 +1077,17 @@ async function makePdf(verdictTitle, modelTitle, sc){
 }
 
 function compareHTML(){
-  let all = [];
-  try { all = JSON.parse(localStorage.getItem("ifg-dbcf")||"[]"); } catch(e){}
+  const all = attempts();
   if (!all.length) return "";
+  const done = all.filter(r => r.sc!==null && r.sc!==undefined), best = done.length ? Math.max(...done.map(r => r.sc)) : null;
+  const tag = st => st==="berjalan" ? "go" : /^selesai/.test(st) ? "ok" : "no";
+  return `<div class="panel recap"><div class="eyebrow" style="margin-bottom:8px">Riwayat percobaan di perangkat ini · ${all.length} percobaan${best!==null?` · nilai terbaik ${best}`:""}</div>
+    <p class="note" style="margin:0 0 8px">Setiap percobaan tercatat dan tidak dihapus saat Anda mengulang. Riwayat ini ikut tercetak di PDF.</p>
+    <div style="overflow:auto"><table class="att"><thead><tr><th>#</th><th>Mulai</th><th>Selesai</th><th>Status</th><th>Nilai</th><th>Vonis dan model</th><th>Kuis</th></tr></thead><tbody>
+    ${all.slice().reverse().map(r => `<tr class="${S&&r.n===S.att?"now":""}"><td class="n">${r.n}</td><td class="n">${r.start||"-"}</td><td class="n">${r.end||"-"}</td><td><span class="tag ${tag(r.status)}">${r.status}</span></td><td class="n">${r.sc!==null&&r.sc!==undefined ? r.sc+" "+r.letter : "-"}</td><td>${r.verdict||"-"}${r.model?"<br><span style=\"color:var(--muted)\">"+r.model+"</span>":""}</td><td class="n">${r.quiz||"-"}</td></tr>`).join("")}
+    </tbody></table></div></div>`;
+}
+function compareHTMLold(all){
   return `<div><div class="eyebrow" style="margin-bottom:8px">Hasil putaran terakhir di perangkat ini</div><div class="cmp">${all.map((r,i)=>`<div class="c"><h3>${i===0?"Putaran terbaru":"Putaran sebelumnya"}</h3><p style="margin:0 0 8px;color:var(--gold);font-weight:700">${r.verdict}</p><dl><dt>Model terbentuk</dt><dd>${r.model}</dd><dt>Kepercayaan</dt><dd>${r.trust}</dd><dt>Kepatuhan</dt><dd>${r.comp}</dd><dt>Misi sosial</dt><dd>${r.mis}</dd><dt>Literasi akad</dt><dd>${r.quiz}</dd><dt>Bulan bertahan</dt><dd>${r.months}</dd></dl></div>`).join("")}</div></div>`;
 }
 function introCompare(){ const h = compareHTML(); $("introCompare").innerHTML = h; $("introCompare").hidden = !h; }

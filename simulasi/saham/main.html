@@ -6,7 +6,7 @@
 <link rel="icon" href="../../assets/logo-tazkia.png">
 <title>Bursa Syariah Simulator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"></noscript>
 <style>
 /* Layout: trading-terminal grid (watchlist | stock desk | account), learning tabs below. FEB UI navy + gold, IDX green-up / red-down. */
 :root{
@@ -28,6 +28,13 @@
   --halal:#4fc7bf; --halal-soft:#0f302e; --warn:#ffb54a; --warn-soft:#3a2a10; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+.attbox{margin:0 0 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:auto}
+.attbox h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:9px 12px 0}
+.attbox p{margin:2px 12px 6px;font-size:.84rem;color:var(--muted)}
+.attbox table{width:100%;border-collapse:collapse;font-size:.85rem}
+.attbox th{text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:6px 12px;border-bottom:1px solid var(--line)}
+.attbox td{padding:6px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.attbox tr.now td{background:var(--gold-soft);font-weight:700}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;margin:0}
 .wrap{max-width:1440px;margin:0 auto;padding-inline:16px;padding-block:0 32px}
 .num,.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
@@ -356,7 +363,7 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
 <div class="regwrap" id="regwrap">
   <div class="regcard">
     <div class="hd"><small>Islamic Financial Market and Institution</small><h2>Bursa Syariah Simulator</h2></div>
-    <form id="reg-form" novalidate>
+    <form id="reg-form" novalidate onsubmit="return false">
       <p>Register before you trade. Your progress is saved under your NIM on this device, and your report shows your name and NIM.</p>
       <div class="field"><label>How do you want to play?</label>
         <div class="modes" role="group" aria-label="Game mode">
@@ -383,7 +390,7 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
       <div class="report" id="end-report" style="margin:0"></div>
       <button class="go" type="button" data-pdf style="background:var(--gold);color:#10243f">Download PDF report: score, behaviour, and analysis</button>
       <p class="est">Submit the PDF to your lecturer. It ends with two reflection questions for you to answer.</p>
-      <div class="row" style="flex-wrap:wrap"><button class="go" type="button" id="end-review" style="background:var(--navy);flex:1">Review my journal</button><button class="go" type="button" id="end-new" style="flex:1">Start a new session</button></div>
+      <div class="row" style="flex-wrap:wrap"><button class="go" type="button" id="end-review" style="background:var(--navy);flex:1">Review my journal</button><button class="go" type="button" id="end-new" style="flex:1">Retake: start a new attempt</button></div>
     </div>
   </div>
 </div>
@@ -403,6 +410,7 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
       <button data-speed="2" aria-pressed="false">2×</button>
       <button data-speed="4" aria-pressed="false" id="sp4" hidden>4×</button>
       <button id="btn-skip">Skip to close</button>
+      <button id="btn-finish" type="button" title="End the session now and get your report">Finish now</button>
     </div>
   </div>
   <div class="tape" aria-hidden="true"><div class="tape-in" id="tape"></div></div>
@@ -416,7 +424,7 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
 
   <div class="macro" id="macro" aria-live="polite"></div>
 
-  <form class="ticket tradebar" id="ticket" novalidate aria-label="Order ticket">
+  <form class="ticket tradebar" id="ticket" novalidate onsubmit="return false" aria-label="Order ticket">
     <div class="tb-stock"><div class="l"><b id="t-tk">SHJY</b><span class="px" id="t-px">—</span><span class="mono" id="t-ch"></span></div><span class="nm" id="t-nm"></span></div>
     <div class="tb-side">
       <div class="side" role="group" aria-label="Order side">
@@ -522,7 +530,7 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
       <button role="tab" id="tab-journal" aria-selected="false" aria-controls="p-journal">Akad journal</button>
       <button role="tab" id="tab-rules" aria-selected="false" aria-controls="p-rules">How it mirrors IDX</button>
     </div>
-    <div class="tabpanel" role="tabpanel" id="p-missions"><div class="report" id="report"></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:-4px 0 14px"><button class="go" type="button" data-pdf style="background:var(--gold);color:#10243f;padding:10px 18px">Download PDF report</button><span class="est" id="pdf-note">Score so far, your behaviour profile (homo islamicus or homo economicus), and an analysis of your game. Download it again after Day 10 for the final version.</span></div><div class="missions" id="missions"></div></div>
+    <div class="tabpanel" role="tabpanel" id="p-missions"><div class="report" id="report"></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:-4px 0 14px"><button class="go" type="button" data-pdf style="background:var(--gold);color:#10243f;padding:10px 18px">Download PDF report</button><span class="est" id="pdf-note">Score so far, your behaviour profile (homo islamicus or homo economicus), and an analysis of your game. Download it again after Day 10 for the final version.</span></div><div class="attbox" id="att-box"></div><div class="missions" id="missions"></div></div>
     <div class="tabpanel" role="tabpanel" id="p-ipo" hidden>
       <ol class="stepper" id="ipo-steps"></ol>
       <div class="ipogrid">
@@ -582,14 +590,14 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
         <section><h3>Simplifications</h3>
           <p>Fictional stocks, simulated prices. One session is 10 trading days; each day lasts two minutes at 1×, so the session takes 20 minutes. Queued orders fill when the last price reaches your limit. No dividend tax, no margin calls. Rules follow IDX practice taught in class; check the latest IDX regulations before real trading.</p></section>
       </div>
-      <p class="foot">Lecturers: Dr. Yaser Taufik Syamlan, ME, CIFP · Lisa Listiana, PhD. Your progress is saved in this browser only. <button class="reset" id="btn-reset" type="button">Reset simulation</button></p>
+      <p class="foot">Lecturers: Dr. Yaser Taufik Syamlan, ME, CIFP · Lisa Listiana, PhD. Your progress is saved in this browser only. <button class="reset" id="btn-reset" type="button">Retake (new attempt)</button></p>
     </div>
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="kelas.js?v=1.3.2"></script>
+<script src="lib/jspdf-2.5.1.umd.min.js" defer></script>
+<script src="lib/mqtt-5.10.1.min.js" defer></script>
+<script src="kelas.js?v=1.4.0" defer></script>
 <script>
 (function(){
 'use strict';
@@ -1069,7 +1077,7 @@ function render(){
   $('holdings').innerHTML=hs.length?hs.map(([tk,h])=>{const p=S.mk[tk].p,pl=(p-h.avg)*h.sh;return `<tr><td>${tk}${h.sh<0?' <span class="badge b-no">SHORT</span>':''}</td><td>${num(h.sh/100)}</td><td>${num(h.avg)}</td><td>${num(p)}</td><td class="${sgn(pl)}">${idr(pl)}</td></tr>`}).join(''):'<tr><td colspan="5" class="empty">No holdings yet. Pick a stock and place a buy order.</td></tr>';
   $('p-due').textContent=idr(S.purDue);$('p-done').textContent=idr(S.purDone);$('btn-purify').disabled=S.purDue<1||S.cash<S.purDue;
   $('orders').innerHTML=S.orders.length?S.orders.map(o=>`<tr><td><span class="${o.side==='buy'?'up':'down'}">${o.side==='buy'?'Buy':'Sell'}</span> ${o.tk}</td><td>${num(o.price)}</td><td>${num(o.lots)}</td><td><button class="cancel" data-cancel="${o.id}">Cancel</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">No open orders.</td></tr>';
-  renderIPO();renderMacro();renderTape();
+  renderIPO();renderMacro();renderTape();renderAttempts();
   $('news').innerHTML=S.news.map(n=>`<li><time>${n.at}</time>${n.text}</li>`).join('');
   const nsig=S.news.length?S.news[0].at+S.news[0].text:'';
   if(nsig!==newsSig){newsSig=nsig;const items=S.news.slice(0,8);const el=$('newsrun');
@@ -1082,7 +1090,7 @@ function render(){
     <div><span>Name</span><b style="font-family:var(--body)">${esc(USER.name)}</b></div><div><span>NIM</span><b>${esc(USER.nim)}</b></div>
     <div><span>Class</span><b style="font-family:var(--body)">${esc(USER.cls||'—')}</b></div><div><span>Sim day</span><b>${Math.min(S.day,SESSION_DAYS)} / ${SESSION_DAYS}${S.over?' ✓':''}</b></div>
     <div><span>Total equity</span><b>${idr(eq+ipoHeld())}</b></div><div><span>Return</span><b class="${sgn(r)}">${fpct(r)}</b></div>
-    <div><span>Score</span><b>${G.total} / 100 · ${G.letter}</b></div><div><span>Behaviour</span><b style="font-family:var(--body)">${BH.lab} (${BH.score})</b></div><div><span>Missions</span><b>${nDone} / ${MISSIONS.length}</b></div><div><span>Macro calls right</span><b>${S.macro?S.macro.score:0} / 3</b></div><div><span>Purified</span><b>${idr(S.purDone)}</b></div>
+    <div><span>Score</span><b>${G.total} / 100 · ${G.letter}</b></div><div><span>Attempt</span><b>${S.attempt||1}</b></div><div><span>Behaviour</span><b style="font-family:var(--body)">${BH.lab} (${BH.score})</b></div><div><span>Missions</span><b>${nDone} / ${MISSIONS.length}</b></div><div><span>Macro calls right</span><b>${S.macro?S.macro.score:0} / 3</b></div><div><span>Purified</span><b>${idr(S.purDone)}</b></div>
     <div><span>Account</span><b style="font-family:var(--body)">${S.mode==='sots'?'SOTS (sharia)':'Regular'}</b></div><div><span>Registered</span><b style="font-family:var(--body);font-size:.85rem">${esc(S.regAt||'')}</b></div>`;
   $('missions').innerHTML=MISSIONS.map(m=>`<div class="mission ${S.missions[m.id]?'done':''}"><span class="tag">${m.tag}</span><h3>${m.title}</h3><p>${m.body}</p><span class="st ${S.missions[m.id]?'pass':''}">${S.missions[m.id]?'✓ Done':'Not yet'}</span></div>`).join('');
   $('journal').innerHTML=S.journal.length?S.journal.map(j=>`<li><span class="mono" style="font-size:.78rem;color:var(--muted)">${j.at}</span><span><b>${j.type}.</b> ${j.text}<span class="akad ${j.riba?'riba':''}">${j.akad}</span></span></li>`).join(''):'<li><span></span><span class="empty">Your trades, dividends, and fees will appear here with the akad behind each one.</span></li>';
@@ -1104,7 +1112,7 @@ function renderIPO(){
     <button type="button" data-scr="loan">No. It has a conventional bank loan, so it can never be in the DES.</button></div>
     ${I.screened&&I.screened!=='ok'?'<div class="msg show err">Not quite. ISSI tolerates some interest: debt up to 45% of assets and non-halal income up to 10% of revenue, with purification. Check the numbers again.</div>':''}
     <p class="why">In a real IPO, OJK reviews the registration statement and a capital market sharia expert (ASPM) gives the sharia opinion. Investors still read the prospectus themselves.</p>`;
-  if(I.legacy){h='<h3>IPO already finished</h3><p>This session started before the full IPO process existed. Use Start a new session (after Day 10) or Reset simulation to experience every step.</p>'}
+  if(I.legacy){h='<h3>IPO already finished</h3><p>This session started before the full IPO process existed. Use Retake (new attempt) at the bottom of the page to experience every step.</p>'}
   else if(st<=1){
     if(I.screened!=='ok') h=gate;
     else h=`<div class="msg show ok">Correct. HALA passes the ISSI screen, so it can be offered as a sharia stock. You will purify the 1% non-halal share of its dividends.</div>
@@ -1229,8 +1237,9 @@ function renderScreen(){const show=$('show-res').checked;
     return `<tr><td><b class="mono">${s.tk}</b> <span class="est">${s.sector}</span></td><td>${bz}</td><td class="n">${s.debt}%</td><td class="n">${String(s.nhi).replace('.',',')}%</td><td>${r(issiPass(s))}</td><td>${r(globPass(s))}</td><td class="n">${show?(purRatio(s)*100).toFixed(1).replace('.',',')+'%':'?'}</td></tr>`}).join('')}
 $('show-res').onchange=renderScreen;
 // reset with in-page confirm
-let armed=false;$('btn-reset').onclick=()=>{if(!armed){armed=true;$('btn-reset').textContent='Click again to erase all progress';setTimeout(()=>{armed=false;$('btn-reset').textContent='Reset simulation'},4000);return}
-  if(S.room)return;try{localStorage.removeItem(stateKey(USER))}catch(e){}S=fresh();S.free=USER.mode==='free';S.regAt=new Date().toLocaleString('id-ID');applyAdj();renderScreen();armed=false;$('btn-reset').textContent='Reset simulation';setMode('sots');setSide('buy');news('Simulation reset. You start with Rp100.000.000 in a SOTS account.');render()};
+let armed=false;$('btn-reset').onclick=()=>{if(!armed){armed=true;$('btn-reset').textContent='Click again: start a new attempt (this one stays on record)';setTimeout(()=>{armed=false;$('btn-reset').textContent='Retake (new attempt)'},4000);return}
+  if(S.room)return;ensureStats();if(S.over)logAttempt(endStatus());else if(S.stats.trades>0||S.day>1||Object.keys(S.missions).length)logAttempt('restarted on day '+S.day);
+  try{localStorage.removeItem(stateKey(USER))}catch(e){}S=fresh();S.attempt=nextAttempt();attSig='';S.free=USER.mode==='free';S.regAt=new Date().toLocaleString('id-ID');applyAdj();renderScreen();armed=false;$('btn-reset').textContent='Retake (new attempt)';setMode('sots');setSide('buy');news(`Attempt ${S.attempt} started. Your previous attempt stays on record. You start with Rp100.000.000 in a SOTS account.`);render()};
 
 function restart(){if(S&&S.room)return;clearInterval(timer);timer=setInterval(()=>{if(paused||S.over)return;tick();if(S.t%20===0)save();const n=Date.now();if(n-lastR>280){render();lastR=n}},Math.round(TICK_MS/speed))}
 window.addEventListener('resize',drawChart);
@@ -1255,8 +1264,8 @@ function grade(){const st=S.stats,M=S.macro||{calls:{},st:{}};
   parts.push({k:'Reading macro events',max:15,got:mp,note:`${made} of 3 calls made, ${right} right`});
   let perf=Math.max(0,Math.min(20,12+alpha*2));if(st.trades<3)perf=Math.min(perf,6);
   parts.push({k:'Performance vs ISSI',max:20,got:perf,note:`Return ${fpct(ret)} against ISSI ${fpct(ixRet)}${st.trades<3?'; under 3 trades, capped at 6':''}`});
-  const fin=S.over?1:Math.min(1,(S.day-1)/SESSION_DAYS);
-  parts.push({k:'Activity and diversification',max:10,got:4*fin+3*Math.min(1,st.trades/5)+3*Math.min(1,st.tks.length/3),note:`${S.over?'Session finished':'Day '+S.day+' of '+SESSION_DAYS}; ${st.trades} trades; ${st.tks.length} different stocks`});
+  const fin=S.over&&!S.endedEarly?1:Math.min(1,(S.day-1+S.t/TICKS_PER_DAY)/SESSION_DAYS);
+  parts.push({k:'Activity and diversification',max:10,got:4*fin+3*Math.min(1,st.trades/5)+3*Math.min(1,st.tks.length/3),note:`${S.endedEarly?'Finished early on day '+S.day:S.over?'Session finished':'Day '+S.day+' of '+SESSION_DAYS}; ${st.trades} trades; ${st.tks.length} different stocks`});
   const total=Math.round(parts.reduce((a,x)=>a+x.got,0));
   const letter=[[85,'A'],[80,'A-'],[75,'B+'],[70,'B'],[65,'B-'],[60,'C+'],[55,'C'],[40,'D'],[0,'E']].find(x=>total>=x[0])[1];
   return {parts,total,letter,eq,ret,ixRet,alpha,nM,made,right,nonDes,purTot}}
@@ -1319,14 +1328,14 @@ function pdfReport(){const J=window.jspdf&&window.jspdf.jsPDF;
   font('normal',10,[255,255,255]);doc.text('Student performance report  |  Islamic Capital Market',X,19);
   font('normal',8,[199,210,226]);doc.text('Learn Islamic Fintech with Tazkia  |  learnislamicfintech.tazkia.ac.id',X,25);
   doc.text(T('Generated '+new Date().toLocaleString('id-ID')),W-X,25,{align:'right'});
-  y=40;const id=[['Name',USER.name],['NIM',USER.nim],['Class',USER.cls||'-'],['Registered',S.regAt||'-'],['Status',S.over?'Session complete (10 of 10 days)':`In progress: day ${S.day} of ${SESSION_DAYS} (provisional)`],['Account at the end',S.mode==='sots'?'SOTS (sharia)':'Regular']];
+  y=40;const id=[['Name',USER.name],['NIM',USER.nim],['Class',USER.cls||'-'],['Registered',S.regAt||'-'],['Attempt',`${S.attempt||1} of ${attemptRows().length} on this device`],['Status',S.endedEarly?`Finished early on day ${S.day} of ${SESSION_DAYS}`:S.over?'Session complete (10 of 10 days)':`In progress: day ${S.day} of ${SESSION_DAYS} (provisional)`],['Account at the end',S.mode==='sots'?'SOTS (sharia)':'Regular']];
   id.forEach(([k,v])=>{font('normal',8.8,MUT);doc.text(k,X,y);font('bold',9.8);doc.text(T(v),X+33,y,{maxWidth:84});y+=6});
   // score + behaviour boxes
   const bx=W-X-56;card(bx,35,56,35);
   font('bold',7.5,MUT);doc.text('SIMULATION SCORE',bx+28,41,{align:'center'});
   font('bold',28,NAVY);doc.text(String(g.total),bx+22,55,{align:'center'});font('normal',9,MUT);doc.text('/ 100',bx+34,55);
   doc.setFillColor(...GOLD);doc.roundedRect(bx+16,59,24,7.5,1.5,1.5,'F');font('bold',10.5,NAVY);doc.text('Grade '+g.letter,bx+28,64.3,{align:'center'});
-  y=82;
+  y=90;
   h2('Score breakdown');
   g.parts.forEach(pt=>{const r=Math.max(0,Math.min(1,pt.got/pt.max));font('bold',9.5);doc.text(T(pt.k),X,y);
     doc.setFillColor(...LINE);doc.roundedRect(X+58,y-2.7,70,3,1,1,'F');doc.setFillColor(...(r>=.7?UP:r>=.4?GOLD:DN));if(r>0)doc.roundedRect(X+58,y-2.7,Math.max(2,70*r),3,1,1,'F');
@@ -1399,7 +1408,16 @@ function pdfReport(){const J=window.jspdf&&window.jspdf.jsPDF;
     doc.setDrawColor(...NAVY);doc.setLineWidth(.4);doc.line(X,y-2,W-X,y-2);font('bold',9.6,NAVY);doc.text('Behaviour index (100 minus deductions)',c1+2,y+3);doc.text(T(`${b.score} / 100  |  ${b.lab}`),c3-2,y+3,{align:'right'});y+=11}
   h2('What went well');fb.pos.forEach(t=>bullet(t,UP));y+=1;
   h2('What to improve');(fb.imp.length?fb.imp:['Nothing major. Try a different strategy in a new session and compare the result.']).forEach(t=>bullet(t,DN));y+=1;
-  page();h2('Reflection','Answer before you submit. Write by hand on a printout or type into the PDF.');
+  page();
+  {const rows=attemptRows(),done=rows.filter(r=>r.status!=='in progress'),best=done.length?Math.max(...done.map(r=>r.sc)):g.total;
+    h2(`Attempt history (${rows.length})`,`Every attempt on this device under NIM ${USER.nim}, including restarted ones. This report is attempt ${S.attempt||1} (marked *). Best score: ${best}.`);
+    const cols=[['#',X+2,0],['Mode',X+9,0],['Started',X+38,0],['Status',X+72,0],['Day',X+111,1],['Score',X+128,1],['Return',X+147,1],['Behaviour',X+151,0]];const shortB=r=>`${r.bs} · `+String(r.bl).replace('Homo ','').replace('Leaning ','lean. ').replace('Between the two','between');
+    doc.setFillColor(...NAVY);doc.rect(X,y-4.3,CW,6.3,'F');font('bold',8,[255,255,255]);cols.forEach(([c,x,r])=>doc.text(c,x,y,r?{align:'right'}:undefined));y+=6.3;
+    rows.slice(-14).forEach((r,i)=>{need(6);const me=r.n===S.attempt&&sameSeries(r);if(me){doc.setFillColor(...[251,241,208]);doc.rect(X,y-4.2,CW,6.2,'F')}else if(i%2){doc.setFillColor(...SOFT);doc.rect(X,y-4.2,CW,6.2,'F')}
+      font(me?'bold':'normal',8.2);doc.text(String(r.n)+(me?'*':''),X+2,y);doc.text(T(modeName(r)),X+9,y,{maxWidth:28});doc.text(T(String(r.start||'-').slice(0,17)),X+38,y);doc.text(T(r.status),X+72,y,{maxWidth:32});
+      doc.text(String(r.day),X+111,y,{align:'right'});doc.text(`${r.sc} ${r.gr}`,X+128,y,{align:'right'});font(me?'bold':'normal',8.2,sgnC(r.r));doc.text(T(fpct(r.r)),X+147,y,{align:'right'});font(me?'bold':'normal',8.2);doc.text(T(shortB(r)),X+151,y,{maxWidth:W-X-151-X+X-2});y+=6.2});
+    if(rows.length>14){font('italic',7.8,MUT);doc.text(`Showing the latest 14 of ${rows.length} attempts.`,X,y);y+=5}y+=6}
+  h2('Reflection','Answer before you submit. Write by hand on a printout or type into the PDF.');
   ['1. Which sharia rule changed one of your decisions, and why?','2. Based on your behaviour profile, were you closer to homo islamicus or homo economicus? Give one example from your trades.'].forEach(q=>{need(30);font('bold',9.2);const L=doc.splitTextToSize(T(q),CW);doc.text(L,X,y);y+=L.length*4+1;doc.setDrawColor(...LINE);doc.setLineWidth(.3);for(let k=0;k<9;k++){y+=7.5;doc.line(X,y,W-X,y)}y+=10});
   need(20);y+=6;doc.setDrawColor(...MUT);doc.line(X,y,X+62,y);doc.line(W-X-62,y,W-X,y);font('normal',8.5,MUT);doc.text('Student signature',X,y+4.5);doc.text('Lecturer: final score and notes',W-X-62,y+4.5);
   // footer on every page
@@ -1410,27 +1428,49 @@ function pdfReport(){const J=window.jspdf&&window.jspdf.jsPDF;
   $('pdf-note').textContent=`Report downloaded: ${g.total}/100 (${g.letter}), ${b.lab}.${S.over?'':' This is provisional; download again after Day 10.'}`}
 document.addEventListener('click',e=>{if(e.target.closest('[data-pdf]')&&S&&USER)pdfReport()});
 
-function showEnd(){publishStatus(true);render();$('end-report').innerHTML=$('report').innerHTML;$('endwrap').hidden=false}
+// ---------------------------------------------------------------- attempts: every attempt stays on record
+const attKey=()=>KEY+'-att-'+USER.nim;
+function attempts(){try{return JSON.parse(localStorage.getItem(attKey())||'[]')}catch(e){return []}}
+const sameSeries=a=>a.mode===(USER.mode||'timed')&&(a.room||'')===(USER.room||'');
+function nextAttempt(){return attempts().filter(sameSeries).reduce((x,a)=>Math.max(x,a.n),0)+1}
+function attemptRow(status){ensureStats();const g=grade(),b=behaviour();
+  return {n:S.attempt,mode:USER.mode||'timed',room:S.room||'',start:S.regAt||'',end:status==='in progress'?'':new Date().toLocaleString('id-ID'),status,day:Math.min(S.day,SESSION_DAYS),sc:g.total,gr:g.letter,r:+g.ret.toFixed(2),bs:b.score,bl:b.lab,ms:g.nM}}
+function logAttempt(status){if(!USER||!S)return;if(!S.attempt)S.attempt=nextAttempt();const r=attemptRow(status),list=attempts();
+  const i=list.findIndex(x=>x.n===r.n&&x.mode===r.mode&&(x.room||'')===r.room);if(i>=0)list[i]=r;else list.push(r);try{localStorage.setItem(attKey(),JSON.stringify(list.slice(-200)))}catch(e){}}
+const endStatus=()=>S.room?'class finished':S.endedEarly?'finished early':'complete';
+// stored attempts plus the current one (shown as "in progress" until it ends)
+function attemptRows(){const list=attempts();if(S&&S.attempt&&!list.some(x=>x.n===S.attempt&&sameSeries(x)))list.push(attemptRow(S.over?endStatus():'in progress'));return list}
+const modeName=a=>a.mode==='class'?'class '+(a.room||''):a.mode==='free'?'no time limit':'20 minutes';
+let attSig='';
+function renderAttempts(){const rows=attemptRows(),sig=JSON.stringify(rows.map(r=>[r.n,r.mode,r.status,r.sc]))+S.attempt;if(sig===attSig)return;attSig=sig;
+  const done=rows.filter(r=>r.status!=='in progress'),best=done.length?Math.max(...done.map(r=>r.sc)):null;
+  $('att-box').innerHTML=`<h3>Your attempts (${rows.length})${best!==null?' · best score '+best:''}</h3><p>Every attempt stays on record, including restarted ones. Your PDF report lists them all for your lecturer.</p>
+    <table><thead><tr><th>#</th><th>Mode</th><th>Started</th><th>Ended</th><th>Status</th><th>Day</th><th>Score</th><th>Return</th><th>Behaviour</th></tr></thead><tbody>
+    ${rows.slice().reverse().map(r=>`<tr class="${r.n===S.attempt&&sameSeries(r)?'now':''}"><td>${r.n}</td><td>${esc(modeName(r))}</td><td>${esc(r.start||'-')}</td><td>${esc(r.end||'-')}</td><td>${esc(r.status)}</td><td>${r.day}</td><td>${r.sc} ${esc(r.gr)}</td><td class="${sgn(r.r)}">${fpct(r.r)}</td><td>${esc(r.bl)}</td></tr>`).join('')}</tbody></table>`}
+let finArmed=false;$('btn-finish').onclick=()=>{if(!S||S.over||S.room)return;
+  if(!finArmed){finArmed=true;$('btn-finish').textContent='Click again to finish';setTimeout(()=>{finArmed=false;$('btn-finish').textContent='Finish now'},4000);return}
+  finArmed=false;$('btn-finish').textContent='Finish now';S.endedEarly=true;S.over=true;news(`You finished the session early on day ${S.day}. Your report is ready.`);clearInterval(timer);save();showEnd()};
+function showEnd(){logAttempt(endStatus());attSig='';publishStatus(true);render();$('end-report').innerHTML=$('report').innerHTML;$('endwrap').hidden=false}
 $('end-review').onclick=()=>{$('endwrap').hidden=true;document.getElementById('tab-journal').click();$('p-journal').scrollIntoView({behavior:'smooth'})};
-$('end-new').onclick=()=>{if(S.room)return;try{localStorage.removeItem(stateKey(USER))}catch(e){}S=fresh();S.free=USER.mode==='free';S.regAt=new Date().toLocaleString('id-ID');applyAdj();renderScreen();$('endwrap').hidden=true;ipoSig='';
-  news(S.free?'New session started with Rp100.000.000 in a SOTS account. Play at your own pace.':'New session started. You have 20 minutes and Rp100.000.000 in a SOTS account.');setMode('sots');setSide('buy');select(S.sel);save();restart()};
+$('end-new').onclick=()=>{if(S.room)return;logAttempt(endStatus());try{localStorage.removeItem(stateKey(USER))}catch(e){}S=fresh();S.attempt=nextAttempt();attSig='';S.free=USER.mode==='free';S.regAt=new Date().toLocaleString('id-ID');applyAdj();renderScreen();$('endwrap').hidden=true;ipoSig='';
+  news(`Attempt ${S.attempt} started. `+(S.free?'You have Rp100.000.000 in a SOTS account. Play at your own pace.':'You have 20 minutes and Rp100.000.000 in a SOTS account.'));setMode('sots');setSide('buy');select(S.sel);save();restart()};
 function stateKey(u){return keyOf(u.nim)+(u.mode==='free'?'-free':u.mode==='class'?'-k-'+u.room:'')}
 let regMode='timed';
 function setRegMode(m){regMode=m;document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===m));$('code-wrap').hidden=m!=='class';
   $('r-go').textContent=m==='class'?'Join the class':'Start with Rp100.000.000';if(m==='class')setTimeout(()=>$('r-code').focus(),0)}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>setRegMode(b.dataset.mode));
 function applyModeUI(){const cls=!!S.room;
-  document.querySelectorAll('.ctrl [data-speed],#btn-pause,#btn-skip').forEach(b=>b.hidden=cls);$('sp4').hidden=!S.free;
+  document.querySelectorAll('.ctrl [data-speed],#btn-pause,#btn-skip,#btn-finish').forEach(b=>b.hidden=cls);$('sp4').hidden=!S.free;
   $('classbar').hidden=!cls;$('lb').hidden=$('lb-h').hidden=!cls;$('btn-reset').hidden=cls;$('end-new').hidden=cls;
   if(!S.free&&speed===4){speed=1;document.querySelectorAll('[data-speed]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.speed==='1'))}
   $('who-nim').textContent=USER.nim+(cls?' · class '+S.room:S.free?' · no time limit':'')}
-function renderClass(online){if(!S.room)return;const st=!CTL?['off','Connecting']:CTL.state==='lobby'?['wait','Waiting for your lecturer']:CTL.state==='pause'?['wait','Paused by your lecturer']:CTL.state==='end'?['off','Class ended']:['','Live'];
+function renderClass(online){if(!S||!S.room)return;const st=!CTL?['off','Connecting']:CTL.state==='lobby'?['wait','Waiting for your lecturer']:CTL.state==='pause'?['wait','Paused by your lecturer']:CTL.state==='end'?['off','Class ended']:['','Live'];
   $('classbar').innerHTML=`<span class="st ${st[0]}">${st[1]}</span><span>Class <b class="code">${esc(S.room)}</b>${CTL&&CTL.name?' · '+esc(CTL.name):''}</span>${CTL&&CTL.allowReg===false?'<span class="est">Regular account disabled by your lecturer</span>':''}<span class="est">${online===false?'Reconnecting…':'Your rank and return are shared with your lecturer.'}</span>`}
-function renderBoard(){if(!S.room||!BOARD)return;const rows=BOARD.rows||[],i=rows.findIndex(r=>r.id===myId);
+function renderBoard(){if(!S||!S.room||!BOARD)return;const rows=BOARD.rows||[],i=rows.findIndex(r=>r.id===myId);
   const li=(r,k)=>`<li class="${r.id===myId?'me':''}"><span class="k">${k+1}</span><span class="n">${esc(r.n)}</span><span class="r ${sgn(r.r)}">${fpct(r.r)}</span></li>`;
   let h=rows.slice(0,8).map(li).join('');if(i>=8)h+='<li class="gap">…</li>'+li(rows[i],i);
   $('lb').innerHTML=h||'<li class="gap">No players yet.</li>';$('lb-me').textContent=i>=0?`You: #${i+1} of ${rows.length}`:`${rows.length} players`}
-function publishStatus(force){if(!CH||!S.room||!myId)return;const n=Date.now();if(!force&&n-lastPub<8000)return;lastPub=n;ensureStats();const g=grade(),b=behaviour();
+function publishStatus(force){if(!CH||!S||!S.room||!myId)return;const n=Date.now();if(!force&&n-lastPub<8000)return;lastPub=n;ensureStats();const g=grade(),b=behaviour();
   CH.setStatus(myId,{n:USER.name,nim:USER.nim,cls:USER.cls||'',eq:Math.round(g.eq),r:+g.ret.toFixed(2),sc:g.total,gr:g.letter,bs:b.score,bl:b.lab,ms:g.nM,tr:S.stats.trades,d:Math.min(S.day,SESSION_DAYS),t:S.t,ac:S.mode,over:!!S.over,ts:CH.now()})}
 function classStep(){if(!S||!S.room||!CTL)return;const target=BSKelas.tickAt(CTL,BSKelas.now());let g=gIdx(),n=0;
   catching=target-g>4;while(g<target&&!S.over&&n<2500){tick();g=gIdx();n++}catching=false;
@@ -1438,6 +1478,7 @@ function classStep(){if(!S||!S.room||!CTL)return;const target=BSKelas.tickAt(CTL
   if(CTL.state==='end'&&!S.over&&gIdx()>=target){S.over=true;news('Your lecturer has ended the class. See your report card.');save();showEnd()}
   const t=Date.now();if(n||t-lastR>900){render();renderClass();lastR=t}if(t-lastSave>5000){save();lastSave=t}publishStatus(false)}
 async function joinClass(u){const m=$('r-msg');m.className='msg show ok';m.textContent='Connecting to the class…';$('r-go').disabled=true;
+  for(let i=0;i<80&&!(window.BSKelas&&window.mqtt);i++)await new Promise(r=>setTimeout(r,250));
   if(!window.BSKelas||!window.mqtt||!window.crypto||!crypto.subtle){m.className='msg show err';m.textContent='Class mode needs an internet connection and a modern browser. Reload the page and try again.';$('r-go').disabled=false;return}
   let first=true;
   try{CH=await BSKelas.join(u.room,{role:'student',
@@ -1461,6 +1502,7 @@ function finishLogin(u){if(!S.ipo||!S.ipo.v2){const old=S.ipo||{};S.ipo=freshIpo
   try{localStorage.setItem(KEY+'-last',u.nim)}catch(e){}
   $('who-name').textContent=u.name;$('who-nim').textContent=u.nim;$('regwrap').hidden=true;
   if(!S.news.length) news(`Welcome, ${esc(u.name)}. You start with Rp100.000.000 in a SOTS account. The HALA IPO starts today: read the prospectus in the IPO process tab. Watch the economic calendar: BPS inflation is out at 10:55, and Bank Indonesia decides the BI Rate tomorrow.`);
+  if(!S.attempt)S.attempt=nextAttempt();attSig='';
   ipoSig='';paused=false;$('btn-pause').setAttribute('aria-pressed','false');$('btn-pause').textContent='Pause';
   setMode(S.mode);otype=S.margin&&S.mode==='reg'?'margin':'cash';document.querySelectorAll('[data-ot]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ot===otype));$('use-margin').checked=!!S.margin;setSide('buy');select(S.sel);save();
   applyModeUI();renderClass();if(S.room&&S.over)showEnd();
@@ -1479,7 +1521,7 @@ $('reg-form').addEventListener('submit',e=>{e.preventDefault();
   const old=users().find(u=>u.nim===nim);if(old&&old.name.toLowerCase()===name.toLowerCase()&&!cls&&old.cls)$('r-cls').value=old.cls;
   if(old&&old.name.toLowerCase()!==name.toLowerCase()){m.className='msg show err';m.textContent=`NIM ${nim} is already registered on this device as ${old.name}. Pick it from the list below, or check your NIM.`;return}
   const u={name,nim,cls:cls||(old&&old.cls)||'',mode:regMode};
-  if(regMode==='class'){const code=BSKelas?BSKelas.cleanCode($('r-code').value):'';if(code.length<4){m.className='msg show err';m.textContent='Enter the class code from your lecturer.';return}u.room=code}
+  if(regMode==='class'){const code=window.BSKelas?BSKelas.cleanCode($('r-code').value):String($('r-code').value).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8);if(code.length<4){m.className='msg show err';m.textContent='Enter the class code from your lecturer.';return}u.room=code}
   login(u);
 });
 $('known').addEventListener('click',e=>{const b=e.target.closest('[data-nim]');if(!b)return;const u=users()[Number(b.dataset.i)];if(u)login(u)});

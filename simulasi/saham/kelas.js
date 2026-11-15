@@ -62,20 +62,26 @@ window.BSKelas = (function () {
   async function join(code, h) {
     if (!window.mqtt) throw new Error('lib');
     code = cleanCode(code); const key = await keyFor(code); const base = 'bsyariah/v1/' + (await sha('bursa-syariah|' + code)).slice(0, 24);
-    await syncClock();
-    let client = null, found = false;
-    for (const url of BROKERS) {
-      const c = await tryBroker(url, 7000); if (!c) continue;
-      if (h.role === 'host' && !h.findOnly) { client = c; break }
-      found = await new Promise(res => {
-        let done = false; const fin = v => { if (!done) { done = true; c.unsubscribe(base + '/ctl'); c.removeListener('message', onm); res(v) } };
+    const clockP = syncClock(); let reached = 0;
+    // a broker "wins" when it connects (host creating a class) or when it holds the class's control message (everyone else);
+    // all brokers are tried at the same time, so one slow broker never makes a student miss the class
+    const findOn = async url => {
+      const c = await tryBroker(url, 9000); if (!c) return null; reached++;
+      if (h.role === 'host' && !h.findOnly) return c;
+      const ok = await new Promise(res => {
+        let done = false; const fin = v => { if (!done) { done = true; c.removeListener('message', onm); res(v) } };
         const onm = (t, m) => { if (t === base + '/ctl' && m.length) fin(true) };
-        c.on('message', onm); c.subscribe(base + '/ctl', { qos: 1 }); setTimeout(() => fin(false), 3500);
+        c.on('message', onm); c.subscribe(base + '/ctl', { qos: 1 }); setTimeout(() => fin(false), 6000);
       });
-      if (found) { client = c; break }
-      c.end(true);
-    }
-    if (!client) throw new Error(h.role === 'host' ? 'net' : 'notfound');
+      if (ok) { c.unsubscribe(base + '/ctl'); return c }
+      c.end(true); return null;
+    };
+    const client = await new Promise(res => {
+      let left = BROKERS.length, won = null;
+      BROKERS.forEach(u => findOn(u).then(c => { if (c && !won) { won = c; res(c) } else if (c) c.end(true); if (--left === 0 && !won) res(null) }));
+    });
+    await clockP;
+    if (!client) throw new Error(h.role === 'host' || !reached ? 'net' : 'notfound');
     const handle = async (t, m) => {
       if (!m.length) { if (t.startsWith(base + '/s/') && h.onStatus) h.onStatus(t.slice(base.length + 3), null); return }
       let o; try { o = await open(key, m.toString()) } catch (e) { return }
