@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Daftar Kelompok · Simulasi MMQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="gaya.css?v=3">
+<script src="../saham/lib/mqtt-5.10.1.min.js"></script>
+<script src="kelas.js?v=5"></script>
+<script src="kelompok.js?v=1"></script>
+<style>
+  .mem{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+  .mem span{background:var(--soft);border-radius:999px;padding:4px 12px;font-weight:600}
+  .wait{font-size:3rem;animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.35}}
+</style>
+</head>
+<body>
+<div class="top"><div class="t">Ruang Tunggu Kelompok<span class="sub"> · Simulasi MMQ PNM</span></div><span class="chip" id="hdrGroup">–</span><span class="conn" id="conn" title="Terhubung ke kelas"></span></div>
+<div class="wrap" id="app"></div>
+<script>
+'use strict';
+const $ = s => document.querySelector(s), app = $('#app'), qs = new URLSearchParams(location.search);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+let R = PNMReg.get(), CH = null, CTL = null, beat = null;
+if (R && qs.get('kelas') && PNMKelas.cleanCode(qs.get('kelas')) !== R.kode) R = null;  // kelas baru: daftar ulang
+
+function form() {
+  app.innerHTML = `<div class="card">
+    <h1>Daftarkan kelompok</h1>
+    <p class="lead">Diskusikan dulu nama kelompok bersama anggota, lalu tuliskan nama setiap anggota. Satu gawai dipakai oleh satu kelompok sepanjang permainan.</p>
+    <label for="kode">Kode kelas dari pengajar</label>
+    <input id="kode" maxlength="8" value="${esc(qs.get('kelas') || (R && R.kode) || '')}" placeholder="contoh: K7PQ2" style="text-transform:uppercase">
+    <label for="nama">Nama kelompok</label>
+    <input id="nama" maxlength="30" placeholder="contoh: Kelompok 3 Cempaka">
+    <label for="ang">Nama anggota, satu nama per baris</label>
+    <textarea id="ang" rows="6" style="font-size:1.1rem;padding:14px;border-radius:12px;border:2px solid var(--line);width:100%;font-family:inherit;background:var(--card);color:var(--ink)" placeholder="Budi Santoso&#10;Siti Aminah&#10;Rahmat Hidayat"></textarea>
+    <p class="no" id="err"></p>
+    <button class="btn gold wide" id="go">Daftarkan kelompok</button>
+  </div>`;
+  $('#go').onclick = () => {
+    const kode = PNMKelas.cleanCode($('#kode').value), nama = $('#nama').value.trim();
+    const anggota = $('#ang').value.split('\n').map(x => x.trim()).filter(Boolean).slice(0, 12);
+    if (!kode) return $('#err').textContent = 'Isi kode kelas yang tampil di layar pengajar.';
+    if (!nama) return $('#err').textContent = 'Isi nama kelompok.';
+    if (anggota.length < 2) return $('#err').textContent = 'Tuliskan minimal dua nama anggota.';
+    R = PNMReg.baru(nama, anggota, kode); hdr(); sambung(); tunggu();
+  };
+}
+function hdr() { $('#hdrGroup').textContent = R ? R.nama : '–' }
+function kirim() { if (CH && R) CH.setStatus('reg-' + R.id, PNMReg.status(R, { di: 'ruang tunggu' })) }
+async function sambung() {
+  if (!R || !window.mqtt) return;
+  try {
+    CH = await PNMKelas.join(R.kode, { role: 'player', onConn: v => $('#conn').classList.toggle('on', v), onCtl: o => { CTL = o; tunggu(); arahkan() } });
+    $('#conn').classList.add('on'); kirim(); clearInterval(beat); beat = setInterval(kirim, 20000); tunggu();
+  } catch (e) { CH = null; $('#conn').classList.remove('on'); tunggu(); setTimeout(() => { if (!CH && R) sambung() }, 4000) }
+}
+// pengajar memulai game: pindah otomatis ke halaman game, sekali untuk setiap aba-aba
+function arahkan() {
+  if (!CTL || !R || !CTL.aktif || !CTL.aktifT || CTL.aktifT <= (R.pergi || 0)) return;
+  if (CTL.aktif === 'cp' && !(CTL.draw && CTL.draw[R.id])) return;
+  R.pergi = CTL.aktifT; PNMReg.set(R);
+  location.href = PNMReg.HAL[CTL.aktif] + '?kelas=' + encodeURIComponent(R.kode) + '&auto=1';
+}
+function tunggu() {
+  if (!R) return form();
+  const d = CTL && CTL.draw && CTL.draw[R.id];
+  const lawan = d && Object.entries(CTL.draw).find(([id, x]) => id !== R.id && x.p === d.p && d.p > 0);
+  app.innerHTML = `<div class="card center">
+      <div class="wait">⏳</div>
+      <h2>Kelompok terdaftar</h2>
+      <div class="big" style="font-size:2.2rem">${esc(R.nama)}</div>
+      <div class="mem" style="justify-content:center">${R.anggota.map(a => `<span>${esc(a)}</span>`).join('')}</div>
+      <p class="lead">${CH ? 'Terhubung ke kelas <b>' + esc(R.kode) + '</b>. Tunggu aba-aba pengajar; layar ini akan pindah sendiri ke game yang dimulai.' : 'Sedang menghubungkan ke kelas ' + esc(R.kode) + '…'}</p>
+    </div>
+    ${d ? `<div class="card"><h3>Hasil undian Game 2 · Cabang vs Pusat</h3>
+      ${d.p > 0 ? `<p class="lead">Pertandingan <b>${d.p}</b>: kelompok Anda <b>${d.s === 'A' ? 'menjadi Pusat di Babak 1 (ULaMM), lalu Cabang di Babak 2 (Mekaar)' : 'menjadi Cabang di Babak 1 (ULaMM), lalu Pusat di Babak 2 (Mekaar)'}</b>.</p>
+      <p>Pasangan: <b>${lawan ? esc(CTL.nama[lawan[0]] || 'kelompok lain') : '–'}</b>. Skor dihitung untuk satu PNM: kedua kelompok menang atau kalah bersama.</p>`
+      : `<p class="lead">Jumlah kelompok ganjil, sehingga kelompok Anda memainkan kedua peran sendiri pada satu gawai.</p>`}</div>` : ''}
+    <div class="card"><h3>Bila layar tidak pindah sendiri</h3>
+      <div class="row"><a class="btn ghost" href="pilih-akad.html?kelas=${esc(R.kode)}&auto=1">Game 1 · Pemilihan Akad</a><a class="btn ghost" href="cabang-pusat.html?kelas=${esc(R.kode)}&auto=1">Game 2 · Cabang vs Pusat</a><a class="btn ghost" href="jejak-audit.html?kelas=${esc(R.kode)}">Game 3 · Jejak Audit</a></div>
+      <p class="note">Salah menulis nama? <a href="#" id="ubah">Daftar ulang kelompok</a>.</p></div>`;
+  $('#ubah').onclick = e => { e.preventDefault(); if (CH) CH.clear('reg-' + R.id); PNMReg.clear(); R = null; hdr(); form() };
+}
+hdr();
+if (R) { sambung(); tunggu() } else form();
+</script>
+</body>
+</html>

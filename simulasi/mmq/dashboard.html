@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard Pengajar · Simulasi MMQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="gaya.css?v=3">
+<script async src="../saham/lib/mqtt-5.10.1.min.js"></script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="data.js?v=3"></script>
+<script src="kelas.js?v=5"></script>
+<script src="kelompok.js?v=1"></script>
+<style>
+  html{font-size:18px}
+  .wrap{max-width:1360px}
+  .tabs{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0;position:sticky;top:58px;z-index:4;background:var(--bg);padding:6px 0}
+  .tabs .btn{min-height:48px;padding:10px 18px}
+  .tabs .btn .n{background:rgba(255,255,255,.25);border-radius:999px;padding:0 9px;margin-left:4px}
+  #qr img,#qr canvas{background:#fff;padding:10px;border-radius:12px;max-width:200px}
+  .code{font-family:'JetBrains Mono',monospace;font-size:3rem;font-weight:800;letter-spacing:.12em;line-height:1}
+  td.n,th.n{font-family:'JetBrains Mono',monospace;font-weight:700;text-align:right}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+  .steps div{background:var(--soft);border-radius:14px;padding:12px 14px}
+  .steps b{display:block;font-family:'Archivo',sans-serif}
+  .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+  .kpi div{background:var(--soft);border-radius:14px;padding:12px 16px}
+  .kpi b{display:block;font-family:'Archivo',sans-serif;font-size:2rem;line-height:1.1}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#aaa;margin-right:6px}
+  .dot.on{background:#2fb86a}
+  .mem{color:var(--muted);font-size:.9rem}
+  .prog{height:12px;border-radius:6px;background:var(--line);overflow:hidden;min-width:120px}
+  .prog i{display:block;height:100%;background:var(--navy)}
+  .rank{font-family:'Archivo',sans-serif;font-weight:800;font-size:1.3rem}
+  .podium{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:10px 0}
+  .podium div{border-radius:16px;padding:14px;text-align:center;background:var(--soft)}
+  .podium .g1{background:#f6e3a8;color:#1b1404}.podium .g2{background:#e3e7ec;color:#1b2430}.podium .g3{background:#efd4bd;color:#1b1404}
+  .podium b{display:block;font-family:'Archivo',sans-serif;font-size:1.25rem}
+  .matches{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:14px}
+  .match{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--sh)}
+  .match.lead{border-color:var(--gold)}
+  .match h3{margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+  .vs{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:10px}
+  .vs .tm{background:var(--soft);border-radius:12px;padding:8px 10px;font-weight:700}
+  .vs .tm small{display:block;font-weight:400;color:var(--muted);font-size:.8rem}
+  .vs .x{font-family:'Archivo',sans-serif;font-weight:800;color:var(--gold)}
+  .bk{border-top:1px solid var(--line);padding:8px 0;display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}
+  .bk .st{font-size:.92rem}
+  .bk .sc{font-family:'Archivo',sans-serif;font-weight:800;font-size:1.6rem;text-align:right;min-width:70px}
+  .tag{display:inline-block;border-radius:8px;padding:1px 8px;font-size:.78rem;font-weight:700;margin-right:4px}
+  .tag.p{background:#173f6b;color:#fff}.tag.c{background:#1f7a4d;color:#fff}
+  .award{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  .award div{border:2px solid var(--gold);border-radius:16px;padding:12px 14px}
+  .award small{color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;font-size:.78rem}
+  .award b{display:block;font-family:'Archivo',sans-serif;font-size:1.25rem}
+  .rule{background:var(--soft);border-radius:14px;padding:12px 16px}
+  @media (max-width:700px){.steps{grid-template-columns:1fr}.matches{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="top"><div class="t">Dashboard Pengajar · Simulasi MMQ PNM</div><span class="chip" id="hdrCode">belum ada kelas</span><span class="chip" id="hdrJam"></span><button class="chip" id="fs" style="border:0;color:#fff;cursor:pointer">⛶ Layar penuh</button><span class="conn" id="conn"></span></div>
+<div class="wrap">
+  <div class="card" id="setup">
+    <h2>Buka kelas</h2>
+    <p>Buat satu kode kelas untuk seluruh hari. Semua kelompok mendaftar lewat QR, lalu Bapak memulai setiap game dari dashboard ini.</p>
+    <div class="row">
+      <button class="btn gold" id="baru">Buat kode kelas baru</button>
+      <div><input id="kodeLama" placeholder="atau ketik kode yang sudah ada" maxlength="8" style="text-transform:uppercase"></div>
+      <button class="btn ghost" id="lama">Buka kode ini</button>
+    </div>
+    <p class="no" id="err"></p>
+  </div>
+
+  <div class="card hide" id="kelas">
+    <div class="row" style="align-items:center">
+      <div id="qr" style="flex:0 0 220px"></div>
+      <div style="flex:1 1 420px"><div class="muted">Kode kelas</div><div class="code" id="code"></div>
+        <p style="word-break:break-all;margin:8px 0">Peserta membuka: <b id="url"></b></p>
+        <div class="steps"><div><b>1 · Daftar</b>Setiap kelompok memindai QR, berdiskusi, lalu mengisi nama kelompok dan anggotanya.</div>
+          <div><b>2 · Undi</b>Di tab Game 2, sistem mengacak pasangan dan peran Pusat atau Cabang.</div>
+          <div><b>3 · Mulai</b>Tekan tombol mulai; layar semua kelompok pindah sendiri ke game.</div></div></div>
+    </div>
+  </div>
+
+  <div class="tabs"><button class="btn" data-t="tk">Kelompok <span class="n" id="nReg">0</span></button><button class="btn ghost" data-t="t1">Game 1 · Pemilihan Akad</button><button class="btn ghost" data-t="t2">Game 2 · Cabang vs Pusat</button><button class="btn ghost" data-t="t3">Game 3 · Jejak Audit</button><button class="btn ghost" data-t="tm">Isian manual</button></div>
+
+  <!-- KELOMPOK -->
+  <div id="tk">
+    <div class="card"><div class="row" style="align-items:center"><h2 style="margin:0">Kelompok terdaftar</h2>
+      <div style="flex:0 0 auto" class="muted">Target <input id="target" type="number" min="2" max="20" value="10" style="width:90px;padding:8px;display:inline-block"> kelompok</div></div>
+      <div class="kpi" style="margin-top:12px"><div><span class="muted">Terdaftar</span><b id="kReg">0</b></div><div><span class="muted">Sedang tersambung</span><b id="kOn">0</b></div><div><span class="muted">Total anggota</span><b id="kAng">0</b></div><div><span class="muted">Game aktif</span><b id="kAkt" style="font-size:1.3rem">–</b></div></div>
+      <div id="regTab" style="margin-top:12px"><p class="muted">Belum ada kelompok. Tampilkan QR di layar dan minta setiap kelompok mendaftar.</p></div>
+      <p class="note">Titik hijau: kelompok mengirim kabar dalam 60 detik terakhir. Kolom posisi menunjukkan halaman yang sedang dibuka kelompok.</p>
+    </div>
+  </div>
+
+  <!-- GAME 1 -->
+  <div id="t1" class="hide">
+    <div class="card"><div class="row" style="align-items:center"><div><h2 style="margin:0">Game 1 · Maqasid dan Pemilihan Akad</h2><p class="muted" id="g1info" style="margin:4px 0 0">Belum dimulai.</p></div>
+      <div style="flex:0 0 auto"><button class="btn gold" id="mulai1">Mulai Game 1 untuk semua kelompok</button></div></div>
+      <div class="rule" style="margin-top:12px"><b>Cara menang.</b> Skor tertinggi menang (maksimum 96: delapan ronde × 10 poin + bonus 2 untuk akad terbaik). Bila skor sama, menang kelompok dengan total waktu menjawab paling singkat. Begitu kelompok menjawab, ronde langsung berlanjut tanpa menunggu waktu 75 detik habis.</div>
+    </div>
+    <div class="card"><h2>Klasemen langsung</h2><div id="g1pod"></div><div id="g1tab"><p class="muted">Belum ada kelompok.</p></div></div>
+    <div class="grid2">
+      <div class="card"><h3>Pilihan kelas per ronde</h3><div id="g1dist"></div></div>
+      <div class="card"><h3>Nilai kumulatif akad, ronde 1–7</h3><div id="g1kum"></div><div class="fact"><b>Penutup.</b> <span id="pesan1"></span></div></div>
+    </div>
+  </div>
+
+  <!-- GAME 2 -->
+  <div id="t2" class="hide">
+    <div class="card"><h2 style="margin-top:0">Game 2 · Cabang vs Pusat</h2>
+      <div class="row" style="align-items:center">
+        <div><p style="margin:0" id="g2info">Langkah: acak pasangan, periksa hasil undian di layar, lalu mulai.</p></div>
+        <div style="flex:0 0 auto;display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" id="acak">🎲 Acak pasangan dan peran</button><button class="btn gold" id="mulai2" disabled>Mulai Game 2</button></div>
+      </div>
+      <div class="rule" style="margin-top:12px"><b>Cara menang (usulan).</b> Setiap pertandingan mempertemukan dua kelompok. Babak 1 ULaMM: kelompok A menjadi Pusat dan B menjadi Cabang; Babak 2 Mekaar: peran bertukar. Skor <b>Satu PNM</b> (0–100) dihitung bersama untuk Pusat dan Cabang pada setiap babak, karena di PNM pusat dan cabang menang atau kalah bersama.
+        <ol style="margin:6px 0 0">
+          <li><b>Juara pertandingan</b>: pasangan dengan rata-rata skor dua babak tertinggi. Bila sama, yang <b>temuan auditnya lebih sedikit</b>, lalu yang <b>lebih cepat selesai</b>. Kedua kelompok dalam pasangan itu sama-sama juara.</li>
+          <li><b>Pusat Terbaik</b> dan <b>Cabang Terbaik</b>: kelompok yang skornya paling jauh di atas rata-rata babak tempat ia memegang peran itu, sehingga ULaMM dan Mekaar dibandingkan secara adil.</li>
+        </ol></div>
+    </div>
+    <div class="card hide" id="undianBox"><h2>Hasil undian</h2><div id="undian"></div></div>
+    <div class="card"><h2>Pertandingan langsung</h2><div class="matches" id="matches"><p class="muted">Belum ada undian.</p></div></div>
+    <div class="card"><h2>Klasemen dan penghargaan</h2><div id="award"></div><div id="g2tab"></div></div>
+    <div class="grid2">
+      <div class="card"><h3>Temuan audit yang muncul di kelas</h3><div id="g2tem"><p class="muted">Belum ada.</p></div><p class="note">Bahan pembuka sesi terakhir tentang risiko dan audit.</p></div>
+      <div class="card"><h3>Kebijakan pusat yang paling sering dipilih</h3><div id="g2pol"><p class="muted">Belum ada.</p></div></div>
+    </div>
+  </div>
+
+  <!-- GAME 3 -->
+  <div id="t3" class="hide">
+    <div class="card"><div class="row" style="align-items:center"><h2 style="margin:0">Game 3 · Jejak Audit MMQ</h2><div style="flex:0 0 auto"><button class="btn gold" id="mulai3">Mulai Game 3 untuk semua kelompok</button></div></div></div>
+    <div class="card"><h2>Papan skor</h2><div id="g3tab"><p class="muted">Belum ada kelompok.</p></div></div>
+    <div class="card"><h3>Ketepatan kelas per berkas</h3><div id="g3ber"></div><p class="note">Berkas dengan ketepatan rendah adalah bahan pembahasan utama.</p></div>
+  </div>
+
+  <!-- MANUAL -->
+  <div id="tm" class="hide">
+    <div class="card"><h2>Isian manual</h2>
+      <p>Untuk kelompok yang terputus internetnya. Kelompok membacakan skor akhir dari layarnya.</p>
+      <div class="row"><div><label>Nama</label><input id="mNama"></div>
+        <div><label>Game</label><select id="mGame"><option value="akad">Game 1 · Pemilihan Akad</option><option value="cp">Game 2 · Cabang vs Pusat</option><option value="audit">Game 3 · Jejak Audit</option></select></div>
+        <div><label>Skor (Game 2: skor ULaMM)</label><input id="mS1" inputmode="decimal"></div>
+        <div><label>Skor Mekaar (Game 2 saja)</label><input id="mS2" inputmode="decimal"></div></div>
+      <p></p><button class="btn gold" id="mAdd">Tambahkan</button> <button class="btn ghost" id="mClear">Hapus semua isian manual</button>
+      <div id="mList"></div>
+    </div>
+    <div class="card"><h3>Hentikan atau bersihkan</h3>
+      <p>Hentikan aba-aba agar ruang tunggu tidak memindahkan kelompok ke game mana pun. Bersihkan data dipakai setelah gladi.</p>
+      <button class="btn ghost" id="stop">Hentikan aba-aba game</button> <button class="btn ghost" id="wipe">Hapus semua data kelas ini</button></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const D = window.PNMDATA, $ = s => document.querySelector(s);
+const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const store = { get(k, d) { try { const v = localStorage.getItem('pnmdash.' + k); return v ? JSON.parse(v) : d } catch (e) { return d } }, set(k, v) { try { localStorage.setItem('pnmdash.' + k, JSON.stringify(v)) } catch (e) { } } };
+const ST = {}; let CH = null, CTL = { v: 1 }, MAN = store.get('manual', []);
+const fmt = PNMReg.fmtDetik, NAMA_G = { akad: 'Game 1', cp: 'Game 2', audit: 'Game 3' };
+$('#pesan1').textContent = D.PESAN.akad;
+$('#target').value = store.get('target', 10); $('#target').onchange = () => { store.set('target', +$('#target').value); gambar() };
+
+/* ---------- tab ---------- */
+let TAB = store.get('tab', 'tk');
+function pilihTab(t) { TAB = t; store.set('tab', t); document.querySelectorAll('[data-t]').forEach(x => x.classList.toggle('ghost', x.dataset.t !== t)); ['tk', 't1', 't2', 't3', 'tm'].forEach(id => $('#' + id).classList.toggle('hide', id !== t)) }
+document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => pilihTab(b.dataset.t)); pilihTab(TAB);
+$('#fs').onclick = () => { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen && document.documentElement.requestFullscreen() };
+
+/* ---------- koneksi ---------- */
+async function buka(code, create) {
+  $('#err').textContent = 'Menghubungkan…';
+  try {
+    CH = await PNMKelas.join(code, { role: 'host', findOnly: !create, onConn: v => $('#conn').classList.toggle('on', v),
+      onCtl: o => { if (o) { CTL = Object.assign({ v: 1 }, o); gambar() } },
+      onStatus: (id, o) => { if (o) ST[id] = o; else delete ST[id]; jadwal() } });
+    if (create) { CTL = { v: 1, dibuat: Date.now() }; await CH.setCtl(CTL) }
+    store.set('kode', code);
+    $('#err').textContent = ''; $('#conn').classList.add('on');
+    $('#hdrCode').textContent = 'Kelas ' + code; $('#code').textContent = code; $('#kelas').classList.remove('hide'); $('#setup').classList.add('hide');
+    const url = location.href.replace(/dashboard\.html.*$/, '') + 'daftar.html?kelas=' + code; $('#url').textContent = url;
+    for (let i = 0; i < 25 && !window.QRCode; i++) await new Promise(r => setTimeout(r, 200));
+    $('#qr').innerHTML = ''; if (window.QRCode) new QRCode($('#qr'), { text: url, width: 200, height: 200 });
+    gambar();
+  } catch (e) { $('#err').textContent = e.message === 'notfound' ? 'Kode tidak ditemukan. Buat kode baru.' : 'Tidak dapat terhubung ke internet. Gunakan isian manual.' }
+}
+const kirimCtl = () => CH && CH.setCtl(CTL);
+$('#baru').onclick = () => buka(PNMKelas.newCode(), true);
+$('#lama').onclick = () => { const c = PNMKelas.cleanCode($('#kodeLama').value); if (c) buka(c, false) };
+const lama = store.get('kode', ''); if (lama) $('#kodeLama').value = lama;
+let tunda = null; const jadwal = () => { clearTimeout(tunda); tunda = setTimeout(gambar, 150) };
+
+/* ---------- data bantu ---------- */
+const semua = g => Object.values(ST).filter(o => o.g === g);
+const REGS = () => semua('reg').sort((a, b) => (a.t0 || 0) - (b.t0 || 0) || String(a.nama).localeCompare(b.nama));
+const namaReg = id => { const r = ST['reg-' + id]; return r ? r.nama : (CTL.nama && CTL.nama[id]) || '?' };
+// kabar terakhir dari sebuah kelompok, di halaman mana pun
+function posisi(id) {
+  const xs = Object.values(ST).filter(o => o.reg === id).sort((a, b) => b.t - a.t); const o = xs[0]; if (!o) return { t: 0, teks: '–' };
+  let teks = 'Ruang tunggu';
+  if (o.g === 'akad') teks = 'Game 1 · ' + (o.selesai ? 'selesai' : 'ronde ' + Math.min(o.ronde + 1, D.KARTU.length));
+  if (o.g === 'cp') teks = 'Game 2 · ' + faseCp(o);
+  if (o.g === 'audit') teks = 'Game 3 · ' + (o.selesai ? 'selesai' : 'berkas ' + Math.min(o.ronde + 1, D.BERKAS.length));
+  return { t: o.t, teks };
+}
+const online = t => Date.now() - t < 60000;
+function faseCp(o) {
+  if (!o) return 'belum masuk';
+  return ({ pusat: 'menyusun kebijakan', tunggu: 'menunggu paket Pusat', cabang: 'kejadian ' + Math.min((o.langkah || 0) + 1, 6) + ' dari 6', serah: 'menyerahkan gawai', tungguHasil: 'menunggu Cabang', hasil: 'melihat hasil', akhir: 'selesai' })[o.fase] || o.fase;
+}
+
+function gambar() {
+  const akt = CTL.aktif ? NAMA_G[CTL.aktif] : '–';
+  $('#kAkt').textContent = akt; $('#hdrJam').textContent = CTL.aktif ? akt + ' berjalan ' + fmt((Date.now() - CTL.aktifT) / 1000) : 'tidak ada game aktif';
+  kelompok(); g1(); g2(); g3(); manList();
+}
+setInterval(() => { if (CH) gambar() }, 5000);
+
+/* ---------- KELOMPOK ---------- */
+function kelompok() {
+  const R = REGS(), tgt = +$('#target').value || 10;
+  $('#nReg').textContent = R.length; $('#kReg').textContent = R.length + ' / ' + tgt;
+  $('#kOn').textContent = R.filter(r => online(posisi(r.reg).t || r.t)).length;
+  $('#kAng').textContent = R.reduce((s, r) => s + (r.anggota || []).length, 0);
+  $('#regTab').innerHTML = R.length ? `<table><tr><th>#</th><th>Kelompok</th><th>Anggota</th><th>Posisi</th><th></th></tr>${R.map((r, i) => { const p = posisi(r.reg); const t = Math.max(p.t, r.t);
+    return `<tr><td>${i + 1}</td><td><span class="dot ${online(t) ? 'on' : ''}"></span><b>${esc(r.nama)}</b></td><td class="mem">${esc((r.anggota || []).join(', '))}</td><td>${esc(p.teks)}</td><td><button class="btn ghost" data-hapus="${esc(r.reg)}" style="min-height:36px;padding:4px 10px">hapus</button></td></tr>` }).join('')}</table>` : '<p class="muted">Belum ada kelompok. Tampilkan QR di layar dan minta setiap kelompok mendaftar.</p>';
+  document.querySelectorAll('[data-hapus]').forEach(b => b.onclick = () => { const btn = b; if (!btn.dataset.y) { btn.dataset.y = 1; btn.textContent = 'yakin?'; return } CH && CH.clear('reg-' + btn.dataset.hapus) });
+}
+
+/* ---------- GAME 1 ---------- */
+function mulaiGame(g) { if (!CH) return; CTL.aktif = g; CTL.aktifT = Date.now(); if (g === 'akad') CTL.g1mulai = CTL.aktifT; if (g === 'audit') CTL.g3mulai = CTL.aktifT; kirimCtl(); gambar() }
+$('#mulai1').onclick = () => { const b = $('#mulai1'); if (CTL.g1mulai && !b.dataset.y) { b.dataset.y = 1; b.textContent = 'Ketuk lagi: mulai ulang Game 1'; return } delete b.dataset.y; b.textContent = 'Mulai Game 1 untuk semua kelompok'; mulaiGame('akad') };
+$('#mulai3').onclick = () => mulaiGame('audit');
+function g1() {
+  const sejak = CTL.g1mulai ? CTL.g1mulai - 60000 : 0;
+  const per = {};   // satu baris per kelompok: percobaan terbaru sejak aba-aba
+  semua('akad').filter(o => !o.mulaiT || o.mulaiT >= sejak).forEach(o => { const k = o.reg || o.nama; if (!per[k] || o.t > per[k].t) per[k] = o });
+  const rows = Object.values(per).map(o => ({ nama: o.reg ? namaReg(o.reg) : o.nama, skor: o.skor, waktu: o.waktu || 0, ronde: o.ronde, selesai: o.selesai, pilih: o.pilih || [], t: o.t }))
+    .concat(MAN.filter(m => m.g === 'akad').map(m => ({ nama: m.nama + ' (manual)', skor: m.s1 || 0, waktu: null, ronde: D.KARTU.length, selesai: true, pilih: [] })))
+    .sort((a, b) => b.skor - a.skor || (a.waktu ?? 9e9) - (b.waktu ?? 9e9));
+  const n = D.KARTU.length, beres = rows.filter(r => r.selesai).length;
+  $('#g1info').textContent = CTL.g1mulai ? `Dimulai ${new Date(CTL.g1mulai).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} · ${beres} dari ${rows.length} kelompok selesai` : 'Belum dimulai.';
+  const top = rows.slice(0, 3);
+  $('#g1pod').innerHTML = top.length ? `<div class="podium">${top.map((r, i) => `<div class="g${i + 1}"><span class="muted">${beres === rows.length && rows.length ? 'Juara ' + (i + 1) : 'Peringkat ' + (i + 1) + ' sementara'}</span><b>${esc(r.nama)}</b>${r.skor} poin · ${fmt(r.waktu)}</div>`).join('')}</div>` : '';
+  $('#g1tab').innerHTML = rows.length ? `<table><tr><th>#</th><th>Kelompok</th><th>Kemajuan</th><th class="n">Skor</th><th class="n">Waktu menjawab</th><th>Status</th></tr>${rows.map((r, i) => { const rd = r.selesai ? n : Math.min(r.ronde, n);
+    return `<tr><td class="rank">${i + 1}</td><td><span class="dot ${r.t && online(r.t) ? 'on' : ''}"></span><b>${esc(r.nama)}</b></td><td><div class="prog"><i style="width:${rd / n * 100}%"></i></div><span class="muted">${rd} dari ${n} ronde</span></td><td class="n">${r.skor}</td><td class="n">${fmt(r.waktu)}</td><td>${r.selesai ? '<span class="ok">selesai</span>' : 'bermain'}</td></tr>` }).join('')}</table>` : '<p class="muted">Belum ada kelompok yang bermain.</p>';
+  const dist = D.KARTU.map((k, r) => D.AKAD.map((a, j) => rows.filter(x => x.pilih[r] === j).length));
+  $('#g1dist').innerHTML = `<table><tr><th>Ronde</th>${D.AKAD.map(a => `<th title="${esc(a.nama)}">${a.id}</th>`).join('')}</tr>${dist.map((d, r) => `<tr><td>${r + 1}. ${esc(D.KARTU[r].judul)}</td>${d.map(x => `<td class="n">${x || ''}</td>`).join('')}</tr>`).join('')}</table><p class="note">${D.AKAD.map(a => a.id + ' = ' + esc(a.nama)).join(' · ')}</p>`;
+  const n7 = n - 1, tot = v => v.reduce((a, b) => a + b, 0);
+  const kum = D.AKAD.map((a, j) => D.KARTU.slice(0, n7).reduce((s, k) => s + tot(k.nilai[j]), 0)); const mx = Math.max(...kum);
+  $('#g1kum').innerHTML = D.AKAD.map((a, j) => `<div><b>${esc(a.nama)}</b> <span class="muted">${kum[j]}</span><div class="bar"><i style="width:${kum[j] / mx * 100}%;background:${a.warna}"></i></div></div>`).join('');
+}
+
+/* ---------- GAME 2: undian ---------- */
+$('#acak').onclick = () => {
+  const R = REGS(); if (R.length < 2) { $('#g2info').textContent = 'Minimal dua kelompok harus terdaftar sebelum diundi.'; return }
+  if (CTL.aktif === 'cp' && CTL.g2mulai) { const b = $('#acak'); if (!b.dataset.y) { b.dataset.y = 1; b.textContent = 'Ketuk lagi: undi ulang (permainan berjalan akan diganti)'; return } }
+  const a = R.map(r => r.reg); for (let i = a.length - 1; i > 0; i--) { const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1); [a[i], a[j]] = [a[j], a[i]] }
+  const draw = {}, nama = {};
+  a.forEach((id, i) => { nama[id] = namaReg(id); draw[id] = i === a.length - 1 && a.length % 2 ? { p: 0, s: 'solo' } : { p: Math.floor(i / 2) + 1, s: i % 2 ? 'B' : 'A' } });
+  CTL.draw = draw; CTL.nama = nama; CTL.drawT = Date.now(); if (CTL.aktif === 'cp') { CTL.aktif = null; CTL.g2mulai = null }
+  const b = $('#acak'); delete b.dataset.y; b.textContent = '🎲 Acak ulang';
+  kirimCtl(); gambar();
+};
+$('#mulai2').onclick = () => { if (!CTL.draw) return; CTL.aktif = 'cp'; CTL.aktifT = CTL.g2mulai = Date.now(); kirimCtl(); gambar() };
+function pasangan() {
+  const P = {}; if (!CTL.draw) return [];
+  Object.entries(CTL.draw).forEach(([id, d]) => { const k = d.p > 0 ? d.p : 's' + id; (P[k] = P[k] || { p: d.p, A: null, B: null })[d.p > 0 ? d.s : 'A'] = id });
+  return Object.values(P).sort((a, b) => (a.p || 99) - (b.p || 99));
+}
+const stCp = id => { const xs = semua('cp').filter(o => o.reg === id && (!CTL.g2mulai || o.sesi === CTL.g2mulai)).sort((a, b) => b.t - a.t); return xs[0] };
+function hitungPasangan(m) {
+  const sA = stCp(m.A), sB = m.B ? stCp(m.B) : null, h = [0, 1].map(b => (sA && sA.hasil && sA.hasil[b]) || (sB && sB.hasil && sB.hasil[b]) || null);
+  const done = h.filter(Boolean), rata = done.length ? Math.round(done.reduce((s, x) => s + x.total, 0) / done.length * 10) / 10 : null;
+  return { m, sA, sB, h, rata, lengkap: done.length === 2, temuan: done.reduce((s, x) => s + (x.temuan || []).length, 0), dt: done.reduce((s, x) => s + (x.dt || 0), 0) };
+}
+function g2() {
+  const M = pasangan(), ada = M.length > 0;
+  $('#mulai2').disabled = !ada || (CTL.aktif === 'cp' && !!CTL.g2mulai);
+  $('#mulai2').textContent = CTL.aktif === 'cp' && CTL.g2mulai ? 'Game 2 sedang berjalan' : 'Mulai Game 2';
+  if (ada && !$('#acak').dataset.y) $('#acak').textContent = '🎲 Acak ulang';
+  $('#g2info').textContent = !ada ? 'Langkah: acak pasangan, periksa hasil undian di layar, lalu mulai.' : CTL.g2mulai && CTL.aktif === 'cp' ? `Berjalan ${fmt((Date.now() - CTL.g2mulai) / 1000)} · ${M.length} pertandingan` : `Undian siap: ${M.length} pertandingan. Tekan Mulai Game 2 bila semua kelompok sudah melihat pasangannya.`;
+  $('#undianBox').classList.toggle('hide', !ada || (CTL.aktif === 'cp' && !!CTL.g2mulai));
+  $('#undian').innerHTML = `<table><tr><th>Pertandingan</th><th>Kelompok A · Pusat di ULaMM, Cabang di Mekaar</th><th>Kelompok B · Cabang di ULaMM, Pusat di Mekaar</th></tr>${M.map(m => `<tr><td class="rank">${m.p || 'Solo'}</td><td><b>${esc(namaReg(m.A))}</b></td><td><b>${m.B ? esc(namaReg(m.B)) : '<span class="muted">memainkan dua peran sendiri</span>'}</b></td></tr>`).join('')}</table>`;
+  const H = M.map(hitungPasangan);
+  const urut = H.slice().sort((a, b) => (b.lengkap - a.lengkap) || ((b.rata ?? -1) - (a.rata ?? -1)) || (a.temuan - b.temuan) || (a.dt - b.dt));
+  const pimpin = urut[0] && urut[0].rata != null ? urut[0].m : null;
+  const sel = (s, h, b) => {
+    if (h) return `<span class="ok">selesai</span> · ${(h.temuan || []).length} temuan · ${fmt(h.dt)}`;
+    if (!s) return '<span class="muted">belum masuk</span>';
+    if (s.babak > b) return 'selesai'; if (s.babak < b) return '<span class="muted">menunggu babak ini</span>';
+    return esc(faseCp(s));
+  };
+  $('#matches').innerHTML = ada ? H.map(x => { const m = x.m, nA = namaReg(m.A), nB = m.B ? namaReg(m.B) : nA;
+    return `<div class="match ${m === pimpin ? 'lead' : ''}"><h3><span>${m.p ? 'Pertandingan ' + m.p : 'Kelompok solo'}</span>${m === pimpin ? '<span class="pill" style="background:#f6e3a8;color:#1b1404">memimpin</span>' : ''}</h3>
+      <div class="vs"><div class="tm"><span class="dot ${x.sA && online(x.sA.t) ? 'on' : ''}"></span>${esc(nA)}<small>A</small></div><div class="x">&amp;</div><div class="tm"><span class="dot ${x.sB && online(x.sB.t) ? 'on' : ''}"></span>${m.B ? esc(nB) : '–'}<small>B</small></div></div>
+      ${D.BABAK.map((B, b) => { const pu = b === 0 ? nA : nB, ca = b === 0 ? nB : nA, sp = b === 0 ? x.sA : (x.sB || x.sA), sc = b === 0 ? (x.sB || x.sA) : x.sA;
+        return `<div class="bk"><div class="st"><b>${esc(B.nama)}</b><br><span class="tag p">Pusat</span>${esc(pu)} · ${x.h[b] ? 'paket terkirim' : sel(sp, null, b)}<br><span class="tag c">Cabang</span>${esc(ca)} · ${sel(sc, x.h[b], b)}</div><div class="sc">${x.h[b] ? x.h[b].total : '–'}</div></div>` }).join('')}
+      <div class="bk"><div class="st"><b>Rata-rata satu PNM</b> · ${x.temuan} temuan audit · ${fmt(x.dt)}</div><div class="sc" style="color:var(--gold)">${x.rata ?? '–'}</div></div></div>` }).join('') : '<p class="muted">Belum ada undian.</p>';
+  // klasemen
+  $('#g2tab').innerHTML = H.length ? `<table><tr><th>#</th><th>Pasangan</th><th class="n">ULaMM</th><th class="n">Mekaar</th><th class="n">Rata-rata</th><th class="n">Temuan</th><th class="n">Waktu</th></tr>${urut.map((x, i) => `<tr><td class="rank">${i + 1}</td><td><b>${esc(namaReg(x.m.A))}${x.m.B ? ' &amp; ' + esc(namaReg(x.m.B)) : ''}</b></td><td class="n">${x.h[0] ? x.h[0].total : '–'}</td><td class="n">${x.h[1] ? x.h[1].total : '–'}</td><td class="n">${x.rata ?? '–'}</td><td class="n">${x.temuan}</td><td class="n">${fmt(x.dt)}</td></tr>`).join('')}${MAN.filter(m => m.g === 'cp').map(m => `<tr><td>–</td><td><b>${esc(m.nama)}</b> <span class="muted">(manual)</span></td><td class="n">${m.s1 ?? '–'}</td><td class="n">${m.s2 ?? '–'}</td><td class="n">${m.s1 != null && m.s2 != null ? Math.round((m.s1 + m.s2) / 2 * 10) / 10 : '–'}</td><td class="n">–</td><td class="n">–</td></tr>`).join('')}</table>` : '';
+  // penghargaan per peran: selisih terhadap rata-rata babak
+  const rataB = [0, 1].map(b => { const v = H.map(x => x.h[b]).filter(Boolean).map(h => h.total); return v.length ? v.reduce((a, c) => a + c, 0) / v.length : null });
+  const peranList = (role) => { const out = []; H.forEach(x => [0, 1].forEach(b => { const h = x.h[b]; if (!h) return;
+    const id = (role === 'p') === (b === 0) ? x.m.A : (x.m.B || x.m.A); const tem = (h.dari || []).filter(d => d === (role === 'p' ? 'Pusat' : 'Cabang')).length;
+    out.push({ id, b, delta: Math.round((h.total - rataB[b]) * 10) / 10, total: h.total, tem, dt: h.dt || 0 }) })); return out.sort((a, b) => b.delta - a.delta || a.tem - b.tem || a.dt - b.dt) };
+  const bp = peranList('p')[0], bc = peranList('c')[0], semuaBeres = H.length && H.every(x => x.lengkap);
+  $('#award').innerHTML = urut[0] && urut[0].rata != null ? `<div class="award">
+      <div><small>${semuaBeres ? 'Juara pertandingan' : 'Memimpin sementara'}</small><b>${esc(namaReg(urut[0].m.A))}${urut[0].m.B ? ' &amp; ' + esc(namaReg(urut[0].m.B)) : ''}</b>Rata-rata ${urut[0].rata} · ${urut[0].temuan} temuan</div>
+      ${bp ? `<div><small>Pusat Terbaik</small><b>${esc(namaReg(bp.id))}</b>${esc(D.BABAK[bp.b].nama)}: ${bp.total} (${bp.delta >= 0 ? '+' : ''}${bp.delta} dari rata-rata babak)</div>` : ''}
+      ${bc ? `<div><small>Cabang Terbaik</small><b>${esc(namaReg(bc.id))}</b>${esc(D.BABAK[bc.b].nama)}: ${bc.total} (${bc.delta >= 0 ? '+' : ''}${bc.delta} dari rata-rata babak)</div>` : ''}
+    </div>` : '<p class="muted">Penghargaan muncul setelah babak pertama selesai.</p>';
+  // temuan dan kebijakan
+  const tem = {}; H.forEach(x => x.h.forEach(h => h && (h.temuan || []).forEach(t => tem[t] = (tem[t] || 0) + 1)));
+  const tl = Object.entries(tem).sort((a, b) => b[1] - a[1]);
+  $('#g2tem').innerHTML = tl.length ? `<table>${tl.map(([t, n]) => `<tr><td>${esc(t)}</td><td class="n">${n}×</td></tr>`).join('')}</table>` : '<p class="muted">Belum ada.</p>';
+  const pol = {}; H.forEach(x => x.h.forEach((h, bi) => { if (!h || !h.paket) return; D.BABAK[bi].kebijakan.forEach(k => { const t = k.judul + ': ' + k.pilihan[h.paket[k.k] || 0].t; pol[t] = (pol[t] || 0) + 1 }) }));
+  const pl = Object.entries(pol).sort((a, b) => b[1] - a[1]).slice(0, 12);
+  $('#g2pol').innerHTML = pl.length ? `<table>${pl.map(([t, n]) => `<tr><td>${esc(t)}</td><td class="n">${n}×</td></tr>`).join('')}</table>` : '<p class="muted">Belum ada.</p>';
+}
+
+/* ---------- GAME 3 ---------- */
+function g3() {
+  const sejak = CTL.g3mulai ? CTL.g3mulai - 60000 : 0;
+  const rows = semua('audit').filter(o => !o.t || o.t >= sejak).map(o => ({ nama: o.reg ? namaReg(o.reg) : o.nama, skor: o.skor, pos: o.selesai ? 'selesai' : 'berkas ' + Math.min(o.ronde + 1, D.BERKAS.length), jawab: o.jawab || [], t: o.t }))
+    .concat(MAN.filter(m => m.g === 'audit').map(m => ({ nama: m.nama + ' (manual)', skor: m.s1, pos: 'manual', jawab: [] }))).sort((a, b) => b.skor - a.skor);
+  $('#g3tab').innerHTML = rows.length ? `<table><tr><th>#</th><th>Kelompok</th><th>Posisi</th><th class="n">Skor</th></tr>${rows.map((r, i) => `<tr><td class="rank">${i + 1}</td><td><span class="dot ${r.t && online(r.t) ? 'on' : ''}"></span><b>${esc(r.nama)}</b></td><td>${esc(r.pos)}</td><td class="n">${r.skor}</td></tr>`).join('')}</table>` : '<p class="muted">Belum ada kelompok.</p>';
+  $('#g3ber').innerHTML = `<table><tr><th>Berkas</th><th>Kunci</th><th class="n">Dijawab</th><th class="n">Rata-rata poin</th></tr>${D.BERKAS.map((b, i) => { const js = rows.map(r => r.jawab[i]).filter(j => j && j.done); const avg = js.length ? Math.round(js.reduce((s, j) => s + (j.p || 0), 0) / js.length * 10) / 10 : '–';
+    return `<tr><td><b>${esc(b.judul)}</b><br><span class="muted">${esc(b.seg)}</span></td><td>${b.temuan ? 'Ada temuan' : 'Bersih'}</td><td class="n">${js.length}</td><td class="n">${avg}</td></tr>` }).join('')}</table>`;
+}
+
+/* ---------- MANUAL ---------- */
+function manList() {
+  $('#mList').innerHTML = MAN.length ? `<table><tr><th>Nama</th><th>Game</th><th>Skor</th><th></th></tr>${MAN.map((m, i) => `<tr><td>${esc(m.nama)}</td><td>${NAMA_G[m.g]}</td><td>${m.s1 ?? ''}${m.s2 != null ? ' / ' + m.s2 : ''}</td><td><button class="btn ghost" data-del="${i}" style="min-height:40px;padding:6px 12px">hapus</button></td></tr>`).join('')}</table>` : '';
+  document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { MAN.splice(+b.dataset.del, 1); store.set('manual', MAN); gambar() });
+}
+const num = v => { const x = parseFloat(String(v).replace(',', '.')); return isNaN(x) ? null : x };
+$('#mAdd').onclick = () => { const n = $('#mNama').value.trim(); if (!n) return; MAN.push({ nama: n, g: $('#mGame').value, s1: num($('#mS1').value), s2: num($('#mS2').value) }); store.set('manual', MAN); ['#mNama', '#mS1', '#mS2'].forEach(s => $(s).value = ''); gambar() };
+$('#mClear').onclick = () => { MAN = []; store.set('manual', MAN); gambar() };
+$('#stop').onclick = () => { CTL.aktif = null; CTL.aktifT = Date.now(); kirimCtl(); gambar() };
+$('#wipe').onclick = async () => {
+  const b = $('#wipe'); if (!b.dataset.y) { b.dataset.y = 1; b.textContent = 'Ketuk lagi: hapus kelompok, skor, dan undian'; return }
+  if (!CH) return;
+  for (const id of Object.keys(ST)) await CH.clear(id);
+  const s = CTL.g2mulai; if (s) for (let p = 1; p <= 12; p++) for (let k = 0; k < 2; k++) { await CH.clearPair(s + ':' + p + '-' + k); await CH.clearPair(s + ':' + p + '-' + k + '-hasil') }
+  CTL = { v: 1, dibuat: Date.now() }; await kirimCtl(); delete b.dataset.y; b.textContent = 'Hapus semua data kelas ini'; gambar();
+};
+gambar();
+</script>
+</body>
+</html>

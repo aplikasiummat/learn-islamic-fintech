@@ -11,6 +11,7 @@
 <script src="data.js?v=3"></script>
 <script src="kelas.js?v=5"></script>
 <script src="riwayat.js?v=1"></script>
+<script src="kelompok.js?v=1"></script>
 </head>
 <body>
 <div class="top"><a class="chip" href="index.html" style="color:#fff;text-decoration:none">☰ Menu</a><div class="t">Maqasid dan Pemilihan Akad<span class="sub"> · Pelatihan Pembiayaan Syariah PNM</span></div><span class="chip" id="hdrGroup">–</span><span class="chip" id="hdrScore">0 poin</span><span class="conn" id="conn" title="Papan skor kelas"></span></div>
@@ -40,26 +41,31 @@ async function sambung(code) {
     $('#conn').classList.add('on'); kirim();
   } catch (e) { CH = null; $('#conn').classList.remove('on'); setTimeout(() => { if (!CH && S) sambung(S.kode) }, 4000) }
 }
-function kirim() { if (CH && S) CH.setStatus('akad-' + S.id, { g: 'akad', nama: PNMRiwayat.label('akad', S.id, S.nama), ronde: S.ronde, skor: S.skor, pilih: S.pilih, selesai: S.selesai, t: Date.now() }) }
+function kirim() { if (CH && S) CH.setStatus('akad-' + S.id, { g: 'akad', reg: S.reg || '', nama: PNMRiwayat.label('akad', S.id, S.nama), ronde: S.ronde, skor: S.skor, pilih: S.pilih, selesai: S.selesai, waktu: S.waktu || 0, mulaiT: S.mulaiT, t: Date.now() }) }
+const REG = PNMReg.get();
+function mulaiMain(nama, kode) {
+  S = { id: Math.random().toString(36).slice(2, 9), reg: REG && REG.kode === kode ? REG.id : '', nama, kode, ronde: 0, skor: 0, pilih: [], fase: 'main', selesai: false, sisa: DETIK, waktu: 0, mulaiT: Date.now(), token: REG ? REG.pergi || 0 : 0 };
+  PNMRiwayat.mulai('akad', S.id, nama); save(); sambung(S.kode); ronde();
+}
 
 function layarAwal() {
-  const kode = qs.get('kelas') || '';
+  const kode = qs.get('kelas') || (REG ? REG.kode : '');
+  if (REG && qs.get('auto') && PNMKelas.cleanCode(kode) === REG.kode) return mulaiMain(REG.nama, REG.kode);
   app.innerHTML = `
   <div class="card">
     <h1>Maqasid dan Pemilihan Akad</h1>
     <p class="lead">Delapan nasabah datang ke PNM dengan kebutuhan yang berbeda. Kelompok memilih satu akad untuk setiap nasabah dalam ${DETIK} detik, lalu melihat skornya pada lima kriteria model bisnis PNM.</p>
+    <div class="fact"><b>Cara menang.</b> Skor tertinggi menang. Bila skor sama, kelompok yang total waktu menjawabnya paling singkat yang menang. Begitu kelompok menjawab, permainan langsung berlanjut tanpa menunggu waktu habis.</div>
     <div class="fact">Lima pilihan akad: <b>Ijarah/IMBT</b>, <b>Mudharabah</b>, <b>Musyarakah</b>, <b>Murabahah</b>, dan <b>Murabahah bil Wakalah / Wakalah Muallaqah</b>. Skor tertinggi per ronde 10, ditambah bonus 2 bila memilih akad terbaik.</div>
     <label for="nama">Nama kelompok</label>
-    <input id="nama" maxlength="30" placeholder="contoh: Kelompok 3 Cempaka">
+    <input id="nama" maxlength="30" placeholder="contoh: Kelompok 3 Cempaka" value="${REG ? esc(REG.nama) : ''}">
     <label for="kode">Kode kelas dari fasilitator <span class="muted">(boleh dikosongkan)</span></label>
     <input id="kode" maxlength="8" value="${esc(kode)}" placeholder="contoh: K7PQ2" style="text-transform:uppercase">
     <p></p>
     <button class="btn gold wide" id="mulai">Mulai bermain</button>
   </div>${PNMRiwayat.html('akad')}`;
   $('#mulai').onclick = () => {
-    const nama = $('#nama').value.trim() || 'Kelompok';
-    S = { id: Math.random().toString(36).slice(2, 9), nama, kode: PNMKelas.cleanCode($('#kode').value), ronde: 0, skor: 0, pilih: [], fase: 'main', selesai: false, sisa: DETIK };
-    PNMRiwayat.mulai('akad', S.id, nama); save(); sambung(S.kode); ronde();
+    mulaiMain($('#nama').value.trim() || 'Kelompok', PNMKelas.cleanCode($('#kode').value));
   };
 }
 
@@ -85,8 +91,10 @@ function ronde() {
 
 function pilih(i) {
   clearInterval(tick);
+  if (S.fase !== 'main') return;
   const r = S.ronde;
   const poin = poinRonde(r, i);
+  S.waktu = (S.waktu || 0) + Math.min(DETIK, DETIK - Math.max(0, S.sisa));
   S.pilih[r] = i; S.skor += poin; S.fase = 'hasil'; save(); hasil(i, poin);
 }
 
@@ -129,7 +137,8 @@ function akhir() {
   app.innerHTML = `
   <div class="card center">
     <div class="muted">Skor akhir ${esc(S.nama)}</div>
-    <div class="big">${S.skor}</div><div class="muted">dari ${maks} poin</div>
+    <div class="big">${S.skor}</div><div class="muted">dari ${maks} poin · waktu menjawab ${PNMReg.fmtDetik(S.waktu || 0)}</div>
+    ${REG ? `<p><a class="btn ghost" href="daftar.html?kelas=${esc(REG.kode)}">Kembali ke ruang tunggu</a></p>` : ''}
   </div>
   <div class="card">
     <h3>Nilai kumulatif tiap akad pada ronde 1 sampai ${n7}</h3>
@@ -149,6 +158,8 @@ function akhir() {
 function confirmUlang() { const b = $('#ulang'); if (b.dataset.y) return true; b.dataset.y = 1; b.textContent = 'Ketuk sekali lagi: mulai percobaan baru (skor ini tetap tercatat)'; return false }
 
 hdr();
+// aba-aba baru dari pengajar (ruang tunggu) memulai percobaan baru untuk kelompok terdaftar
+if (S && REG && qs.get('auto') && REG.pergi && S.token !== REG.pergi && S.reg === REG.id) S = null;
 if (!S) layarAwal();
 else { sambung(S.kode); if (S.fase === 'akhir') akhir(); else if (S.fase === 'hasil') hasil(S.pilih[S.ronde], poinRonde(S.ronde, S.pilih[S.ronde])); else ronde() }
 </script>
