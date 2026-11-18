@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="gaya.css?v=3">
+<script>/* bila pustaka gagal dimuat (jaringan lemah), muat ulang halaman sekali */
+addEventListener('error', function (e) { try { if (/is not defined|Cannot read/.test(e.message || '') && !sessionStorage.getItem('pnm-rl')) { sessionStorage.setItem('pnm-rl', '1'); location.reload() } } catch (x) { } });
+addEventListener('load', function () { setTimeout(function () { try { sessionStorage.removeItem('pnm-rl') } catch (x) { } }, 8000) });</script>
 <script async src="../saham/lib/mqtt-5.10.1.min.js"></script>
 <script async src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="data.js?v=3"></script>
@@ -113,7 +116,7 @@
     <div class="card"><h2 style="margin-top:0">Game 2 · Cabang vs Pusat</h2>
       <div class="row" style="align-items:center">
         <div><p style="margin:0" id="g2info">Langkah: acak pasangan, periksa hasil undian di layar, lalu mulai.</p></div>
-        <div style="flex:0 0 auto;display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" id="acak">🎲 Acak pasangan dan peran</button><button class="btn gold" id="mulai2" disabled>Mulai Game 2</button></div>
+        <div style="flex:0 0 auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><select id="lawan" style="width:auto;padding:10px"><option value="kelompok">Lawan kelompok lain</option><option value="mesin">Semua lawan mesin</option></select><button class="btn ghost" id="acak">🎲 Acak pasangan dan peran</button><button class="btn gold" id="mulai2" disabled>Mulai Game 2</button></div>
       </div>
       <div class="rule" style="margin-top:12px"><b>Cara menang (usulan).</b> Setiap pertandingan mempertemukan dua kelompok. Babak 1 ULaMM: kelompok A menjadi Pusat dan B menjadi Cabang; Babak 2 Mekaar: peran bertukar. Skor <b>Satu PNM</b> (0–100) dihitung bersama untuk Pusat dan Cabang pada setiap babak, karena di PNM pusat dan cabang menang atau kalah bersama.
         <ol style="margin:6px 0 0">
@@ -260,7 +263,8 @@ $('#acak').onclick = () => {
   if (CTL.aktif === 'cp' && CTL.g2mulai) { const b = $('#acak'); if (!b.dataset.y) { b.dataset.y = 1; b.textContent = 'Ketuk lagi: undi ulang (permainan berjalan akan diganti)'; return } }
   const a = R.map(r => r.reg); for (let i = a.length - 1; i > 0; i--) { const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1); [a[i], a[j]] = [a[j], a[i]] }
   const draw = {}, nama = {};
-  a.forEach((id, i) => { nama[id] = namaReg(id); draw[id] = i === a.length - 1 && a.length % 2 ? { p: 0, s: 'solo' } : { p: Math.floor(i / 2) + 1, s: i % 2 ? 'B' : 'A' } });
+  const mesin = $('#lawan').value === 'mesin';
+  a.forEach((id, i) => { nama[id] = namaReg(id); draw[id] = mesin ? { p: 0, s: 'mesin' } : i === a.length - 1 && a.length % 2 ? { p: 0, s: 'solo' } : { p: Math.floor(i / 2) + 1, s: i % 2 ? 'B' : 'A' } });
   CTL.draw = draw; CTL.nama = nama; CTL.drawT = Date.now(); if (CTL.aktif === 'cp') { CTL.aktif = null; CTL.g2mulai = null }
   const b = $('#acak'); delete b.dataset.y; b.textContent = '🎲 Acak ulang';
   kirimCtl(); gambar();
@@ -268,7 +272,7 @@ $('#acak').onclick = () => {
 $('#mulai2').onclick = () => { if (!CTL.draw) return; CTL.aktif = 'cp'; CTL.aktifT = CTL.g2mulai = Date.now(); kirimCtl(); gambar() };
 function pasangan() {
   const P = {}; if (!CTL.draw) return [];
-  Object.entries(CTL.draw).forEach(([id, d]) => { const k = d.p > 0 ? d.p : 's' + id; (P[k] = P[k] || { p: d.p, A: null, B: null })[d.p > 0 ? d.s : 'A'] = id });
+  Object.entries(CTL.draw).forEach(([id, d]) => { const k = d.p > 0 ? d.p : 's' + id; (P[k] = P[k] || { p: d.p, A: null, B: null, mesin: d.s === 'mesin' })[d.p > 0 ? d.s : 'A'] = id });
   return Object.values(P).sort((a, b) => (a.p || 99) - (b.p || 99));
 }
 const stCp = id => { const xs = semua('cp').filter(o => o.reg === id && (!CTL.g2mulai || o.sesi === CTL.g2mulai)).sort((a, b) => b.t - a.t); return xs[0] };
@@ -284,7 +288,7 @@ function g2() {
   if (ada && !$('#acak').dataset.y) $('#acak').textContent = '🎲 Acak ulang';
   $('#g2info').textContent = !ada ? 'Langkah: acak pasangan, periksa hasil undian di layar, lalu mulai.' : CTL.g2mulai && CTL.aktif === 'cp' ? `Berjalan ${fmt((Date.now() - CTL.g2mulai) / 1000)} · ${M.length} pertandingan` : `Undian siap: ${M.length} pertandingan. Tekan Mulai Game 2 bila semua kelompok sudah melihat pasangannya.`;
   $('#undianBox').classList.toggle('hide', !ada || (CTL.aktif === 'cp' && !!CTL.g2mulai));
-  $('#undian').innerHTML = `<table><tr><th>Pertandingan</th><th>Kelompok A · Pusat di ULaMM, Cabang di Mekaar</th><th>Kelompok B · Cabang di ULaMM, Pusat di Mekaar</th></tr>${M.map(m => `<tr><td class="rank">${m.p || 'Solo'}</td><td><b>${esc(namaReg(m.A))}</b></td><td><b>${m.B ? esc(namaReg(m.B)) : '<span class="muted">memainkan dua peran sendiri</span>'}</b></td></tr>`).join('')}</table>`;
+  $('#undian').innerHTML = `<table><tr><th>Pertandingan</th><th>Kelompok A · Pusat di ULaMM, Cabang di Mekaar</th><th>Kelompok B · Cabang di ULaMM, Pusat di Mekaar</th></tr>${M.map(m => `<tr><td class="rank">${m.p || 'Solo'}</td><td><b>${esc(namaReg(m.A))}</b></td><td><b>${m.B ? esc(namaReg(m.B)) : m.mesin ? '🤖 Mesin' : '<span class="muted">memainkan dua peran sendiri</span>'}</b></td></tr>`).join('')}</table>`;
   const H = M.map(hitungPasangan);
   const urut = H.slice().sort((a, b) => (b.lengkap - a.lengkap) || ((b.rata ?? -1) - (a.rata ?? -1)) || (a.temuan - b.temuan) || (a.dt - b.dt));
   const pimpin = urut[0] && urut[0].rata != null ? urut[0].m : null;
@@ -294,14 +298,14 @@ function g2() {
     if (s.babak > b) return 'selesai'; if (s.babak < b) return '<span class="muted">menunggu babak ini</span>';
     return esc(faseCp(s));
   };
-  $('#matches').innerHTML = ada ? H.map(x => { const m = x.m, nA = namaReg(m.A), nB = m.B ? namaReg(m.B) : nA;
-    return `<div class="match ${m === pimpin ? 'lead' : ''}"><h3><span>${m.p ? 'Pertandingan ' + m.p : 'Kelompok solo'}</span>${m === pimpin ? '<span class="pill" style="background:#f6e3a8;color:#1b1404">memimpin</span>' : ''}</h3>
-      <div class="vs"><div class="tm"><span class="dot ${x.sA && online(x.sA.t) ? 'on' : ''}"></span>${esc(nA)}<small>A</small></div><div class="x">&amp;</div><div class="tm"><span class="dot ${x.sB && online(x.sB.t) ? 'on' : ''}"></span>${m.B ? esc(nB) : '–'}<small>B</small></div></div>
+  $('#matches').innerHTML = ada ? H.map(x => { const m = x.m, nA = namaReg(m.A), nB = m.B ? namaReg(m.B) : m.mesin ? '🤖 Mesin' : nA;
+    return `<div class="match ${m === pimpin ? 'lead' : ''}"><h3><span>${m.p ? 'Pertandingan ' + m.p : m.mesin ? 'Lawan mesin' : 'Kelompok solo'}</span>${m === pimpin ? '<span class="pill" style="background:#f6e3a8;color:#1b1404">memimpin</span>' : ''}</h3>
+      <div class="vs"><div class="tm"><span class="dot ${x.sA && online(x.sA.t) ? 'on' : ''}"></span>${esc(nA)}<small>A</small></div><div class="x">&amp;</div><div class="tm"><span class="dot ${x.sB && online(x.sB.t) ? 'on' : ''}"></span>${m.B || m.mesin ? esc(nB) : '–'}<small>B</small></div></div>
       ${D.BABAK.map((B, b) => { const pu = b === 0 ? nA : nB, ca = b === 0 ? nB : nA, sp = b === 0 ? x.sA : (x.sB || x.sA), sc = b === 0 ? (x.sB || x.sA) : x.sA;
-        return `<div class="bk"><div class="st"><b>${esc(B.nama)}</b><br><span class="tag p">Pusat</span>${esc(pu)} · ${x.h[b] ? 'paket terkirim' : sel(sp, null, b)}<br><span class="tag c">Cabang</span>${esc(ca)} · ${sel(sc, x.h[b], b)}</div><div class="sc">${x.h[b] ? x.h[b].total : '–'}</div></div>` }).join('')}
+        return `<div class="bk"><div class="st"><b>${esc(B.nama)}</b><br><span class="tag p">Pusat</span>${esc(pu)} · ${x.h[b] ? 'paket terkirim' : m.mesin && b === 1 ? 'otomatis' : sel(sp, null, b)}<br><span class="tag c">Cabang</span>${esc(ca)} · ${m.mesin && b === 0 && !x.h[b] ? 'otomatis' : sel(sc, x.h[b], b)}</div><div class="sc">${x.h[b] ? x.h[b].total : '–'}</div></div>` }).join('')}
       <div class="bk"><div class="st"><b>Rata-rata satu PNM</b> · ${x.temuan} temuan audit · ${fmt(x.dt)}</div><div class="sc" style="color:var(--gold)">${x.rata ?? '–'}</div></div></div>` }).join('') : '<p class="muted">Belum ada undian.</p>';
   // klasemen
-  $('#g2tab').innerHTML = H.length ? `<table><tr><th>#</th><th>Pasangan</th><th class="n">ULaMM</th><th class="n">Mekaar</th><th class="n">Rata-rata</th><th class="n">Temuan</th><th class="n">Waktu</th></tr>${urut.map((x, i) => `<tr><td class="rank">${i + 1}</td><td><b>${esc(namaReg(x.m.A))}${x.m.B ? ' &amp; ' + esc(namaReg(x.m.B)) : ''}</b></td><td class="n">${x.h[0] ? x.h[0].total : '–'}</td><td class="n">${x.h[1] ? x.h[1].total : '–'}</td><td class="n">${x.rata ?? '–'}</td><td class="n">${x.temuan}</td><td class="n">${fmt(x.dt)}</td></tr>`).join('')}${MAN.filter(m => m.g === 'cp').map(m => `<tr><td>–</td><td><b>${esc(m.nama)}</b> <span class="muted">(manual)</span></td><td class="n">${m.s1 ?? '–'}</td><td class="n">${m.s2 ?? '–'}</td><td class="n">${m.s1 != null && m.s2 != null ? Math.round((m.s1 + m.s2) / 2 * 10) / 10 : '–'}</td><td class="n">–</td><td class="n">–</td></tr>`).join('')}</table>` : '';
+  $('#g2tab').innerHTML = H.length ? `<table><tr><th>#</th><th>Pasangan</th><th class="n">ULaMM</th><th class="n">Mekaar</th><th class="n">Rata-rata</th><th class="n">Temuan</th><th class="n">Waktu</th></tr>${urut.map((x, i) => `<tr><td class="rank">${i + 1}</td><td><b>${esc(namaReg(x.m.A))}${x.m.B ? ' &amp; ' + esc(namaReg(x.m.B)) : x.m.mesin ? ' <span class="muted">vs mesin</span>' : ''}</b></td><td class="n">${x.h[0] ? x.h[0].total : '–'}</td><td class="n">${x.h[1] ? x.h[1].total : '–'}</td><td class="n">${x.rata ?? '–'}</td><td class="n">${x.temuan}</td><td class="n">${fmt(x.dt)}</td></tr>`).join('')}${MAN.filter(m => m.g === 'cp').map(m => `<tr><td>–</td><td><b>${esc(m.nama)}</b> <span class="muted">(manual)</span></td><td class="n">${m.s1 ?? '–'}</td><td class="n">${m.s2 ?? '–'}</td><td class="n">${m.s1 != null && m.s2 != null ? Math.round((m.s1 + m.s2) / 2 * 10) / 10 : '–'}</td><td class="n">–</td><td class="n">–</td></tr>`).join('')}</table>` : '';
   // penghargaan per peran: selisih terhadap rata-rata babak
   const rataB = [0, 1].map(b => { const v = H.map(x => x.h[b]).filter(Boolean).map(h => h.total); return v.length ? v.reduce((a, c) => a + c, 0) / v.length : null });
   const peranList = (role) => { const out = []; H.forEach(x => [0, 1].forEach(b => { const h = x.h[b]; if (!h) return;

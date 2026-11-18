@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="gaya.css?v=3">
+<script>/* bila pustaka gagal dimuat (jaringan lemah), muat ulang halaman sekali */
+addEventListener('error', function (e) { try { if (/is not defined|Cannot read/.test(e.message || '') && !sessionStorage.getItem('pnm-rl')) { sessionStorage.setItem('pnm-rl', '1'); location.reload() } } catch (x) { } });
+addEventListener('load', function () { setTimeout(function () { try { sessionStorage.removeItem('pnm-rl') } catch (x) { } }, 8000) });</script>
 <script src="../saham/lib/mqtt-5.10.1.min.js"></script>
 <script src="data.js?v=3"></script>
 <script src="kelas.js?v=5"></script>
@@ -30,6 +33,17 @@ const PAKET = {};   // kunci pasangan-babak -> paket dari Pusat
 const HASIL = {};   // kunci pasangan-babak -> hasil dari Cabang
 
 const peran = (st = S) => st.mode === 'satu' ? (st.fase === 'pusat' ? 'Pusat' : 'Cabang') : ((st.babak === 0) === (st.sisi === 'A') ? 'Pusat' : 'Cabang');
+/* lawan mesin: mesin Pusat memilih paket paling lengkap yang muat anggaran; mesin Cabang memilih jawaban dengan akibat paling ringan */
+function mesinPaket(bi) {
+  const B = D.BABAK[bi], p = {}; let sisa = D.ANGGARAN;
+  B.kebijakan.forEach(k => { let best = 0; k.pilihan.forEach((o, i) => { if (o.b <= sisa && o.b > k.pilihan[best].b) best = i }); p[k.k] = best; sisa -= k.pilihan[best].b });
+  return p;
+}
+function mesinCabang(bi, paket) {
+  const pen = r => ['pny', 'npf', 'aud', 'sys'].reduce((t, x) => t + (r[x] || 0), 0) + (r.tem ? 0.5 : 0);
+  return D.BABAK[bi].kejadian.map(e => e.pilihan.map((_, i) => i).sort((a, b) => pen(e.hasil(paket, a)) - pen(e.hasil(paket, b)))[0]);
+}
+function mesinMulaiCabang() { S.paket = mesinPaket(S.babak); S.namaPusat = 'Mesin'; S.dtPusat = 0; S.fase = 'cabang'; S.sisa = DT_CABANG; S.pilihan = []; S.langkah = 0 }
 const kunci = () => (S.sesi ? S.sesi + ':' : '') + S.pasangan + '-' + S.babak;
 const REG = PNMReg.get();
 let CTL = null;
@@ -65,6 +79,7 @@ function mulaiUndian(d, sesi) {
   const solo = !(d.p > 0);
   S = { id: Math.random().toString(36).slice(2, 9), reg: REG.id, sesi, nama: REG.nama, mode: solo ? 'satu' : 'dua', kode: REG.kode, pasangan: solo ? 0 : d.p, sisi: solo ? 'A' : d.s,
         babak: 0, fase: 'pusat', paket: {}, pilihan: [], langkah: 0, hasil: [null, null], sisa: DT_PUSAT };
+  if (d.s === 'mesin') { S.mode = 'mesin'; S.sisi = 'A' }
   if (!solo && peran() === 'Cabang') S.fase = 'tunggu';
   PNMRiwayat.mulai('cp', S.id, S.nama); save(); render(); cekPasangan();
 }
@@ -96,6 +111,7 @@ function layarUndian() {
     <div class="big" style="font-size:2rem">${esc(REG.nama)}</div>
     <p class="lead">${!CH ? 'Menghubungkan ke kelas ' + esc(REG.kode) + '…' : !d ? 'Menunggu pengajar mengundi pasangan dan peran.' : 'Undian sudah keluar. Permainan dimulai begitu pengajar memberi aba-aba.'}</p>
     ${d ? (d.p > 0 ? `<div class="fact" style="text-align:left">Pertandingan <b>${d.p}</b> bersama <b>${lawan ? esc(CTL.nama[lawan[0]] || '') : '–'}</b>.<br>Babak 1 · ULaMM: kelompok Anda menjadi <b>${d.s === 'A' ? 'Pusat' : 'Cabang'}</b>. Babak 2 · Mekaar: peran bertukar menjadi <b>${d.s === 'A' ? 'Cabang' : 'Pusat'}</b>.</div>`
+      : d.s === 'mesin' ? `<div class="fact" style="text-align:left">Kelompok Anda <b>melawan mesin</b>. Babak 1 · ULaMM: Anda menjadi Pusat dan mesin menjadi Cabang. Babak 2 · Mekaar: Anda menjadi Cabang dan mesin menjadi Pusat.</div>`
       : `<div class="fact" style="text-align:left">Jumlah kelompok ganjil: kelompok Anda memainkan peran Pusat lalu Cabang sendiri pada gawai ini.</div>`) : ''}
     <div class="fact" style="text-align:left"><b>Cara menang.</b> Skor satu PNM dihitung bersama untuk Pusat dan Cabang, lalu dirata-ratakan dari dua babak. Pasangan dengan skor tertinggi menang; bila sama, yang temuan auditnya lebih sedikit, lalu yang lebih cepat selesai. Begitu Pusat mengirim paket atau Cabang menjawab, permainan langsung berlanjut tanpa menunggu waktu habis.</div>
     ${d && CTL.aktif === 'cp' && CTL.g2mulai ? '<button class="btn gold wide" id="mulaiLagi">Mulai permainan</button>' : ''}
@@ -116,6 +132,7 @@ function layarAwal() {
     <div class="row">
       <button class="opt on" data-m="dua"><b>Dua gawai</b><small>Satu gawai per kelompok, terhubung lewat kode kelas</small></button>
       <button class="opt" data-m="satu"><b>Satu gawai</b><small>Satu gawai untuk satu pasangan, dioper bergantian; tanpa internet pun jalan</small></button>
+      <button class="opt" data-m="mesin"><b>Lawan mesin</b><small>Satu kelompok bermain sendiri: Babak 1 menjadi Pusat dan mesin menjadi Cabang, Babak 2 menjadi Cabang dan mesin menjadi Pusat</small></button>
     </div>
     <div id="duaBox">
       <label for="kode">Kode kelas dari fasilitator</label>
@@ -129,13 +146,13 @@ function layarAwal() {
     <button class="btn gold wide" id="mulai">Mulai</button>
   </div>${PNMRiwayat.html('cp')}`;
   let mode = 'dua', n = null, sisi = null;
-  app.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { mode = b.dataset.m; app.querySelectorAll('[data-m]').forEach(x => x.classList.toggle('on', x === b)); $('#duaBox').classList.toggle('hide', mode === 'satu') });
+  app.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { mode = b.dataset.m; app.querySelectorAll('[data-m]').forEach(x => x.classList.toggle('on', x === b)); $('#duaBox').classList.toggle('hide', mode !== 'dua') });
   app.querySelectorAll('[data-n]').forEach(b => b.onclick = () => { n = +b.dataset.n; app.querySelectorAll('[data-n]').forEach(x => x.classList.toggle('on', x === b)) });
   app.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { sisi = b.dataset.s; app.querySelectorAll('[data-s]').forEach(x => x.classList.toggle('on', x === b)) });
   $('#mulai').onclick = () => {
     const kode = PNMKelas.cleanCode($('#kode').value);
     if (mode === 'dua' && (!kode || !n || !sisi)) { $('#err').textContent = 'Isi kode kelas, nomor pasangan, dan A atau B. Bila tidak ada internet, pilih Satu gawai.'; return }
-    S = { id: Math.random().toString(36).slice(2, 9), nama: $('#nama').value.trim() || 'Kelompok', mode, kode: mode === 'dua' ? kode : '', pasangan: n || 0, sisi: sisi || 'A',
+    S = { id: Math.random().toString(36).slice(2, 9), nama: $('#nama').value.trim() || 'Kelompok', mode, kode: mode === 'dua' ? kode : '', pasangan: mode === 'dua' ? n : 0, sisi: mode === 'dua' ? sisi : 'A',
           babak: 0, fase: 'pusat', paket: {}, pilihan: [], langkah: 0, hasil: [null, null], sisa: DT_PUSAT };
     if (mode === 'dua' && peran() === 'Cabang') S.fase = 'tunggu';
     PNMRiwayat.mulai('cp', S.id, S.nama); save(); sambung(); render();
@@ -178,6 +195,11 @@ function kirimPaket() {
   if (S.fase !== 'pusat') return;
   S.dtPusat = DT_PUSAT - Math.max(0, S.sisa);
   if (S.mode === 'satu') { S.fase = 'serah'; save(); return render() }
+  if (S.mode === 'mesin') {
+    const c = mesinCabang(S.babak, S.paket), res = D.nilaiBabak(S.babak, S.paket, c);
+    Object.assign(res, { dt: S.dtPusat, pusat: S.nama, cabang: 'Mesin', paket: S.paket, pilihan: c });
+    S.hasil[S.babak] = res; S.fase = 'hasil'; save(); return render();
+  }
   const pk = { paket: S.paket, nama: S.nama, dt: S.dtPusat, t: Date.now() };
   if (CH) CH.setPair(kunci(), pk);
   PAKET[kunci()] = pk; S.fase = 'tungguHasil'; save(); render();
@@ -229,7 +251,7 @@ function selesaiCabang() {
   if (S.fase !== 'cabang') return;
   const res = D.nilaiBabak(S.babak, S.paket, D.BABAK[S.babak].kejadian.map((e, i) => S.pilihan[i]));
   res.dt = (S.dtPusat || 0) + DT_CABANG - Math.max(0, S.sisa);
-  res.pusat = S.mode === 'satu' ? S.nama : (S.namaPusat || ''); res.cabang = S.nama; res.paket = S.paket; res.pilihan = S.pilihan;
+  res.pusat = S.mode === 'satu' ? S.nama : S.mode === 'mesin' ? 'Mesin' : (S.namaPusat || ''); res.cabang = S.nama; res.paket = S.paket; res.pilihan = S.pilihan;
   S.hasil[S.babak] = res; S.fase = 'hasil';
   if (CH) CH.setPair(kunci() + '-hasil', { res, t: Date.now() });
   save(); render();
@@ -255,14 +277,14 @@ function layarHasil() {
     if (S.babak === 1) { S.fase = 'akhir'; save(); return render() }
     S.babak = 1; S.paket = {}; S.pilihan = []; S.langkah = 0;
     if (S.mode === 'satu') { S.fase = 'pusat'; S.sisa = DT_PUSAT }
-    else if (peran() === 'Pusat') { S.fase = 'pusat'; S.sisa = DT_PUSAT } else { S.fase = 'tunggu' }
+    else if (peran() === 'Pusat') { S.fase = 'pusat'; S.sisa = DT_PUSAT } else if (S.mode === 'mesin') mesinMulaiCabang(); else { S.fase = 'tunggu' }
     save(); render(); cekPasangan();
   };
 }
 function layarAkhir() {
   const h = S.hasil.filter(Boolean); const rata = h.length ? Math.round(h.reduce((s, x) => s + x.skor.total, 0) / h.length * 10) / 10 : 0;
   PNMRiwayat.selesai('cp', S.id, S.nama, rata, 100);
-  app.innerHTML = `<div class="card center"><div class="muted">Skor akhir pasangan ${S.mode === 'dua' ? S.pasangan : ''} · rata-rata dua babak</div><div class="big">${rata}</div>
+  app.innerHTML = `<div class="card center"><div class="muted">Skor akhir pasangan ${S.mode === 'dua' ? S.pasangan : S.mode === 'mesin' ? '(lawan mesin)' : ''} · rata-rata dua babak</div><div class="big">${rata}</div>
     <p>ULaMM ${S.hasil[0] ? S.hasil[0].skor.total : '-'} · Mekaar ${S.hasil[1] ? S.hasil[1].skor.total : '-'}</p>
     <div class="fact" style="text-align:left"><b>Untuk pembahasan.</b> ${esc(D.PESAN.cp)} Bawa satu temuan audit dari permainan ini ke sesi terakhir.</div></div>`
     + S.hasil.map((r, i) => r ? blokHasil(r, D.BABAK[i].nama) : '').join('')
