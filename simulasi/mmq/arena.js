@@ -77,6 +77,17 @@ window.Arena = (function () {
       <ol style="margin:8px 0 10px;padding-left:22px">${x.poin.map(t => `<li style="margin:4px 0">${esc(t)}</li>`).join('')}</ol>
       <div class="fact" style="margin:0"><b>Kaitan dengan materi hari ini · ${esc(x.sesi)}.</b> ${esc(x.kait)}</div></div>`;
   }
+  // tombol "Mulai ulang" di bilah atas: menghapus permainan yang sedang berjalan di perangkat ini (riwayat skor tetap tercatat)
+  function ulang(kunci) {
+    const top = document.querySelector('.top'); if (!top || top.querySelector('.ulang')) return;
+    const b = document.createElement('button'); b.className = 'sfx ulang'; b.type = 'button'; b.textContent = '↺ Mulai ulang';
+    b.onclick = () => {
+      if (!b.dataset.y) { b.dataset.y = 1; b.textContent = 'Ketuk lagi untuk mulai dari awal'; setTimeout(() => { delete b.dataset.y; b.textContent = '↺ Mulai ulang' }, 4000); return }
+      try { localStorage.removeItem(kunci) } catch (e) { }
+      location.href = location.pathname + '?baru=' + Date.now();
+    };
+    top.insertBefore(b, top.querySelector('.sfx') || top.querySelector('.conn'));
+  }
   document.addEventListener('DOMContentLoaded', pasangSfx);
-  return { sfx, coach, confetti, countUp, waktu, peringkat, esc, paham };
+  return { sfx, coach, confetti, countUp, waktu, peringkat, esc, paham, ulang };
 })();

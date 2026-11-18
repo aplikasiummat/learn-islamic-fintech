@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reset Simulasi MMQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="gaya.css?v=4">
+</head>
+<body>
+<div class="top"><div class="t">Reset Simulasi MMQ<span class="sub"> · perangkat ini</span></div></div>
+<div class="wrap">
+  <div class="card hero center">
+    <div class="kicker">Mulai dari awal</div>
+    <h1 id="judul">Membersihkan data permainan…</h1>
+    <p class="lead" id="ket">Pendaftaran kelompok, permainan yang sedang berjalan, dan riwayat percobaan di perangkat ini dihapus. Data di perangkat lain tidak tersentuh.</p>
+  </div>
+  <div class="card">
+    <h3>Pilih langkah berikutnya</h3>
+    <div class="row">
+      <a class="btn gold" id="g2k" href="cabang-pusat.html?lawan=komputer">🤖 Game 2 lawan komputer</a>
+      <a class="btn ghost" id="g1" href="pilih-akad.html">Game 1 · Pilih Akadnya</a>
+      <a class="btn ghost" id="g3" href="jejak-audit.html">Game 3 · Jejak Audit</a>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <a class="btn ghost" id="df" href="daftar.html">Daftar kelompok (mode kelas)</a>
+      <a class="btn ghost" id="db" href="dashboard.html">Dashboard pengajar</a>
+    </div>
+  </div>
+</div>
+<script>
+'use strict';
+let n = 0;
+try {
+  const ks = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^pnm/.test(k) && k !== 'pnm.sfx') ks.push(k) }
+  ks.forEach(k => { localStorage.removeItem(k); n++ }); sessionStorage.clear();
+} catch (e) { }
+document.getElementById('judul').textContent = 'Data permainan sudah dibersihkan';
+document.getElementById('ket').textContent = n + ' catatan dihapus dari perangkat ini. Silakan mulai bermain dari awal.';
+const t = Date.now(); document.querySelectorAll('a.btn').forEach(a => a.href += (a.href.includes('?') ? '&' : '?') + 'r=' + t);
+</script>
+</body>
+</html>

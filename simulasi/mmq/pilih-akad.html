@@ -15,7 +15,7 @@ addEventListener('load', function () { setTimeout(function () { try { sessionSto
 <script src="kelas.js?v=5"></script>
 <script src="riwayat.js?v=1"></script>
 <script src="kelompok.js?v=1"></script>
-<script src="arena.js?v=1"></script>
+<script src="arena.js?v=2"></script>
 </head>
 <body>
 <div class="top"><a class="chip" href="index.html" style="color:#fff;text-decoration:none">☰ Menu</a><div class="t">Game 1 · Pilih Akadnya<span class="sub"> · Maqasid dan pemilihan akad</span></div><span class="chip" id="hdrGroup"></span><span class="chip" id="hdrScore">0 poin</span><span class="conn" id="conn" title="Papan skor kelas"></span></div>
@@ -188,6 +188,7 @@ hdr();
 if (S && REG && qs.get('auto') && REG.pergi && S.token !== REG.pergi && S.reg === REG.id) S = null;
 if (!S) layarAwal();
 else { sambung(S.kode); if (S.fase === 'akhir') akhir(); else if (S.fase === 'hasil') hasil(S.pilih[S.ronde], poinRonde(S.ronde, S.pilih[S.ronde])); else ronde() }
+Arena.ulang('pnmakad.state');
 </script>
 </body>
 </html>

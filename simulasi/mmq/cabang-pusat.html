@@ -15,7 +15,7 @@ addEventListener('load', function () { setTimeout(function () { try { sessionSto
 <script src="kelas.js?v=5"></script>
 <script src="riwayat.js?v=1"></script>
 <script src="kelompok.js?v=1"></script>
-<script src="arena.js?v=1"></script>
+<script src="arena.js?v=2"></script>
 </head>
 <body>
 <div class="top"><a class="chip" href="index.html" style="color:#fff;text-decoration:none">☰ Menu</a><div class="t">Game 2 · Cabang vs Pusat<span class="sub"> · Menjalankan MMQ</span></div><span class="chip" id="hdrGroup"></span><span class="chip" id="hdrRole"></span><span class="conn" id="conn" title="Papan skor kelas"></span></div>
@@ -345,10 +345,13 @@ function layarAkhir() {
   $('#ulang').onclick = () => { const b = $('#ulang'); if (!b.dataset.y) { b.dataset.y = 1; b.textContent = 'Ketuk sekali lagi: mulai percobaan baru (skor ini tetap tercatat)'; return } store.set('state', null); S = null; hdr(); render() };
 }
 
+// tautan ?lawan=komputer selalu memulai permainan baru melawan komputer
+if (qs.get('lawan') === 'komputer') { try { history.replaceState(null, '', location.pathname) } catch (e) { } if (!(S && S.mode === 'mesin' && S.fase !== 'akhir')) S = null }
 hdr();
 if (REG && REG.kode) sambung(REG.kode);
 else if (S) sambung();
 render();
+Arena.ulang('pnmcp.state');
 </script>
 </body>
 </html>
