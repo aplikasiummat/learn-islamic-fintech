@@ -80,7 +80,7 @@ function tunggu() {
     ${d ? `<div class="card"><div class="kicker">Pasangan Game 2 · Cabang vs Pusat</div>
       ${d.p > 0 ? `<h2>Pertandingan ${d.p}: ${esc(R.nama)} &amp; ${lawan ? esc(CTL.nama[lawan[0]] || 'kelompok lain') : '–'}</h2>
       <p class="lead">Babak 1 · ULaMM: Anda menjadi <b>${d.s === 'A' ? 'Kantor Pusat' : 'Cabang'}</b>. Babak 2 · Mekaar: peran bertukar menjadi <b>${d.s === 'A' ? 'Cabang' : 'Kantor Pusat'}</b>. Skor dihitung untuk satu PNM: kedua kelompok menang atau kalah bersama.</p>`
-      : d.s === 'mesin' ? `<h2>${esc(R.nama)} melawan mesin</h2><p class="lead">Babak 1 · ULaMM: Anda Kantor Pusat dan mesin menjadi Cabang. Babak 2 · Mekaar: Anda Cabang dan mesin menjadi Kantor Pusat.</p>`
+      : d.s === 'mesin' ? `<h2>${esc(R.nama)} melawan komputer</h2><p class="lead">Babak 1 · ULaMM: Anda Kantor Pusat dan komputer menjadi Cabang. Babak 2 · Mekaar: Anda Cabang dan komputer menjadi Kantor Pusat.</p>`
       : `<p class="lead">Jumlah kelompok ganjil, sehingga kelompok Anda memainkan kedua peran sendiri pada laptop ini.</p>`}</div>` : ''}
     <div class="card"><h3>Bila layar tidak pindah sendiri</h3>
       <div class="row"><a class="btn ghost" href="pilih-akad.html?kelas=${esc(R.kode)}&auto=1">Game 1 · Pilih Akadnya</a><a class="btn ghost" href="cabang-pusat.html?kelas=${esc(R.kode)}&auto=1">Game 2 · Cabang vs Pusat</a><a class="btn ghost" href="jejak-audit.html?kelas=${esc(R.kode)}&auto=1">Game 3 · Jejak Audit</a></div>

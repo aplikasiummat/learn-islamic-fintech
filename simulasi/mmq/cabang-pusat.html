@@ -11,7 +11,7 @@
 addEventListener('error', function (e) { try { if (/is not defined|Cannot read/.test(e.message || '') && !sessionStorage.getItem('pnm-rl')) { sessionStorage.setItem('pnm-rl', '1'); location.reload() } } catch (x) { } });
 addEventListener('load', function () { setTimeout(function () { try { sessionStorage.removeItem('pnm-rl') } catch (x) { } }, 8000) });</script>
 <script src="../saham/lib/mqtt-5.10.1.min.js"></script>
-<script src="data.js?v=4"></script>
+<script src="data.js?v=6"></script>
 <script src="kelas.js?v=5"></script>
 <script src="riwayat.js?v=1"></script>
 <script src="kelompok.js?v=1"></script>
@@ -44,7 +44,7 @@ function mesinCabang(bi, paket) {
   const pen = r => ['pny', 'npf', 'aud', 'sys'].reduce((t, x) => t + (r[x] || 0), 0) + (r.tem ? 0.5 : 0);
   return D.BABAK[bi].kejadian.map(e => e.pilihan.map((_, i) => i).sort((a, b) => pen(e.hasil(paket, a)) - pen(e.hasil(paket, b)))[0]);
 }
-function mesinMulaiCabang() { S.paket = mesinPaket(S.babak); S.namaPusat = 'Mesin'; S.dtPusat = 0; S.fase = 'cabang'; S.sisa = DT_CABANG; S.pilihan = []; S.langkah = 0 }
+function mesinMulaiCabang() { S.paket = mesinPaket(S.babak); S.namaPusat = 'Komputer'; S.dtPusat = 0; S.fase = 'cabang'; S.sisa = DT_CABANG; S.pilihan = []; S.langkah = 0 }
 const kunci = () => (S.sesi ? S.sesi + ':' : '') + S.pasangan + '-' + S.babak;
 const REG = PNMReg.get();
 let CTL = null;
@@ -117,8 +117,8 @@ function layarUndian() {
   <div class="card center">
     ${Arena.coach(['Pasangan disusun', 'Aba-aba pengajar', 'Babak 1 ULaMM', 'Babak 2 Mekaar'], !d ? 0 : 1, !CH ? 'menghubungkan ke kelas ' + esc(REG.kode) + '…' : !d ? 'tunggu pengajar menyusun pasangan. Pasangan disusun menurut urutan pendaftaran.' : 'pasangan sudah keluar. Layar pindah sendiri begitu pengajar menekan Mulai Game 2.')}
     ${d ? (d.p > 0 ? `<div class="fact" style="text-align:left">Pertandingan <b>${d.p}</b> bersama <b>${lawan ? esc(CTL.nama[lawan[0]] || '') : '–'}</b>.<br>Babak 1 · ULaMM: kelompok Anda menjadi <b>${d.s === 'A' ? 'Pusat' : 'Cabang'}</b>. Babak 2 · Mekaar: peran bertukar menjadi <b>${d.s === 'A' ? 'Cabang' : 'Pusat'}</b>.</div>`
-      : d.s === 'mesin' ? `<div class="fact" style="text-align:left">Kelompok Anda <b>melawan mesin</b>. Babak 1 · ULaMM: Anda menjadi Pusat dan mesin menjadi Cabang. Babak 2 · Mekaar: Anda menjadi Cabang dan mesin menjadi Pusat.</div>`
-      : `<div class="fact" style="text-align:left">Jumlah kelompok ganjil: kelompok Anda memainkan peran Pusat lalu Cabang sendiri pada gawai ini.</div>`) : ''}
+      : d.s === 'mesin' ? `<div class="fact" style="text-align:left">Kelompok Anda <b>melawan komputer</b>. Babak 1 · ULaMM: Anda menjadi Pusat dan komputer menjadi Cabang. Babak 2 · Mekaar: Anda menjadi Cabang dan komputer menjadi Pusat.</div>`
+      : `<div class="fact" style="text-align:left">Jumlah kelompok ganjil: kelompok Anda memainkan peran Pusat lalu Cabang sendiri pada laptop ini.</div>`) : ''}
     <div class="fact" style="text-align:left"><b>Waktu.</b> Pusat 4 menit, Cabang 6 menit per babak. <b>Cara menang.</b> Skor satu PNM dihitung bersama untuk Pusat dan Cabang, lalu dirata-ratakan dari dua babak. Pasangan dengan skor tertinggi menang; bila sama, yang temuan auditnya lebih sedikit, lalu yang lebih cepat selesai. Begitu Pusat mengirim paket atau Cabang menjawab, permainan langsung berlanjut tanpa menunggu waktu habis.</div>
     ${d && CTL.aktif === 'cp' && CTL.g2mulai ? '<button class="btn gold wide" id="mulaiLagi">Mulai permainan</button>' : ''}
     <button class="btn ghost wide" id="vsMesin" style="margin-top:10px">🤖 Main lawan komputer sekarang</button>
@@ -126,9 +126,15 @@ function layarUndian() {
     <p class="note"><a href="?manual=1${qs.get('kelas') ? '&kelas=' + esc(qs.get('kelas')) : ''}">Isi pasangan secara manual</a> · <a href="daftar.html?kelas=${esc(REG.kode)}">Ruang tunggu</a></p>
   </div>`;
   const b = $('#mulaiLagi'); if (b) b.onclick = () => mulaiUndian(d, CTL.g2mulai);
-  $('#vsMesin').onclick = () => mulaiUndian({ p: 0, s: 'mesin' }, 'mesin-' + Date.now());
+  $('#vsMesin').onclick = () => mulaiKomputer();
+}
+function mulaiKomputer(nama) {
+  S = { id: Math.random().toString(36).slice(2, 9), reg: REG ? REG.id : '', nama: nama || (REG && REG.nama) || 'Kelompok', mode: 'mesin', kode: '', pasangan: 0, sisi: 'A',
+        babak: 0, fase: 'pusat', paket: {}, pilihan: [], langkah: 0, hasil: [null, null], sisa: DT_PUSAT };
+  PNMRiwayat.mulai('cp', S.id, S.nama); save(); render();
 }
 function layarAwal() {
+  if (qs.get('lawan') === 'komputer') return mulaiKomputer();
   if (REG && REG.kode && !qs.get('manual')) return layarUndian();
   app.innerHTML = `
   <div class="card hero"><div class="kicker">Game 2 · dua babak · Pusat 4 menit, Cabang 6 menit</div><h1 style="font-size:2.5rem">Cabang vs Pusat</h1>
@@ -140,9 +146,9 @@ function layarAwal() {
     <input id="nama" maxlength="30" placeholder="contoh: Kelompok Melati">
     <label>Cara bermain</label>
     <div class="row">
-      <button class="opt on" data-m="dua"><b>Dua gawai</b><small>Satu gawai per kelompok, terhubung lewat kode kelas</small></button>
-      <button class="opt" data-m="satu"><b>Satu gawai</b><small>Satu gawai untuk satu pasangan, dioper bergantian; tanpa internet pun jalan</small></button>
-      <button class="opt" data-m="mesin" style="border-left:8px solid var(--gold)"><b>🤖 Lawan komputer</b><small>Satu kelompok bermain sendiri: Babak 1 menjadi Pusat dan mesin menjadi Cabang, Babak 2 menjadi Cabang dan mesin menjadi Pusat</small></button>
+      <button class="opt on" data-m="dua"><b>Dua laptop</b><small>Satu laptop per kelompok, terhubung lewat kode kelas</small></button>
+      <button class="opt" data-m="satu"><b>Satu laptop</b><small>Satu laptop untuk satu pasangan, dioper bergantian; tanpa internet pun jalan</small></button>
+      <button class="opt" data-m="mesin" style="border-left:8px solid var(--gold)"><b>🤖 Lawan komputer</b><small>Satu kelompok bermain sendiri: Babak 1 menjadi Pusat dan komputer menjadi Cabang, Babak 2 menjadi Cabang dan komputer menjadi Pusat</small></button>
     </div>
     <div id="duaBox">
       <label for="kode">Kode kelas dari fasilitator</label>
@@ -161,7 +167,7 @@ function layarAwal() {
   app.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { sisi = b.dataset.s; app.querySelectorAll('[data-s]').forEach(x => x.classList.toggle('on', x === b)) });
   $('#mulai').onclick = () => {
     const kode = PNMKelas.cleanCode($('#kode').value);
-    if (mode === 'dua' && (!kode || !n || !sisi)) { $('#err').textContent = 'Isi kode kelas, nomor pasangan, dan A atau B. Bila tidak ada internet, pilih Satu gawai.'; return }
+    if (mode === 'dua' && (!kode || !n || !sisi)) { $('#err').textContent = 'Isi kode kelas, nomor pasangan, dan A atau B. Bila tidak ada internet, pilih Satu laptop.'; return }
     S = { id: Math.random().toString(36).slice(2, 9), nama: $('#nama').value.trim() || 'Kelompok', mode, kode: mode === 'dua' ? kode : '', pasangan: mode === 'dua' ? n : 0, sisi: mode === 'dua' ? sisi : 'A',
           babak: 0, fase: 'pusat', paket: {}, pilihan: [], langkah: 0, hasil: [null, null], sisa: DT_PUSAT };
     if (mode === 'dua' && peran() === 'Cabang') S.fase = 'tunggu';
@@ -218,7 +224,7 @@ function kirimPaket() {
   if (S.mode === 'satu') { S.fase = 'serah'; save(); return render() }
   if (S.mode === 'mesin') {
     const c = mesinCabang(S.babak, S.paket), res = D.nilaiBabak(S.babak, S.paket, c);
-    Object.assign(res, { dt: S.dtPusat, pusat: S.nama, cabang: 'Mesin', paket: S.paket, pilihan: c });
+    Object.assign(res, { dt: S.dtPusat, pusat: S.nama, cabang: 'Komputer', paket: S.paket, pilihan: c });
     S.hasil[S.babak] = res; S.fase = 'hasil'; save(); return render();
   }
   const pk = { paket: S.paket, nama: S.nama, dt: S.dtPusat, t: Date.now() };
@@ -235,13 +241,19 @@ function layarTunggu() {
     <p class="lead">Pasangan Anda sedang menyusun kebijakan MMQ untuk ${esc(D.BABAK[S.babak].nama.split('·')[1].trim())}. Layar ini berpindah sendiri begitu paket tiba.</p></div>
     <div class="card">${Arena.coach(LANGKAH2C, 0, 'tunggu paket tiba. Sambil menunggu, diskusikan: kebijakan pusat seperti apa yang paling sering menyulitkan cabang?')}
     <p class="note">${CH ? 'Terhubung ke kelas ' + esc(S.kode) + '.' : 'Belum terhubung ke kelas. Periksa internet atau kode kelas.'}</p>
-    <button class="btn ghost" id="kosong">Pusat tidak terhubung: lanjut dengan paket tanpa kebijakan</button></div>`;
-  $('#kosong').onclick = () => { S.paket = {}; S.namaPusat = '(tanpa paket)'; S.fase = 'cabang'; S.sisa = DT_CABANG; S.pilihan = []; S.langkah = 0; save(); render() };
+    <div class="row"><button class="btn gold" id="keKom">🤖 Pasangan belum muncul? Lanjut lawan komputer</button></div></div>`;
+  $('#keKom').onclick = () => { S.mode = 'mesin'; mesinMulaiCabang(); save(); render() };
 }
 function layarTungguHasil() {
   app.innerHTML = `<div class="card hero center"><div class="ic">📨</div><div class="kicker">Paket terkirim</div><h2>Cabang sedang menjalankan kebijakan Anda</h2>
     <p class="lead">Enam kejadian lapangan sedang diputuskan. Skor satu PNM muncul di layar ini begitu Cabang selesai.</p></div>
-    <div class="card">${Arena.coach(LANGKAH2P, 3, 'tunggu hasil. Sambil menunggu, tuliskan satu kebijakan Anda yang paling mungkin <b>tidak bisa dijalankan</b> di lapangan, beserta alasannya.')}</div>`;
+    <div class="card">${Arena.coach(LANGKAH2P, 3, 'tunggu hasil. Sambil menunggu, tuliskan satu kebijakan Anda yang paling mungkin <b>tidak bisa dijalankan</b> di lapangan, beserta alasannya.')}
+    <button class="btn ghost" id="keKom">🤖 Cabang belum muncul? Biarkan komputer menjadi Cabang</button></div>`;
+  $('#keKom').onclick = () => {
+    S.mode = 'mesin'; const c = mesinCabang(S.babak, S.paket), res = D.nilaiBabak(S.babak, S.paket, c);
+    Object.assign(res, { dt: S.dtPusat || 0, pusat: S.nama, cabang: 'Komputer', paket: S.paket, pilihan: c });
+    S.hasil[S.babak] = res; S.fase = 'hasil'; save(); render();
+  };
 }
 
 function layarCabang() {
@@ -285,7 +297,7 @@ function selesaiCabang() {
   if (S.fase !== 'cabang') return;
   const res = D.nilaiBabak(S.babak, S.paket, D.BABAK[S.babak].kejadian.map((e, i) => S.pilihan[i]));
   res.dt = (S.dtPusat || 0) + DT_CABANG - Math.max(0, S.sisa);
-  res.pusat = S.mode === 'satu' ? S.nama : S.mode === 'mesin' ? 'Mesin' : (S.namaPusat || ''); res.cabang = S.nama; res.paket = S.paket; res.pilihan = S.pilihan;
+  res.pusat = S.mode === 'satu' ? S.nama : S.mode === 'mesin' ? 'Komputer' : (S.namaPusat || ''); res.cabang = S.nama; res.paket = S.paket; res.pilihan = S.pilihan;
   S.hasil[S.babak] = res; S.fase = 'hasil';
   if (CH) CH.setPair(kunci() + '-hasil', { res, t: Date.now() });
   save(); render();
@@ -307,7 +319,7 @@ function blokHasil(res, judul) {
 function layarHasil() {
   const res = S.hasil[S.babak], B = D.BABAK[S.babak];
   Arena.sfx(res.skor.total >= 60 ? 'ok' : 'mid');
-  app.innerHTML = `<div class="card">${Arena.coach(null, 0, S.babak === 0 ? 'bahas skor dan temuan di bawah bersama ' + (S.mode === 'mesin' ? 'kelompok' : 'pasangan Anda') + ', lalu klik <b>Lanjut ke Babak 2</b>. Peran bertukar: ' + (S.mode === 'mesin' ? 'Anda menjadi Cabang dan mesin menjadi Pusat.' : peran() === 'Pusat' ? 'Anda menjadi Cabang.' : 'Anda menjadi Kantor Pusat.') : 'klik <b>Lihat hasil akhir</b> untuk skor rata-rata dua babak.')}</div>`
+  app.innerHTML = `<div class="card">${Arena.coach(null, 0, S.babak === 0 ? 'bahas skor dan temuan di bawah bersama ' + (S.mode === 'mesin' ? 'kelompok' : 'pasangan Anda') + ', lalu klik <b>Lanjut ke Babak 2</b>. Peran bertukar: ' + (S.mode === 'mesin' ? 'Anda menjadi Cabang dan komputer menjadi Pusat.' : peran() === 'Pusat' ? 'Anda menjadi Cabang.' : 'Anda menjadi Kantor Pusat.') : 'klik <b>Lihat hasil akhir</b> untuk skor rata-rata dua babak.')}</div>`
     + blokHasil(res, B.nama) + `<div class="card"><div class="fact"><b>Pesan babak ini.</b> ${esc(D.PESAN.cp)}</div>
     <button class="btn gold wide" id="lanjut">${S.babak === 0 ? 'Lanjut ke Babak 2 · Mekaar (peran bertukar) ▶' : 'Lihat hasil akhir 🏁'}</button></div>`;
   setTimeout(() => Arena.countUp(document.querySelector('.skorb'), res.skor.total), 30);
@@ -323,7 +335,7 @@ function layarAkhir() {
   const h = S.hasil.filter(Boolean); const rata = h.length ? Math.round(h.reduce((s, x) => s + x.skor.total, 0) / h.length * 10) / 10 : 0;
   PNMRiwayat.selesai('cp', S.id, S.nama, rata, 100);
   setTimeout(() => { Arena.countUp(document.getElementById('skorAkhir'), rata); Arena.confetti(); Arena.sfx('win') }, 50);
-  app.innerHTML = `<div class="card hero center"><div class="kicker">Skor akhir pasangan ${S.mode === 'dua' ? S.pasangan : S.mode === 'mesin' ? '(lawan mesin)' : ''} · rata-rata dua babak</div><div class="big" id="skorAkhir" style="font-size:4.4rem;color:#ffd57a">${rata}</div>
+  app.innerHTML = `<div class="card hero center"><div class="kicker">Skor akhir pasangan ${S.mode === 'dua' ? S.pasangan : S.mode === 'mesin' ? '(lawan komputer)' : ''} · rata-rata dua babak</div><div class="big" id="skorAkhir" style="font-size:4.4rem;color:#ffd57a">${rata}</div>
     <p class="lead">ULaMM ${S.hasil[0] ? S.hasil[0].skor.total : '-'} · Mekaar ${S.hasil[1] ? S.hasil[1].skor.total : '-'}</p>
     <p class="muted">Klasemen semua pertandingan tampil di layar pengajar.</p></div>
     <div class="card">${Arena.coach(null, 0, REG ? 'klik <b>Kembali ke ruang tunggu</b> di bagian bawah, lalu tunggu aba-aba pengajar. Bawa satu temuan audit dari permainan ini ke sesi terakhir.' : 'bawa satu temuan audit dari permainan ini ke sesi terakhir.')}
