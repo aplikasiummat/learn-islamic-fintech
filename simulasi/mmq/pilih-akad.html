@@ -6,18 +6,19 @@
 <title>Maqasid dan Pemilihan Akad</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="gaya.css?v=3">
+<link rel="stylesheet" href="gaya.css?v=4">
 <script>/* bila pustaka gagal dimuat (jaringan lemah), muat ulang halaman sekali */
 addEventListener('error', function (e) { try { if (/is not defined|Cannot read/.test(e.message || '') && !sessionStorage.getItem('pnm-rl')) { sessionStorage.setItem('pnm-rl', '1'); location.reload() } } catch (x) { } });
 addEventListener('load', function () { setTimeout(function () { try { sessionStorage.removeItem('pnm-rl') } catch (x) { } }, 8000) });</script>
 <script src="../saham/lib/mqtt-5.10.1.min.js"></script>
-<script src="data.js?v=3"></script>
+<script src="data.js?v=4"></script>
 <script src="kelas.js?v=5"></script>
 <script src="riwayat.js?v=1"></script>
 <script src="kelompok.js?v=1"></script>
+<script src="arena.js?v=1"></script>
 </head>
 <body>
-<div class="top"><a class="chip" href="index.html" style="color:#fff;text-decoration:none">☰ Menu</a><div class="t">Maqasid dan Pemilihan Akad<span class="sub"> · Pelatihan Pembiayaan Syariah PNM</span></div><span class="chip" id="hdrGroup">–</span><span class="chip" id="hdrScore">0 poin</span><span class="conn" id="conn" title="Papan skor kelas"></span></div>
+<div class="top"><a class="chip" href="index.html" style="color:#fff;text-decoration:none">☰ Menu</a><div class="t">Game 1 · Pilih Akadnya<span class="sub"> · Maqasid dan pemilihan akad</span></div><span class="chip" id="hdrGroup"></span><span class="chip" id="hdrScore">0 poin</span><span class="conn" id="conn" title="Papan skor kelas"></span></div>
 <div class="wrap" id="app"></div>
 
 <script>
@@ -36,11 +37,11 @@ const poinRonde = (r, i) => i == null ? 0 : nilaiAkad(r, i) + (terbaik(r).includ
 const terbaik = k => { const v = D.KARTU[k].nilai.map(tot); const m = Math.max(...v); return v.map((x, i) => x === m ? i : -1).filter(i => i >= 0) };
 
 function save() { store.set('state', S); hdr(); kirim() }
-function hdr() { $('#hdrGroup').textContent = S ? S.nama : '–'; $('#hdrScore').textContent = (S ? S.skor : 0) + ' poin' }
+function hdr() { $('#hdrGroup').textContent = S ? S.nama : ''; $('#hdrScore').textContent = (S ? S.skor : 0) + ' poin' }
 async function sambung(code) {
   if (!code || !window.mqtt) return;
   try {
-    CH = await PNMKelas.join(code, { role: 'player', onConn: v => $('#conn').classList.toggle('on', v) });
+    CH = await PNMKelas.join(code, { role: 'player', onConn: v => $('#conn').classList.toggle('on', v), onCtl: o => Arena.peringkat(o, 'akad', S && S.reg) });
     $('#conn').classList.add('on'); kirim();
   } catch (e) { CH = null; $('#conn').classList.remove('on'); setTimeout(() => { if (!CH && S) sambung(S.kode) }, 4000) }
 }
@@ -51,22 +52,29 @@ function mulaiMain(nama, kode) {
   PNMRiwayat.mulai('akad', S.id, nama); save(); sambung(S.kode); ronde();
 }
 
+const LANGKAH1 = ['Baca kisah nasabah', 'Pilih akad', 'Lihat skor', 'Ronde berikutnya'];
 function layarAwal() {
   const kode = qs.get('kelas') || (REG ? REG.kode : '');
   if (REG && qs.get('auto') && PNMKelas.cleanCode(kode) === REG.kode) return mulaiMain(REG.nama, REG.kode);
   app.innerHTML = `
+  <div class="card hero">
+    <div class="kicker">Game 1 · ${D.KARTU.length} ronde · ${DETIK} detik per keputusan</div>
+    <h1 style="font-size:2.6rem">Pilih Akadnya!</h1>
+    <p class="lead">Delapan nasabah PNM antre di meja Anda. Masing-masing butuh pembiayaan, dan hanya satu akad yang paling pas dengan model bisnis PNM. Diskusikan cepat, pilih tepat.</p>
+    <div class="row" style="margin-top:14px">
+      <div class="fact" style="background:rgba(255,255,255,.1);color:#fff"><b>Poin.</b> 0–10 per ronde dari lima kriteria, <b>+2 bonus</b> bila akad Anda yang terbaik. Maksimum ${D.KARTU.length * 12}.</div>
+      <div class="fact" style="background:rgba(255,255,255,.1);color:#fff"><b>Menang.</b> Skor tertinggi. Bila seri, kelompok yang total waktu menjawabnya paling singkat.</div>
+    </div>
+  </div>
   <div class="card">
-    <h1>Maqasid dan Pemilihan Akad</h1>
-    <p class="lead">Delapan nasabah datang ke PNM dengan kebutuhan yang berbeda. Kelompok memilih satu akad untuk setiap nasabah dalam ${DETIK} detik, lalu melihat skornya pada lima kriteria model bisnis PNM.</p>
-    <div class="fact"><b>Cara menang.</b> Skor tertinggi menang. Bila skor sama, kelompok yang total waktu menjawabnya paling singkat yang menang. Begitu kelompok menjawab, permainan langsung berlanjut tanpa menunggu waktu habis.</div>
-    <div class="fact">Lima pilihan akad: <b>Ijarah/IMBT</b>, <b>Mudharabah</b>, <b>Musyarakah</b>, <b>Murabahah</b>, dan <b>Murabahah bil Wakalah / Wakalah Muallaqah</b>. Skor tertinggi per ronde 10, ditambah bonus 2 bila memilih akad terbaik.</div>
-    <label for="nama">Nama kelompok</label>
-    <input id="nama" maxlength="30" placeholder="contoh: Kelompok 3 Cempaka" value="${REG ? esc(REG.nama) : ''}">
-    <label for="kode">Kode kelas dari fasilitator <span class="muted">(boleh dikosongkan)</span></label>
-    <input id="kode" maxlength="8" value="${esc(kode)}" placeholder="contoh: K7PQ2" style="text-transform:uppercase">
+    ${Arena.coach(null, 0, 'isi nama kelompok dan kode kelas dari layar pengajar, lalu tekan <b>Mulai bermain</b>.')}
+    <div class="row"><div><label for="nama">Nama kelompok</label>
+    <input id="nama" maxlength="30" placeholder="contoh: Kelompok 3 Cempaka" value="${REG ? esc(REG.nama) : ''}"></div>
+    <div><label for="kode">Kode kelas</label>
+    <input id="kode" maxlength="8" value="${esc(kode)}" placeholder="contoh: K7PQ2" style="text-transform:uppercase"></div></div>
     <p></p>
-    <button class="btn gold wide" id="mulai">Mulai bermain</button>
-  </div>${PNMRiwayat.html('akad')}`;
+    <button class="btn gold wide" id="mulai">Mulai bermain ▶</button>
+  </div>${Arena.paham('akad')}${PNMRiwayat.html('akad')}`;
   $('#mulai').onclick = () => {
     mulaiMain($('#nama').value.trim() || 'Kelompok', PNMKelas.cleanCode($('#kode').value));
   };
@@ -74,19 +82,29 @@ function layarAwal() {
 
 function ronde() {
   clearInterval(tick);
-  const k = D.KARTU[S.ronde];
+  const k = D.KARTU[S.ronde], akhirR = S.ronde === D.KARTU.length - 1;
   app.innerHTML = `
   <div class="card">
-    <div class="row" style="align-items:center"><div><span class="pill">Ronde ${S.ronde + 1} dari ${D.KARTU.length}</span></div><div style="text-align:right"><span class="timer" id="tm">${S.sisa}</span></div></div>
-    <div style="display:flex;gap:14px;align-items:center;margin-top:10px"><div class="ic">${k.ikon}</div><h2 style="margin:0">${esc(k.judul)}</h2></div>
-    <p class="lead">${esc(k.cerita)}</p>
-    <div class="fact"><b>Fakta PNM.</b> ${esc(k.fakta)}</div>
-    <h3>Akad mana yang kelompok pilih?</h3>
-    ${D.AKAD.map((a, i) => `<button class="opt" data-i="${i}"><b>${esc(a.nama)}</b><small>${esc(a.rumpun)}</small></button>`).join('')}
+    <div class="row" style="align-items:center"><div><span class="pill">RONDE ${S.ronde + 1} / ${D.KARTU.length}</span> ${akhirR ? '<span class="news">RONDE PENENTU</span>' : ''} <span class="muted" style="margin-left:6px">Skor Anda ${S.skor}</span></div><div style="text-align:right;flex:0 0 auto"><span class="timer" id="tm">${S.sisa}</span></div></div>
+    <div class="timebar"><i id="tb" style="width:${S.sisa / DETIK * 100}%"></i></div>
+    ${Arena.coach(LANGKAH1, 1, 'diskusikan bersama, lalu <b>klik satu kartu akad</b>. Skor langsung keluar begitu Anda klik; jangan tunggu waktu habis.')}
+    <div class="split">
+      <div>
+        <div class="kicker">Nasabah berikutnya</div>
+        <div style="display:flex;gap:14px;align-items:center;margin-top:6px"><div class="ic">${k.ikon}</div><h2 style="margin:0">${esc(k.judul)}</h2></div>
+        <p class="lead">${esc(k.cerita)}</p>
+        <div class="fact"><b>Fakta PNM.</b> ${esc(k.fakta)}</div>
+      </div>
+      <div>
+        <h3>Akad mana yang paling tepat?</h3>
+        ${D.AKAD.map((a, i) => `<button class="opt" data-i="${i}" style="border-left:8px solid ${a.warna}"><b>${'ABCDE'[i]}. ${esc(a.nama)}</b><small>${esc(a.rumpun)}</small></button>`).join('')}
+      </div>
+    </div>
   </div>`;
   app.querySelectorAll('.opt').forEach(b => b.onclick = () => pilih(+b.dataset.i));
   tick = setInterval(() => {
     S.sisa--; const t = $('#tm'); if (t) { t.textContent = S.sisa; t.classList.toggle('low', S.sisa <= 15) }
+    Arena.waktu(S.sisa, DETIK);
     store.set('state', S);
     if (S.sisa <= 0) pilih(null);
   }, 1000);
@@ -105,24 +123,25 @@ function hasil(i, poin) {
   const r = S.ronde, k = D.KARTU[r], best = terbaik(r);
   const urut = D.AKAD.map((a, j) => j).sort((a, b) => nilaiAkad(r, b) - nilaiAkad(r, a));
   const pilihan = i == null ? null : D.AKAD[i];
+  const vk = i == null ? 'v-no' : best.includes(i) ? 'v-ok' : poin >= 7 ? 'v-mid' : 'v-no';
+  const vt = i == null ? 'Waktu habis!' : best.includes(i) ? 'Tepat! Akad terbaik' : poin >= 7 ? 'Lumayan, tetapi belum yang terbaik' : 'Kurang tepat';
+  Arena.sfx(vk === 'v-ok' ? 'ok' : vk === 'v-mid' ? 'mid' : 'bad');
   app.innerHTML = `
   <div class="card">
-    <span class="pill">Ronde ${r + 1} · ${esc(k.judul)}</span>
-    <div class="row" style="align-items:center;margin-top:10px">
-      <div><div class="muted">Pilihan kelompok</div><h2 style="margin:4px 0">${pilihan ? esc(pilihan.nama) : 'Waktu habis'}</h2></div>
-      <div style="text-align:right;flex:0 0 auto"><div class="muted">Poin ronde ini</div><div class="big ${poin >= 10 ? 'ok' : poin >= 7 ? '' : 'no'}">+${poin}</div></div>
-    </div>
-    ${i != null ? `<table><tr><th>Kriteria</th><th style="text-align:center">Nilai</th></tr>${D.KRITERIA.map((kr, j) => { const v = k.nilai[i][j]; return `<tr><td>${esc(kr)}</td><td style="text-align:center" class="${v === 2 ? 'ok' : v === 0 ? 'no' : ''}">${v === 2 ? '●●' : v === 1 ? '●○' : '○○'}</td></tr>` }).join('')}</table>` : ''}
+    <span class="pill">RONDE ${r + 1} / ${D.KARTU.length} · ${esc(k.judul)}</span>
+    ${Arena.coach(LANGKAH1, 2, 'baca pembahasan bersama, lalu klik <b>' + (r + 1 < D.KARTU.length ? 'Ronde berikutnya' : 'Lihat hasil akhir') + '</b> di bawah. Waktu membaca tidak dihitung.')}
+    <div class="verdict ${vk}"><div class="vb">+${poin}</div><div><div class="vt">${vt}</div><small>Pilihan Anda: ${pilihan ? esc(pilihan.nama) : 'tidak ada'} · Total skor ${S.skor}</small></div></div>
+    ${i != null ? `<table style="margin-top:10px"><tr><th>Kriteria model bisnis PNM</th><th style="text-align:center">Nilai akad Anda</th></tr>${D.KRITERIA.map((kr, j) => { const v = k.nilai[i][j]; return `<tr><td>${esc(kr)}</td><td style="text-align:center" class="${v === 2 ? 'ok' : v === 0 ? 'no' : ''}">${v === 2 ? '●● 2' : v === 1 ? '●○ 1' : '○○ 0'}</td></tr>` }).join('')}</table>` : ''}
   </div>
   <div class="card">
-    <h3>Skor kelima akad untuk nasabah ini</h3>
+    <h3>Papan nilai kelima akad untuk nasabah ini</h3>
     ${urut.map(j => { const a = D.AKAD[j], v = nilaiAkad(r, j); return `
       <div style="margin-top:10px"><b>${esc(a.nama)}</b> ${best.includes(j) ? '<span class="pill" style="background:#dff3e6;color:#1f7a4d">terbaik</span>' : ''} ${j === i ? '<span class="pill">pilihan kelompok</span>' : ''}
       <div class="bar"><i style="width:${v * 10}%;background:${a.warna}"></i></div>
       <div class="muted" style="margin-top:-6px">${v}/10 · ${esc(k.alasan[j])}</div></div>` }).join('')}
     <p class="note" style="margin-top:14px">Rujukan: ${esc(k.rujukan)}</p>
     ${k.catatan ? `<div class="fact"><b>Catatan.</b> ${esc(k.catatan)}</div>` : ''}
-    <button class="btn gold wide" id="lanjut">${r + 1 < D.KARTU.length ? 'Ronde berikutnya' : 'Lihat hasil akhir'}</button>
+    <button class="btn gold wide" id="lanjut">${r + 1 < D.KARTU.length ? 'Ronde berikutnya ▶' : 'Lihat hasil akhir 🏁'}</button>
   </div>`;
   $('#lanjut').onclick = () => {
     S.ronde++; S.sisa = DETIK; S.fase = 'main';
@@ -137,19 +156,23 @@ function akhir() {
   const maks = D.KARTU.length * 12;
   const mx = Math.max(...kum);
   PNMRiwayat.selesai('akad', S.id, S.nama, S.skor, maks);
+  setTimeout(() => { Arena.countUp(document.getElementById('skorAkhir'), S.skor); Arena.confetti(); Arena.sfx('win') }, 50);
   app.innerHTML = `
-  <div class="card center">
-    <div class="muted">Skor akhir ${esc(S.nama)}</div>
-    <div class="big">${S.skor}</div><div class="muted">dari ${maks} poin · waktu menjawab ${PNMReg.fmtDetik(S.waktu || 0)}</div>
-    ${REG ? `<p><a class="btn ghost" href="daftar.html?kelas=${esc(REG.kode)}">Kembali ke ruang tunggu</a></p>` : ''}
+  <div class="card hero center">
+    <div class="kicker">Game 1 selesai · ${esc(S.nama)}</div>
+    <div class="big" id="skorAkhir" style="font-size:4.4rem;color:#ffd57a">${S.skor}</div><div class="lead">dari ${maks} poin · waktu menjawab ${PNMReg.fmtDetik(S.waktu || 0)}</div>
+    <p class="muted">Peringkat Anda tampil di pojok kanan atas dan di layar pengajar.</p>
   </div>
+  <div class="card">${Arena.coach(null, 0, REG ? 'klik <b>Kembali ke ruang tunggu</b>, lalu tunggu pengajar memulai game berikutnya. Sambil menunggu, baca pelajaran di bawah.' : 'baca pelajaran di bawah bersama kelompok.')}
+    ${REG ? `<a class="btn gold wide" href="daftar.html?kelas=${esc(REG.kode)}">Kembali ke ruang tunggu ▶</a>` : ''}</div>
+  ${Arena.paham('akad')}
   <div class="card">
     <h3>Nilai kumulatif tiap akad pada ronde 1 sampai ${n7}</h3>
     ${D.AKAD.map((a, j) => `<div><b>${esc(a.nama)}</b> <span class="muted">${kum[j]} dari ${n7 * 10}</span><div class="bar"><i style="width:${kum[j] / mx * 100}%;background:${a.warna}"></i></div></div>`).join('')}
     <p>Pada tujuh ronde pertama, Murabahah bil Wakalah dan Wakalah Muallaqah unggul karena paling sejalan dengan model bisnis PNM: nasabah memerlukan uang, dana PNM berbiaya tetap, dan akad harus dapat dijalankan massal di pertemuan kelompok.</p>
   </div>
   <div class="card" style="border-color:var(--red)">
-    <h3>Ronde ${n7 + 1}: saat nasabah kesulitan membayar</h3>
+    <span class="news">PLOT TWIST</span><h3>Ronde ${n7 + 1}: saat nasabah kesulitan membayar</h3>
     ${D.AKAD.map((a, j) => `<div><b>${esc(a.nama)}</b> <span class="muted">${r8[j]}/10</span><div class="bar"><i style="width:${r8[j] * 10}%;background:${a.warna}"></i></div></div>`).join('')}
     <p>Pada ronde terakhir urutannya berbalik. Tagihan Murabahah terkunci sejak akad, sehingga ruang restrukturisasi, penjadwalan ulang, dan persyaratan ulang (3R) menjadi sempit. Dengan kata lain, tidak ada akad yang unggul di delapan ronde sekaligus. Akad yang menggabungkan kepastian Murabahah dan keluwesan Musyarakah dibahas di Sesi 1, yaitu Musyarakah Mutanaqishah.</p>
     <div class="fact"><b>Maqasid.</b> ${esc(D.PESAN.maqasid)}</div>

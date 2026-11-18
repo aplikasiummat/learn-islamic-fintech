@@ -6,18 +6,19 @@
 <title>Cabang vs Pusat</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="gaya.css?v=3">
+<link rel="stylesheet" href="gaya.css?v=4">
 <script>/* bila pustaka gagal dimuat (jaringan lemah), muat ulang halaman sekali */
 addEventListener('error', function (e) { try { if (/is not defined|Cannot read/.test(e.message || '') && !sessionStorage.getItem('pnm-rl')) { sessionStorage.setItem('pnm-rl', '1'); location.reload() } } catch (x) { } });
 addEventListener('load', function () { setTimeout(function () { try { sessionStorage.removeItem('pnm-rl') } catch (x) { } }, 8000) });</script>
 <script src="../saham/lib/mqtt-5.10.1.min.js"></script>
-<script src="data.js?v=3"></script>
+<script src="data.js?v=4"></script>
 <script src="kelas.js?v=5"></script>
 <script src="riwayat.js?v=1"></script>
 <script src="kelompok.js?v=1"></script>
+<script src="arena.js?v=1"></script>
 </head>
 <body>
-<div class="top"><a class="chip" href="index.html" style="color:#fff;text-decoration:none">☰ Menu</a><div class="t">Cabang vs Pusat<span class="sub"> · Menjalankan MMQ</span></div><span class="chip" id="hdrGroup">–</span><span class="chip" id="hdrRole">–</span><span class="conn" id="conn" title="Papan skor kelas"></span></div>
+<div class="top"><a class="chip" href="index.html" style="color:#fff;text-decoration:none">☰ Menu</a><div class="t">Game 2 · Cabang vs Pusat<span class="sub"> · Menjalankan MMQ</span></div><span class="chip" id="hdrGroup"></span><span class="chip" id="hdrRole"></span><span class="conn" id="conn" title="Papan skor kelas"></span></div>
 <div class="wrap" id="app"></div>
 
 <script>
@@ -49,8 +50,8 @@ const REG = PNMReg.get();
 let CTL = null;
 function save() { store.set('state', S); hdr(); kirim() }
 function hdr() {
-  $('#hdrGroup').textContent = S ? S.nama + (S.mode === 'dua' ? ' · Pasangan ' + S.pasangan + S.sisi : '') : '–';
-  $('#hdrRole').textContent = S && S.fase !== 'akhir' ? D.BABAK[S.babak].nama.split('·')[1].trim() + ' · ' + peran() : '–';
+  $('#hdrGroup').textContent = S ? S.nama + (S.mode === 'dua' ? ' · Pertandingan ' + S.pasangan : S.mode === 'mesin' ? ' · lawan komputer' : '') : '';
+  $('#hdrRole').textContent = S && S.fase !== 'akhir' ? D.BABAK[S.babak].nama.split('·')[1].trim() + ' · ' + peran() : '';
 }
 function kirim() {
   if (!CH || !S) return;
@@ -69,9 +70,12 @@ async function sambung(kode) {
 /* undian dan aba-aba dari dashboard pengajar */
 function terimaCtl(o) {
   CTL = o; if (!REG || !o) return;
+  Arena.peringkat(o, 'cp', REG.id);
   const d = o.draw && o.draw[REG.id];
   if (!d || o.aktif !== 'cp' || !o.g2mulai) { if (!S) render(); return }
   if (S && S.reg === REG.id && S.sesi === o.g2mulai) return;   // permainan ini sudah berjalan
+  if (store.get('g2seen', 0) === o.g2mulai) { if (!S) render(); return }   // aba-aba ini sudah pernah dijalankan di laptop ini
+  store.set('g2seen', o.g2mulai);
   mulaiUndian(d, o.g2mulai);
 }
 function mulaiUndian(d, sesi) {
@@ -105,26 +109,32 @@ function render() {
 function layarUndian() {
   const d = CTL && CTL.draw && CTL.draw[REG.id];
   const lawan = d && d.p > 0 ? Object.entries(CTL.draw).find(([id, x]) => id !== REG.id && x.p === d.p) : null;
-  app.innerHTML = `<div class="card center">
-    <div class="ic">🎲</div>
-    <h1>Cabang vs Pusat</h1>
-    <div class="big" style="font-size:2rem">${esc(REG.nama)}</div>
-    <p class="lead">${!CH ? 'Menghubungkan ke kelas ' + esc(REG.kode) + '…' : !d ? 'Menunggu pengajar mengundi pasangan dan peran.' : 'Undian sudah keluar. Permainan dimulai begitu pengajar memberi aba-aba.'}</p>
+  app.innerHTML = `<div class="card hero center">
+    <div class="kicker">Game 2 · Cabang vs Pusat · ${esc(REG.nama)}</div>
+    <h1 style="font-size:2.5rem">Pusat dan Cabang, satu PNM</h1>
+    <p class="lead">Kantor Pusat menulis kebijakan MMQ dengan anggaran terbatas. Cabang menjalankannya menghadapi enam kejadian lapangan. Skornya satu: menang bersama atau kalah bersama.</p>
+  </div>
+  <div class="card center">
+    ${Arena.coach(['Pasangan disusun', 'Aba-aba pengajar', 'Babak 1 ULaMM', 'Babak 2 Mekaar'], !d ? 0 : 1, !CH ? 'menghubungkan ke kelas ' + esc(REG.kode) + '…' : !d ? 'tunggu pengajar menyusun pasangan. Pasangan disusun menurut urutan pendaftaran.' : 'pasangan sudah keluar. Layar pindah sendiri begitu pengajar menekan Mulai Game 2.')}
     ${d ? (d.p > 0 ? `<div class="fact" style="text-align:left">Pertandingan <b>${d.p}</b> bersama <b>${lawan ? esc(CTL.nama[lawan[0]] || '') : '–'}</b>.<br>Babak 1 · ULaMM: kelompok Anda menjadi <b>${d.s === 'A' ? 'Pusat' : 'Cabang'}</b>. Babak 2 · Mekaar: peran bertukar menjadi <b>${d.s === 'A' ? 'Cabang' : 'Pusat'}</b>.</div>`
       : d.s === 'mesin' ? `<div class="fact" style="text-align:left">Kelompok Anda <b>melawan mesin</b>. Babak 1 · ULaMM: Anda menjadi Pusat dan mesin menjadi Cabang. Babak 2 · Mekaar: Anda menjadi Cabang dan mesin menjadi Pusat.</div>`
       : `<div class="fact" style="text-align:left">Jumlah kelompok ganjil: kelompok Anda memainkan peran Pusat lalu Cabang sendiri pada gawai ini.</div>`) : ''}
-    <div class="fact" style="text-align:left"><b>Cara menang.</b> Skor satu PNM dihitung bersama untuk Pusat dan Cabang, lalu dirata-ratakan dari dua babak. Pasangan dengan skor tertinggi menang; bila sama, yang temuan auditnya lebih sedikit, lalu yang lebih cepat selesai. Begitu Pusat mengirim paket atau Cabang menjawab, permainan langsung berlanjut tanpa menunggu waktu habis.</div>
+    <div class="fact" style="text-align:left"><b>Waktu.</b> Pusat 4 menit, Cabang 6 menit per babak. <b>Cara menang.</b> Skor satu PNM dihitung bersama untuk Pusat dan Cabang, lalu dirata-ratakan dari dua babak. Pasangan dengan skor tertinggi menang; bila sama, yang temuan auditnya lebih sedikit, lalu yang lebih cepat selesai. Begitu Pusat mengirim paket atau Cabang menjawab, permainan langsung berlanjut tanpa menunggu waktu habis.</div>
     ${d && CTL.aktif === 'cp' && CTL.g2mulai ? '<button class="btn gold wide" id="mulaiLagi">Mulai permainan</button>' : ''}
+    <button class="btn ghost wide" id="vsMesin" style="margin-top:10px">🤖 Main lawan komputer sekarang</button>
+    ${Arena.paham('cp')}
     <p class="note"><a href="?manual=1${qs.get('kelas') ? '&kelas=' + esc(qs.get('kelas')) : ''}">Isi pasangan secara manual</a> · <a href="daftar.html?kelas=${esc(REG.kode)}">Ruang tunggu</a></p>
   </div>`;
   const b = $('#mulaiLagi'); if (b) b.onclick = () => mulaiUndian(d, CTL.g2mulai);
+  $('#vsMesin').onclick = () => mulaiUndian({ p: 0, s: 'mesin' }, 'mesin-' + Date.now());
 }
 function layarAwal() {
   if (REG && REG.kode && !qs.get('manual')) return layarUndian();
   app.innerHTML = `
+  <div class="card hero"><div class="kicker">Game 2 · dua babak · Pusat 4 menit, Cabang 6 menit</div><h1 style="font-size:2.5rem">Cabang vs Pusat</h1>
+    <p class="lead">Mau mencoba sendiri? Pilih <b>Lawan komputer</b> di bawah: Anda menjadi Kantor Pusat di Babak 1, lalu Cabang di Babak 2, dan komputer memainkan peran pasangannya.</p></div>
   <div class="card">
-    <h1>Cabang vs Pusat</h1>
-    <p class="lead">Kantor pusat menyusun paket kebijakan MMQ dengan anggaran terbatas, lalu cabang menjalankannya menghadapi enam kejadian lapangan. Skor dihitung untuk <b>satu PNM</b>: pusat dan cabang menang atau kalah bersama.</p>
+    ${Arena.coach(null, 0, 'isi nama kelompok, pilih cara bermain (<b>Lawan komputer</b> untuk mencoba sendiri), lalu tekan <b>Mulai</b>.')}
     <div class="fact">Dua babak, peran bertukar. <b>Babak 1 ULaMM</b>: kelompok A menjadi Pusat, kelompok B menjadi Cabang. <b>Babak 2 Mekaar</b>: kelompok A menjadi Cabang, kelompok B menjadi Pusat. Pusat bekerja ${DT_PUSAT / 60} menit, Cabang ${DT_CABANG / 60} menit.</div>
     <label for="nama">Nama kelompok</label>
     <input id="nama" maxlength="30" placeholder="contoh: Kelompok Melati">
@@ -132,7 +142,7 @@ function layarAwal() {
     <div class="row">
       <button class="opt on" data-m="dua"><b>Dua gawai</b><small>Satu gawai per kelompok, terhubung lewat kode kelas</small></button>
       <button class="opt" data-m="satu"><b>Satu gawai</b><small>Satu gawai untuk satu pasangan, dioper bergantian; tanpa internet pun jalan</small></button>
-      <button class="opt" data-m="mesin"><b>Lawan mesin</b><small>Satu kelompok bermain sendiri: Babak 1 menjadi Pusat dan mesin menjadi Cabang, Babak 2 menjadi Cabang dan mesin menjadi Pusat</small></button>
+      <button class="opt" data-m="mesin" style="border-left:8px solid var(--gold)"><b>🤖 Lawan komputer</b><small>Satu kelompok bermain sendiri: Babak 1 menjadi Pusat dan mesin menjadi Cabang, Babak 2 menjadi Cabang dan mesin menjadi Pusat</small></button>
     </div>
     <div id="duaBox">
       <label for="kode">Kode kelas dari fasilitator</label>
@@ -163,30 +173,41 @@ function timer(onHabis) {
   tick = setInterval(() => {
     S.sisa--; store.set('state', S);
     const t = $('#tm'); if (t) { t.textContent = Math.floor(Math.max(0, S.sisa) / 60) + ':' + String(Math.max(0, S.sisa) % 60).padStart(2, '0'); t.classList.toggle('low', S.sisa <= 30) }
+    Arena.waktu(S.sisa, S.fase === 'pusat' ? DT_PUSAT : DT_CABANG);
     if (S.sisa <= 0) { clearInterval(tick); onHabis() }
   }, 1000);
 }
 const fmt = s => Math.floor(Math.max(0, s) / 60) + ':' + String(Math.max(0, s) % 60).padStart(2, '0');
 
 function biaya(B, p) { return B.kebijakan.reduce((s, k) => s + k.pilihan[p[k.k] || 0].b, 0) }
+const LANGKAH2P = ['Pilih 8 kebijakan', 'Jaga anggaran', 'Kirim paket', 'Lihat hasil'];
+const LANGKAH2C = ['Baca paket Pusat', 'Putuskan 6 kejadian', 'Lihat hasil'];
+const peranBadge = () => `<span class="pill" style="background:${peran() === 'Pusat' ? 'var(--navy)' : 'var(--green)'};color:#fff">ANDA: ${peran() === 'Pusat' ? 'KANTOR PUSAT' : 'CABANG'}</span>`;
 function layarPusat() {
   const B = D.BABAK[S.babak];
   const draw = () => {
-    const pakai = biaya(B, S.paket), sisa = D.ANGGARAN - pakai;
+    const pakai = biaya(B, S.paket), sisa = D.ANGGARAN - pakai, terisi = B.kebijakan.filter(k => S.paket[k.k] != null).length;
     app.innerHTML = `
     <div class="card">
-      <div class="row" style="align-items:center"><div><span class="pill">${esc(B.nama)} · Kantor Pusat</span></div><div style="text-align:right"><span class="timer" id="tm">${fmt(S.sisa)}</span></div></div>
-      <h2>Susun paket kebijakan MMQ</h2>
-      <p>${esc(B.sub)} Anggaran implementasi ${D.ANGGARAN} poin. Setiap pilihan memakai anggaran; sisa anggaran menjadi poin, tetapi kebijakan yang terlalu hemat akan diuji oleh cabang.</p>
-      <div style="position:sticky;top:64px;background:var(--card);padding:8px 0;z-index:3"><b>Anggaran terpakai ${pakai} dari ${D.ANGGARAN}</b> · sisa ${sisa}<div class="bar"><i style="width:${Math.min(100, pakai)}%;background:${sisa < 0 ? 'var(--red)' : 'var(--navy)'}"></i></div></div>
+      <div class="row" style="align-items:center"><div>${peranBadge()} <span class="pill">${esc(B.nama.toUpperCase())}</span></div><div style="text-align:right;flex:0 0 auto"><span class="timer" id="tm">${fmt(S.sisa)}</span></div></div>
+      <div class="timebar"><i id="tb" style="width:${S.sisa / DT_PUSAT * 100}%"></i></div>
+      <h2 style="margin-top:12px">Rapat direksi: susun paket kebijakan MMQ</h2>
+      <p>${esc(B.sub)} Cabang akan menjalankan paket Anda menghadapi enam kejadian lapangan. Kebijakan lengkap mahal; kebijakan hemat menyisakan poin, tetapi celahnya akan diuji di lapangan.</p>
+      ${Arena.coach(LANGKAH2P, terisi < B.kebijakan.length ? 0 : 2, terisi < B.kebijakan.length ? 'pilih satu opsi di setiap kebijakan (' + terisi + ' dari ' + B.kebijakan.length + ' sudah dipilih). Kebijakan yang tidak dipilih otomatis memakai opsi pertama.' : 'semua kebijakan terisi. Periksa anggaran, lalu klik <b>Kunci dan kirim paket ke Cabang</b>.')}
     </div>
-    ${B.kebijakan.map((k, ki) => `<div class="card"><h3>${ki + 1}. ${esc(k.judul)}</h3>
-      ${k.pilihan.map((o, oi) => { const cur = S.paket[k.k] || 0; const jadi = pakai - k.pilihan[cur].b + o.b; const on = cur === oi;
-        return `<button class="opt ${on ? 'on' : ''}" data-k="${k.k}" data-o="${oi}" ${!on && jadi > D.ANGGARAN ? 'disabled' : ''}>${esc(o.t)}<small>Biaya ${o.b} poin${!on && jadi > D.ANGGARAN ? ' · melebihi anggaran' : ''}</small></button>` }).join('')}
+    <div class="card" style="position:sticky;top:62px;z-index:5;padding:14px 22px">
+      <div class="row" style="align-items:center"><div><b style="font-family:Archivo">💰 Anggaran ${pakai} / ${D.ANGGARAN} poin</b> · sisa <b class="${sisa < 15 ? 'no' : 'ok'}">${sisa}</b> <span class="muted">(sisa anggaran menjadi poin, maksimum 10)</span></div><div style="flex:0 0 auto"><button class="btn gold" id="kirim2">Kunci dan kirim ▶</button></div></div>
+      <div class="bar" style="margin:8px 0 0"><i style="width:${Math.min(100, pakai)}%;background:${sisa < 0 ? 'var(--red)' : 'linear-gradient(90deg,var(--blue),var(--navy))'}"></i></div>
+    </div>
+    <div class="grid2">
+    ${B.kebijakan.map((k, ki) => `<div class="card" style="margin:0"><div class="kicker">Kebijakan ${ki + 1} dari ${B.kebijakan.length}</div><h3>${esc(k.judul)}</h3>
+      ${k.pilihan.map((o, oi) => { const cur = S.paket[k.k] || 0; const jadi = pakai - k.pilihan[cur].b + o.b; const on = cur === oi && S.paket[k.k] != null;
+        return `<button class="opt ${on ? 'on' : ''}" data-k="${k.k}" data-o="${oi}" ${!on && jadi > D.ANGGARAN ? 'disabled' : ''}>${on ? '✅ ' : ''}${esc(o.t)}<small>Biaya ${o.b} poin${!on && jadi > D.ANGGARAN ? ' · melebihi anggaran' : ''}</small></button>` }).join('')}
     </div>`).join('')}
-    <div class="card"><button class="btn gold wide" id="kirim">Kirim paket ke Cabang</button></div>`;
+    </div>
+    <div class="card"><button class="btn gold wide" id="kirim">🔒 Kunci dan kirim paket ke Cabang</button><p class="note center">Boleh dikirim sebelum waktu habis. Begitu terkirim, Cabang langsung mulai.</p></div>`;
     app.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { S.paket[b.dataset.k] = +b.dataset.o; store.set('state', S); const y = scrollY; draw(); scrollTo(0, y) });
-    $('#kirim').onclick = kirimPaket;
+    $('#kirim').onclick = kirimPaket; $('#kirim2').onclick = kirimPaket;
   };
   draw(); timer(kirimPaket);
 }
@@ -205,21 +226,22 @@ function kirimPaket() {
   PAKET[kunci()] = pk; S.fase = 'tungguHasil'; save(); render();
 }
 function layarSerah() {
-  app.innerHTML = `<div class="card center"><div class="ic">🤝</div><h2>Paket kebijakan terkunci</h2><p class="lead">Serahkan gawai ini kepada kelompok yang berperan sebagai <b>Cabang</b>. Cabang akan melihat paket kebijakan pusat, lalu menghadapi enam kejadian lapangan dalam ${DT_CABANG / 60} menit.</p>
-    <button class="btn gold wide" id="go">Kami kelompok Cabang, mulai</button></div>`;
+  app.innerHTML = `<div class="card hero center"><div class="ic">🤝</div><div class="kicker">Paket kebijakan terkunci</div><h2>Saatnya Cabang beraksi</h2><p class="lead">Serahkan laptop ini kepada kelompok yang berperan sebagai <b>Cabang</b>. Cabang membaca paket kebijakan, lalu menghadapi enam kejadian lapangan dalam ${DT_CABANG / 60} menit.</p>
+    <button class="btn gold" id="go">Kami kelompok Cabang, mulai ▶</button></div>`;
   $('#go').onclick = () => { S.fase = 'cabang'; S.sisa = DT_CABANG; S.pilihan = []; S.langkah = 0; S.namaPusat = 'Pusat'; save(); render() };
 }
 function layarTunggu() {
-  app.innerHTML = `<div class="card center"><div class="ic">⏳</div><h2>Menunggu paket kebijakan dari Pusat</h2>
-    <p class="lead">Pasangan ${S.pasangan}: kelompok ${S.sisi === 'A' ? 'B' : 'A'} sedang menyusun kebijakan MMQ untuk ${esc(D.BABAK[S.babak].nama.split('·')[1].trim())}. Sambil menunggu, diskusikan apa yang paling sering menyulitkan cabang ketika kebijakan baru turun.</p>
+  app.innerHTML = `<div class="card hero center"><div class="ic">⏳</div><div class="kicker">${esc(D.BABAK[S.babak].nama)} · Anda Cabang</div><h2>Kantor Pusat sedang rapat</h2>
+    <p class="lead">Pasangan Anda sedang menyusun kebijakan MMQ untuk ${esc(D.BABAK[S.babak].nama.split('·')[1].trim())}. Layar ini berpindah sendiri begitu paket tiba.</p></div>
+    <div class="card">${Arena.coach(LANGKAH2C, 0, 'tunggu paket tiba. Sambil menunggu, diskusikan: kebijakan pusat seperti apa yang paling sering menyulitkan cabang?')}
     <p class="note">${CH ? 'Terhubung ke kelas ' + esc(S.kode) + '.' : 'Belum terhubung ke kelas. Periksa internet atau kode kelas.'}</p>
     <button class="btn ghost" id="kosong">Pusat tidak terhubung: lanjut dengan paket tanpa kebijakan</button></div>`;
   $('#kosong').onclick = () => { S.paket = {}; S.namaPusat = '(tanpa paket)'; S.fase = 'cabang'; S.sisa = DT_CABANG; S.pilihan = []; S.langkah = 0; save(); render() };
 }
 function layarTungguHasil() {
-  app.innerHTML = `<div class="card center"><div class="ic">📨</div><h2>Paket sudah terkirim ke Cabang</h2>
-    <p class="lead">Kelompok Cabang sedang menjalankan kebijakan Bapak dan Ibu menghadapi enam kejadian lapangan. Hasil satu PNM akan muncul di layar ini.</p>
-    <div class="fact">Sambil menunggu: tuliskan satu kebijakan yang menurut kelompok paling mungkin <b>tidak bisa dijalankan</b> di lapangan, beserta alasannya.</div></div>`;
+  app.innerHTML = `<div class="card hero center"><div class="ic">📨</div><div class="kicker">Paket terkirim</div><h2>Cabang sedang menjalankan kebijakan Anda</h2>
+    <p class="lead">Enam kejadian lapangan sedang diputuskan. Skor satu PNM muncul di layar ini begitu Cabang selesai.</p></div>
+    <div class="card">${Arena.coach(LANGKAH2P, 3, 'tunggu hasil. Sambil menunggu, tuliskan satu kebijakan Anda yang paling mungkin <b>tidak bisa dijalankan</b> di lapangan, beserta alasannya.')}</div>`;
 }
 
 function layarCabang() {
@@ -228,22 +250,34 @@ function layarCabang() {
   const e = B.kejadian[S.langkah], ada = S.pilihan[S.langkah] != null;
   app.innerHTML = `
   <div class="card">
-    <div class="row" style="align-items:center"><div><span class="pill">${esc(B.nama)} · Cabang · Kejadian ${S.langkah + 1} dari ${B.kejadian.length}</span></div><div style="text-align:right"><span class="timer" id="tm">${fmt(S.sisa)}</span></div></div>
-    <details style="margin-top:10px"><summary><b>Paket kebijakan dari Pusat</b> <span class="muted">(${esc(S.namaPusat || '')})</span></summary>
-      <table>${B.kebijakan.map(k => `<tr><td><b>${esc(k.judul)}</b></td><td>${esc(k.pilihan[S.paket[k.k] || 0].t)}</td></tr>`).join('')}</table></details>
-    <div style="display:flex;gap:14px;align-items:center;margin-top:14px"><div class="ic">${e.ikon}</div><h2 style="margin:0">${esc(e.judul)}</h2></div>
-    <p class="lead">${esc(e.cerita)}</p>
-    ${e.pilihan.map((t, i) => `<button class="opt ${ada && S.pilihan[S.langkah] === i ? 'on' : ''}" data-i="${i}" ${ada ? 'disabled' : ''}>${esc(t)}</button>`).join('')}
-    <div id="fb"></div>
+    <div class="row" style="align-items:center"><div>${peranBadge()} <span class="pill">${esc(B.nama.toUpperCase())} · KEJADIAN ${S.langkah + 1} / ${B.kejadian.length}</span></div><div style="text-align:right;flex:0 0 auto"><span class="timer" id="tm">${fmt(S.sisa)}</span></div></div>
+    <div class="timebar"><i id="tb" style="width:${S.sisa / DT_CABANG * 100}%"></i></div>
+    ${Arena.coach(LANGKAH2C, 1, ada ? 'baca akibatnya, lalu klik tombol emas di bawah.' : 'diskusikan, lalu <b>klik satu keputusan</b>. Akibatnya langsung tampil.')}
+    <div class="split">
+      <div>
+        <span class="news">📡 LAPORAN LAPANGAN</span>
+        <div style="display:flex;gap:14px;align-items:center;margin-top:10px"><div class="ic">${e.ikon}</div><h2 style="margin:0">${esc(e.judul)}</h2></div>
+        <p class="lead">${esc(e.cerita)}</p>
+        <h3>Apa keputusan cabang?</h3>
+        ${e.pilihan.map((t, i) => `<button class="opt ${ada && S.pilihan[S.langkah] === i ? 'on' : ''}" data-i="${i}" ${ada ? 'disabled' : ''}><b>${'ABCD'[i]}.</b> ${esc(t)}</button>`).join('')}
+        <div id="fb"></div>
+      </div>
+      <div class="card" style="margin:0;background:var(--soft)"><div class="kicker">Paket kebijakan dari ${esc(S.namaPusat || 'Pusat')}</div>
+        <table style="font-size:.9rem">${B.kebijakan.map(k => `<tr><td><b>${esc(k.judul)}</b></td><td>${esc(k.pilihan[S.paket[k.k] || 0].t)}</td></tr>`).join('')}</table></div>
+    </div>
   </div>`;
-  const tampil = i => {
-    const r = e.hasil(S.paket, i); const pen = ['pny', 'npf', 'aud', 'sys'].filter(x => r[x]).map(x => D.KATEGORI.find(k => k.id === x).nama + ' −' + r[x]).join(' · ');
-    $('#fb').innerHTML = `<div class="fact"><b>${pen ? 'Akibat:' : 'Tanpa penalti.'}</b> ${esc(pen)}<br>${esc(r.m)}${r.tem ? `<br><span class="no">Temuan audit: ${esc(r.tem)}</span>` : ''}</div>
-      <button class="btn gold wide" id="next">${S.langkah + 1 < B.kejadian.length ? 'Kejadian berikutnya' : 'Lihat hasil satu PNM'}</button>`;
+  const tampil = (i, baru) => {
+    const r = e.hasil(S.paket, i); const tot = ['pny', 'npf', 'aud', 'sys'].reduce((t, x) => t + (r[x] || 0), 0);
+    const pen = ['pny', 'npf', 'aud', 'sys'].filter(x => r[x]).map(x => D.KATEGORI.find(k => k.id === x).nama + ' −' + r[x]).join(' · ');
+    const vk = !tot && !r.tem ? 'v-ok' : tot <= 4 && !r.tem ? 'v-mid' : 'v-no';
+    if (baru) Arena.sfx(vk === 'v-ok' ? 'ok' : vk === 'v-mid' ? 'mid' : 'bad');
+    $('#fb').innerHTML = `<div class="verdict ${vk}" style="margin-top:12px"><div class="vb">${tot ? '−' + tot : '✓'}</div><div><div class="vt">${!tot && !r.tem ? 'Aman, tanpa penalti' : r.tem ? 'Muncul temuan audit' : 'Ada akibatnya'}</div><small>${esc(pen || 'Skor satu PNM terjaga.')}</small></div></div>
+      <div class="fact">${esc(r.m)}${r.tem ? `<br><span class="no">🔎 Temuan audit: ${esc(r.tem)}</span>` : ''}</div>
+      <button class="btn gold wide" id="next">${S.langkah + 1 < B.kejadian.length ? 'Kejadian berikutnya ▶' : 'Lihat hasil satu PNM 🏁'}</button>`;
     $('#next').onclick = () => { S.langkah++; save(); render() };
   };
   if (ada) tampil(S.pilihan[S.langkah]);
-  app.querySelectorAll('.opt[data-i]').forEach(b => b.onclick = () => { S.pilihan[S.langkah] = +b.dataset.i; save(); app.querySelectorAll('.opt[data-i]').forEach(x => { x.disabled = true; x.classList.toggle('on', x === b) }); tampil(+b.dataset.i) });
+  app.querySelectorAll('.opt[data-i]').forEach(b => b.onclick = () => { S.pilihan[S.langkah] = +b.dataset.i; save(); app.querySelectorAll('.opt[data-i]').forEach(x => { x.disabled = true; x.classList.toggle('on', x === b) }); tampil(+b.dataset.i, true) });
   timer(selesaiCabang);
 }
 function selesaiCabang() {
@@ -258,21 +292,25 @@ function selesaiCabang() {
 }
 
 function blokHasil(res, judul) {
+  const tone = res.skor.total >= 75 ? 'var(--green)' : res.skor.total >= 50 ? 'var(--amber)' : 'var(--red)';
   return `<div class="card">
-    <span class="pill">${esc(judul)}</span>
-    <div class="row" style="align-items:center;margin-top:8px"><div><div class="muted">Skor satu PNM</div><div class="big">${res.skor.total}</div><div class="muted">dari 100 · Pusat: ${esc(res.pusat || '-')} · Cabang: ${esc(res.cabang || '-')}</div></div>
+    <span class="pill">${esc(judul.toUpperCase())}</span>
+    <div class="row" style="align-items:center;margin-top:8px"><div><div class="kicker">Skor satu PNM</div><div class="big skorb" style="color:${tone}">${res.skor.total}</div><div class="muted">dari 100 · Pusat: ${esc(res.pusat || '-')} · Cabang: ${esc(res.cabang || '-')}</div></div>
     <div>${D.KATEGORI.map(k => `<div><b>${k.nama}</b> <span class="muted">${res.skor[k.id]} / ${k.maks}</span><div class="bar"><i style="width:${res.skor[k.id] / k.maks * 100}%;background:${res.skor[k.id] / k.maks >= .8 ? 'var(--green)' : res.skor[k.id] / k.maks >= .5 ? 'var(--amber)' : 'var(--red)'}"></i></div></div>`).join('')}</div></div>
   </div>
-  <div class="card"><h3>Temuan audit syariah (${res.temuan.length})</h3>
+  <div class="card"><h3>🔎 Temuan audit syariah (${res.temuan.length})</h3>
     ${res.temuan.length ? '<table>' + res.temuan.map(t => `<tr><td><span class="pill">${esc(t.dari)}</span></td><td>${esc(t.t)}</td></tr>`).join('') + '</table>' : '<p class="ok">Tidak ada temuan.</p>'}
-    <h3 style="margin-top:16px">Jejak keputusan cabang</h3>
+    <h3 style="margin-top:16px">🧭 Jejak keputusan cabang</h3>
     <table>${res.cat.map(c => `<tr><td><b>${esc(c.e)}</b><br><span class="muted">${esc(c.pilih || '-')}</span></td><td>${esc(c.m)}</td></tr>`).join('')}</table>
   </div>`;
 }
 function layarHasil() {
   const res = S.hasil[S.babak], B = D.BABAK[S.babak];
-  app.innerHTML = blokHasil(res, B.nama) + `<div class="card"><div class="fact"><b>Pesan babak ini.</b> ${esc(D.PESAN.cp)}</div>
-    <button class="btn gold wide" id="lanjut">${S.babak === 0 ? 'Lanjut ke Babak 2 · Mekaar (peran bertukar)' : 'Lihat hasil akhir'}</button></div>`;
+  Arena.sfx(res.skor.total >= 60 ? 'ok' : 'mid');
+  app.innerHTML = `<div class="card">${Arena.coach(null, 0, S.babak === 0 ? 'bahas skor dan temuan di bawah bersama ' + (S.mode === 'mesin' ? 'kelompok' : 'pasangan Anda') + ', lalu klik <b>Lanjut ke Babak 2</b>. Peran bertukar: ' + (S.mode === 'mesin' ? 'Anda menjadi Cabang dan mesin menjadi Pusat.' : peran() === 'Pusat' ? 'Anda menjadi Cabang.' : 'Anda menjadi Kantor Pusat.') : 'klik <b>Lihat hasil akhir</b> untuk skor rata-rata dua babak.')}</div>`
+    + blokHasil(res, B.nama) + `<div class="card"><div class="fact"><b>Pesan babak ini.</b> ${esc(D.PESAN.cp)}</div>
+    <button class="btn gold wide" id="lanjut">${S.babak === 0 ? 'Lanjut ke Babak 2 · Mekaar (peran bertukar) ▶' : 'Lihat hasil akhir 🏁'}</button></div>`;
+  setTimeout(() => Arena.countUp(document.querySelector('.skorb'), res.skor.total), 30);
   $('#lanjut').onclick = () => {
     if (S.babak === 1) { S.fase = 'akhir'; save(); return render() }
     S.babak = 1; S.paket = {}; S.pilihan = []; S.langkah = 0;
@@ -284,11 +322,14 @@ function layarHasil() {
 function layarAkhir() {
   const h = S.hasil.filter(Boolean); const rata = h.length ? Math.round(h.reduce((s, x) => s + x.skor.total, 0) / h.length * 10) / 10 : 0;
   PNMRiwayat.selesai('cp', S.id, S.nama, rata, 100);
-  app.innerHTML = `<div class="card center"><div class="muted">Skor akhir pasangan ${S.mode === 'dua' ? S.pasangan : S.mode === 'mesin' ? '(lawan mesin)' : ''} · rata-rata dua babak</div><div class="big">${rata}</div>
-    <p>ULaMM ${S.hasil[0] ? S.hasil[0].skor.total : '-'} · Mekaar ${S.hasil[1] ? S.hasil[1].skor.total : '-'}</p>
-    <div class="fact" style="text-align:left"><b>Untuk pembahasan.</b> ${esc(D.PESAN.cp)} Bawa satu temuan audit dari permainan ini ke sesi terakhir.</div></div>`
+  setTimeout(() => { Arena.countUp(document.getElementById('skorAkhir'), rata); Arena.confetti(); Arena.sfx('win') }, 50);
+  app.innerHTML = `<div class="card hero center"><div class="kicker">Skor akhir pasangan ${S.mode === 'dua' ? S.pasangan : S.mode === 'mesin' ? '(lawan mesin)' : ''} · rata-rata dua babak</div><div class="big" id="skorAkhir" style="font-size:4.4rem;color:#ffd57a">${rata}</div>
+    <p class="lead">ULaMM ${S.hasil[0] ? S.hasil[0].skor.total : '-'} · Mekaar ${S.hasil[1] ? S.hasil[1].skor.total : '-'}</p>
+    <p class="muted">Klasemen semua pertandingan tampil di layar pengajar.</p></div>
+    <div class="card">${Arena.coach(null, 0, REG ? 'klik <b>Kembali ke ruang tunggu</b> di bagian bawah, lalu tunggu aba-aba pengajar. Bawa satu temuan audit dari permainan ini ke sesi terakhir.' : 'bawa satu temuan audit dari permainan ini ke sesi terakhir.')}
+    <div class="fact" style="text-align:left"><b>Untuk pembahasan.</b> ${esc(D.PESAN.cp)}</div></div>${Arena.paham('cp')}`
     + S.hasil.map((r, i) => r ? blokHasil(r, D.BABAK[i].nama) : '').join('')
-    + PNMRiwayat.html('cp', S.id) + `<div class="card">${REG ? `<a class="btn gold wide" href="daftar.html?kelas=${esc(REG.kode)}" style="margin-bottom:12px">Kembali ke ruang tunggu</a>` : ''}<button class="btn ghost wide" id="ulang">Main ulang (retake)</button></div>`;
+    + PNMRiwayat.html('cp', S.id) + `<div class="card">${REG ? `<a class="btn gold wide" href="daftar.html?kelas=${esc(REG.kode)}" style="margin-bottom:12px">Kembali ke ruang tunggu ▶</a>` : ''}<button class="btn ghost wide" id="ulang">Main ulang (retake)</button></div>`;
   $('#ulang').onclick = () => { const b = $('#ulang'); if (!b.dataset.y) { b.dataset.y = 1; b.textContent = 'Ketuk sekali lagi: mulai percobaan baru (skor ini tetap tercatat)'; return } store.set('state', null); S = null; hdr(); render() };
 }
 

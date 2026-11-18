@@ -250,9 +250,9 @@ window.PNMDATA = (function () {
         { k: 'P7', judul: 'Pedoman 3R', pilihan: [
           { t: 'Belum ada pedoman', b: 0 },
           { t: 'Musyawarah jadwal, jangka waktu, dan nisbah; biaya riil saja', b: 10 } ] },
-        { k: 'P8', judul: 'Skrip nasabah dan tanggung renteng', pilihan: [
+        { k: 'P8', judul: 'Penjelasan kepada nasabah dan tanggung renteng', pilihan: [
           { t: 'Tidak ada', b: 0, pen: { npf: 4 } },
-          { t: 'Skrip tiga kalimat; tanggung renteng hanya untuk ujrah dan pembelian porsi yang tertunggak', b: 10 } ] },
+          { t: 'Penjelasan baku yang sama di setiap PKM; tanggung renteng hanya untuk ujrah dan pembelian porsi yang tertunggak', b: 10 } ] },
       ],
       kejadian: [
         { judul: 'Ibu tanpa aset', ikon: '🙋‍♀️',
