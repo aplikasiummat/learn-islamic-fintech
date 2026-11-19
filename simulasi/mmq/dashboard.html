@@ -15,7 +15,7 @@ addEventListener('load', function () { setTimeout(function () { try { sessionSto
 <script src="data.js?v=6"></script>
 <script src="kelas.js?v=5"></script>
 <script src="kelompok.js?v=1"></script>
-<script src="arena.js?v=2"></script>
+<script src="arena.js?v=3"></script>
 <style>
   html{font-size:18px}
   .wrap{max-width:1360px}
@@ -391,9 +391,14 @@ function arahan() {
   else { k = 'g3beres'; no = 12; judul = 'Semua game selesai'; isi = 'Umumkan juara Game 3 dan bahas berkas yang paling sering meleset. Terima kasih, semua game sudah selesai.'; tab = 't3' }
   $('#gNo').textContent = no; $('#gTxt').innerHTML = '<b>' + judul + '.</b> ' + isi;
   $('#gBtn').textContent = tab ? 'Buka tab terkait' : 'Mengerti'; $('#gBtn').onclick = () => { if (aksi) aksi(); else if (tab) pilihTab(tab); scrollTo(0, 0) };
+  window._arah = [judul, isi];
   if (k !== lastArah) { lastArah = k; store.set('arah', k); $('#mJudul').textContent = judul; $('#mIsi').innerHTML = isi; $('#modal').classList.remove('hide'); Arena.sfx('mid') }
 }
 $('#mOk').onclick = () => $('#modal').classList.add('hide');
+(function () { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn gold'; b.textContent = '❓ Arahan';
+  b.style.cssText = 'position:fixed;right:18px;bottom:18px;z-index:55;min-height:48px;padding:10px 18px;box-shadow:0 8px 22px rgba(0,0,0,.25)';
+  b.onclick = () => { if (window._arah) { $('#mJudul').textContent = window._arah[0]; $('#mIsi').innerHTML = window._arah[1] } $('#modal').classList.remove('hide') };
+  document.body.appendChild(b) })();
 gambar();
 </script>
 </body>

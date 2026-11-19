@@ -30,9 +30,46 @@ window.Arena = (function () {
     top.insertBefore(b, top.querySelector('.conn'));
   }
   // petunjuk: langkah-langkah (array teks), indeks langkah sekarang, dan kalimat "berikutnya"
-  function coach(steps, now, next) {
+  // panduan pop up: muncul sekali setiap jenis layar berganti, dan dapat dibuka lagi lewat tombol Panduan
+  let cur = null, pt = null;
+  function coachHtml(steps, now, next) {
     return `${steps ? `<div class="stepper">${steps.map((s, i) => `<span class="${i < now ? 'done' : i === now ? 'now' : ''}">${i < now ? '✓ ' : (i + 1) + ' · '}${esc(s)}</span>`).join('')}</div>` : ''}
       ${next ? `<div class="coach"><span class="ar">👉</span><div><b>Langkah berikutnya:</b> ${next}</div></div>` : ''}`;
+  }
+  function popup(force) {
+    if (!cur || !cur.next) return;
+    let m = document.getElementById('pnm-pop');
+    if (!m) {
+      m = document.createElement('div'); m.id = 'pnm-pop';
+      m.style.cssText = 'position:fixed;inset:0;background:rgba(5,13,26,.55);z-index:70;display:flex;align-items:center;justify-content:center;padding:18px';
+      document.body.appendChild(m);
+      m.addEventListener('click', e => { if (e.target === m) m.remove() });
+    }
+    const judul = (document.querySelector('.top .t') || {}).textContent || 'Panduan';
+    m.innerHTML = `<div class="card" style="max-width:620px;width:100%;border:3px solid var(--gold);margin:0;animation:pop .3s ease">
+      <div class="kicker">Panduan · ${esc(judul.split('·')[0].trim())}</div>
+      <h2 style="margin:6px 0 4px">👉 Langkah berikutnya</h2>
+      <div class="lead" style="margin:6px 0 12px">${cur.next}</div>
+      ${cur.steps ? `<div class="stepper" style="margin-bottom:14px">${cur.steps.map((s, i) => `<span class="${i < cur.now ? 'done' : i === cur.now ? 'now' : ''}">${i < cur.now ? '✓ ' : (i + 1) + ' · '}${esc(s)}</span>`).join('')}</div>` : ''}
+      <button class="btn gold wide" type="button" id="pnm-pop-ok">Mengerti ▶</button>
+      <p class="note center" style="margin:8px 0 0">Panduan dapat dibuka lagi lewat tombol ❓ Panduan di pojok kanan bawah.</p></div>`;
+    document.getElementById('pnm-pop-ok').onclick = () => m.remove();
+  }
+  function autoPop() {
+    if (!cur || !cur.next) return;
+    const key = 'pnmpop|' + location.pathname + '|' + (cur.steps ? cur.steps[cur.now] || '' : '') + '|' + String(cur.next).replace(/<[^>]+>/g, '').replace(/[0-9]/g, '').slice(0, 70);
+    try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1') } catch (e) { }
+    popup();
+  }
+  function tombolPanduan() {
+    if (document.getElementById('pnm-help')) return;
+    const b = document.createElement('button'); b.id = 'pnm-help'; b.type = 'button'; b.textContent = '❓ Panduan';
+    b.className = 'btn gold'; b.style.cssText = 'position:fixed;right:18px;bottom:18px;z-index:65;min-height:48px;padding:10px 18px;box-shadow:0 8px 22px rgba(0,0,0,.25)';
+    b.onclick = () => popup(true); document.body.appendChild(b);
+  }
+  function coach(steps, now, next) {
+    if (next) { cur = { steps, now, next }; clearTimeout(pt); pt = setTimeout(() => { tombolPanduan(); autoPop() }, 350) }
+    return coachHtml(steps, now, next);
   }
   function confetti(ms) {
     let c = document.getElementById('confetti'); if (!c) { c = document.createElement('canvas'); c.id = 'confetti'; document.body.appendChild(c) }
@@ -89,5 +126,5 @@ window.Arena = (function () {
     top.insertBefore(b, top.querySelector('.sfx') || top.querySelector('.conn'));
   }
   document.addEventListener('DOMContentLoaded', pasangSfx);
-  return { sfx, coach, confetti, countUp, waktu, peringkat, esc, paham, ulang };
+  return { sfx, coach, popup, confetti, countUp, waktu, peringkat, esc, paham, ulang };
 })();
