@@ -74,7 +74,9 @@ const T = {
   cntEyebrow:"Capaian", cntTitle:"Belajar tanpa biaya, kapan saja",
   newsEyebrow:"Bahan Ajar Terbaru", newsTitle:"Deck kuliah terbaru", seeAll:"Selengkapnya",
   footRel:"Situs Terkait", footAddr:"Universitas Tazkia · Sentul City, Bogor, Jawa Barat",
-  mSimDbcf:"Simulasi Donasi (DBCF)", mSimSaham:"Simulasi Saham Syariah", mSimMmq:"Simulasi Musyarakah Mutanaqishah", mSimKomite:"Duel Komite Pembiayaan BPRS",
+  mSimDbcf:"Simulasi Donasi (DBCF)", mSimSaham:"Simulasi Saham Syariah", mSimMmq:"Simulasi Musyarakah Mutanaqishah", mSimKomite:"Duel Komite Pembiayaan BPRS", mSimRcf:"Simulasi Reward Crowdfunding (RCF)", mSimAgg:"Simulasi Agregator Syariah",
+  sim5CardT:"Reward Based Crowdfunding Simulation", sim5CardD:"Memimpin platform urun dana berbasis imbalan selama 12 bulan: akad per tingkatan imbalan, rekening penampung, pencairan bertahap, akibat tertunda, kuis akad, dan lembar hasil PDF.", sim5Meta:"12 bulan · kuis akad · PDF",
+  sim6CardT:"Agregator Syariah Simulation", sim6CardD:"Memimpin aplikasi pembanding produk keuangan syariah: izin, penyaringan syariah, amanah data, urutan rekomendasi netral, akad samsarah dan ju'alah, serta godaan memegang dana pengguna.", sim6Meta:"12 bulan · kuis akad · PDF",
   sim4CardT:"Duel Komite Pembiayaan BPRS", sim4CardD:"Reviewer legal dan risiko melawan komputer: 5C, neraca, siklus kas, opini audit, trik AO, pemalsuan data MUP, dan sidang komite pembiayaan BPRS. Dengan dashboard pengajar.", sim4Meta:"10 babak · 15–30 menit · lawan komputer",
   sim3CardT:"Simulasi Musyarakah Mutanaqishah (MMQ)", sim3CardD:"Tiga permainan kelompok tentang MMQ: Maqasid dan Pemilihan Akad, Cabang vs Pusat, dan Jejak Audit MMQ, lengkap dengan konsol fasilitator dan papan skor kelas.", sim3Meta:"3 permainan · 15–30 menit",
   ssCrumb:"Saham Syariah", ssTitle:"Bursa Syariah", ssStart:"Mulai Simulasi", ssHow:"Cara Bermain",
@@ -179,7 +181,9 @@ const T = {
   cntEyebrow:"Milestones", cntTitle:"Learn at no cost, anytime",
   newsEyebrow:"Latest Materials", newsTitle:"Latest lecture decks", seeAll:"See all",
   footRel:"Related Sites", footAddr:"Universitas Tazkia · Sentul City, Bogor, West Java",
-  mSimDbcf:"Donation Simulation (DBCF)", mSimSaham:"Islamic Stock Simulation", mSimMmq:"Diminishing Partnership (MMQ) Simulation", mSimKomite:"BPRS Financing Committee Duel",
+  mSimDbcf:"Donation Simulation (DBCF)", mSimSaham:"Islamic Stock Simulation", mSimMmq:"Diminishing Partnership (MMQ) Simulation", mSimKomite:"BPRS Financing Committee Duel", mSimRcf:"Reward Crowdfunding Simulation (RCF)", mSimAgg:"Islamic Aggregator Simulation",
+  sim5CardT:"Reward Based Crowdfunding Simulation", sim5CardD:"Lead a reward-based crowdfunding platform for 12 months: contracts per reward tier, escrow, milestone disbursement, delayed consequences, contract quizzes, and a PDF result sheet (in Indonesian).", sim5Meta:"12 months · quizzes · PDF",
+  sim6CardT:"Islamic Aggregator Simulation", sim6CardD:"Lead an Islamic financial product comparison app: licensing, sharia screening, data trust, neutral ranking, samsarah and ju'alah fees, and the temptation to hold user funds (in Indonesian).", sim6Meta:"12 months · quizzes · PDF",
   sim4CardT:"BPRS Financing Committee Duel", sim4CardD:"Legal and risk reviewers versus the computer: 5C, balance sheet, cash cycle, audit opinion, account officer tricks, falsified financing memos, and the committee hearing. With an instructor dashboard (Indonesian).", sim4Meta:"10 rounds · 15–30 minutes · vs computer",
   sim3CardT:"Diminishing Partnership (MMQ) Simulation", sim3CardD:"Three group games on musyarakah mutanaqishah: Maqasid and Contract Choice, Branch vs Head Office, and MMQ Audit Trail, with a facilitator console and class scoreboard. Interface in Indonesian.", sim3Meta:"3 games · 15–30 minutes",
   ssCrumb:"Islamic Stocks", ssTitle:"Bursa Syariah", ssStart:"Start the Simulation", ssHow:"How to Play",
@@ -319,6 +323,14 @@ function simCard4(){
     <h3 style="color:#fff">${L.sim4CardT}</h3><p style="color:#c3cec6">${L.sim4CardD}</p>
     <div class="acts"><a class="btn gold sm" href="${BASE}simulasi/komite/">${L.play}</a></div></div></article>`;
 }
+function simCardX(n, path, ar, c1, c2){
+  const L = T[lang];
+  return `<article class="mod corner reveal" style="background:radial-gradient(ellipse at 30% 0%,${c1},#0a1730 70%);border-color:var(--gold);color:#e9e4d5">
+    <a class="thumb" href="${BASE}simulasi/${path}/" style="display:grid;place-items:center;background:radial-gradient(ellipse at 50% 30%,${c2},#06101f)"><span class="foil" style="font-family:var(--ar);font-size:56px;line-height:1">${ar}</span><span class="tag m">${L.lvlSim}</span></a>
+    <div class="body"><div class="meta" style="color:#a9b4ab">${L["sim"+n+"Meta"]}</div>
+    <h3 style="color:#fff">${L["sim"+n+"CardT"]}</h3><p style="color:#c3cec6">${L["sim"+n+"CardD"]}</p>
+    <div class="acts"><a class="btn gold sm" href="${BASE}simulasi/${path}/">${L.play}</a></div></div></article>`;
+}
 function renderMods(){
   const featBox = $("#featMods");
   if (featBox) featBox.innerHTML = MODS.slice().reverse().filter(m => !m.extra).slice(0,3).map(modCard).join("");
@@ -337,6 +349,9 @@ function renderMods(){
     if (sim3Ok) html += simCard3();
     const sim4Ok = (filter==="all" || filter==="sim") && (!q || (T.id.sim4CardT+" "+T.id.sim4CardD+" "+T.en.sim4CardD+" komite pembiayaan bprs kredit legal fraud mup muk neraca 5c").toLowerCase().includes(q));
     if (sim4Ok) html += simCard4();
+    const simX = (n, kw) => (filter==="all" || filter==="sim") && (!q || (T.id["sim"+n+"CardT"]+" "+T.id["sim"+n+"CardD"]+" "+T.en["sim"+n+"CardD"]+" "+kw).toLowerCase().includes(q));
+    if (simX(5, "rcf reward crowdfunding istishna salam imbalan")) html += simCardX(5, "rcf", "جَعَالَة", "#123d3a", "#16504a");
+    if (simX(6, "agregator aggregator samsarah wasathah pembanding")) html += simCardX(6, "agregator", "سَمْسَرَة", "#2b1d4a", "#3a2a63");
     cat.innerHTML = html || `<div class="empty">${T[lang].empty}</div>`;
   }
   const reads = $("#reads");

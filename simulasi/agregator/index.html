@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agregator Syariah Simulation</title>
+<link rel="icon" href="../../assets/logo-tazkia.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="../cf/engine.css?v=1">
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+window.SIM = {
+  key: 'agregator',
+  eyebrow: 'Keuangan Digital Syariah · Magister · Sub-CPMK 8',
+  titleHtml: 'Agregator <em>Syariah</em> Simulation',
+  sub: 'Timbang: perantara yang dibayar karena jujur',
+  lead: 'Anda memimpin **Timbang**, aplikasi fiktif pembanding produk keuangan syariah. Selama 12 bulan Anda memilih mitra, mengurus izin, menyusun penyaringan syariah, mengatur data pengguna, urutan rekomendasi, model komisi, hingga menghadapi tawaran untuk ikut memegang uang pengguna. Beberapa keputusan baru terasa akibatnya beberapa bulan kemudian.',
+  org: 'Aplikasi Timbang',
+  role: 'CEO Timbang',
+  stages: ['Himpun', 'Saring', 'Profil', 'Cocokkan', 'Rujuk', 'Komisi', 'Pantau'],
+  ind: [
+    { k: 'net', label: 'Netralitas rekomendasi', start: 60 },
+    { k: 'data', label: 'Amanah data', start: 60 },
+    { k: 'pat', label: 'Kepatuhan syariah dan izin', start: 50 },
+    { k: 'kas', label: 'Pendapatan kumulatif', start: 100, money: true, target: 380 },
+    { k: 'usr', label: 'Pengguna aktif', start: 5000, unit: 'orang', target: 18000 },
+  ],
+  weights: { net: 20, data: 20, pat: 20, kas: 10, usr: 5, quiz: 25 },
+  goals: [
+    'Menganalisis proses agregasi data, pencocokan produk, rujukan, dan komisi (C4).',
+    "Menganalisis akad imbalan perantara: samsarah atau wasathah, ju'alah, ijarah, dan wakalah bil ujrah (C4).",
+    'Mengevaluasi risiko konflik kepentingan rekomendasi, privasi data, dan penghimpunan dana pengguna (C5).',
+    'Merancang model monetisasi agregator syariah yang berkelanjutan berdasarkan kasus Kandang.in, Oneshaf, dan Mobilima (C6).',
+  ],
+  materi: 'Materi pendamping: deck **Model Bisnis Agregator Syariah** (Minggu 9), POJK 4/2025, dan Fatwa DSN-MUI 93/2014.',
+  rules: [
+    ['12 bulan, 12 keputusan', 'Setiap bulan ada satu situasi dengan tiga pilihan. Pilihan tidak dapat diubah.'],
+    ['Lima kuis akad', 'Kuis muncul setelah pembahasan dan menyumbang 25 dari 100 poin.'],
+    ['Akibat tertunda', 'Keputusan yang longgar dapat memunculkan masalah beberapa bulan kemudian.'],
+    ['Retake', 'Permainan dapat diulang kapan saja. Semua percobaan tercatat di PDF.'],
+  ],
+  howto: [
+    'Isi **nama lengkap dan NIM**, lalu tekan **Mulai bulan pertama**.',
+    'Setiap bulan, baca kabar dan situasi, lalu **pilih satu dari tiga keputusan**.',
+    'Baca **pembahasan**: alasan, dasar akad atau aturan, dan perubahan indikator di panel kiri.',
+    'Pada bulan tertentu, jawab **kuis akad**.',
+    'Setelah bulan 12, pelajari tinjauan, isi refleksi, lalu **unduh PDF** untuk diunggah ke LMS.',
+    'Ingin mencoba strategi lain? Tekan **Ulangi permainan**. Tombol **❓ Panduan** selalu ada di kanan atas.',
+  ],
+  months: [
+    { stage: 0, title: 'Memilih mitra pertama',
+      sit: 'Timbang perlu produk untuk dibandingkan. Ada tawaran dari bank syariah, BPR syariah, dan multifinance syariah berizin, serta dari sebuah aplikasi pinjaman daring yang **belum berizin** dengan komisi tiga kali lipat.',
+      opts: [
+        { t: 'Hanya bermitra dengan **lembaga keuangan syariah berizin**; izin dan status DPS setiap mitra diperiksa.', short: 'Hanya mitra syariah berizin', eff: { pat: 10, net: 4, kas: 20 }, best: true, fb: 'Agregator ikut menanggung reputasi mitranya. Mitra berizin dengan DPS memastikan produk yang dirujuk memang sah dan sesuai syariah.' },
+        { t: 'Terima semua mitra termasuk pinjaman daring belum berizin karena komisinya tinggi.', short: 'Terima mitra tak berizin', eff: { kas: 90, pat: -15, net: -6 }, bad: true, set: 'ilegal', fb: 'Merujuk pengguna ke penyelenggara tak berizin menjerumuskan mereka pada risiko penagihan kasar dan biaya tidak wajar. Dalam fikih ini termasuk tolong-menolong dalam keburukan.' },
+        { t: 'Campur produk syariah dan konvensional tanpa label yang membedakan.', short: 'Campur tanpa label', eff: { usr: 3000, kas: 40, pat: -10, net: -4 }, bad: true, fb: 'Pengguna yang mencari produk syariah dapat tertukar. Bila produk konvensional ditampilkan, labelnya wajib jelas.' },
+      ],
+      ref: 'Fatwa DSN-MUI 93/2014 tentang Keperantaraan (Wasathah); QS Al-Maidah: 2.',
+      quiz: { q: 'Timbang menerima imbalan yang jumlahnya diketahui dari mitra atas jasa mempertemukan pengguna dengan produk. Akad yang paling sesuai adalah', opts: ['Samsarah atau wasathah', 'Mudharabah', 'Qardh', 'Wadiah'], a: 0, why: 'Wasathah adalah akad keperantaraan yang memberi perantara hak atas imbalan yang diketahui atas pekerjaannya (Fatwa DSN-MUI 93/2014).' } },
+
+    { stage: 0, title: 'Izin sebelum meluncur',
+      sit: 'Aplikasi siap. Pesaing akan meluncur bulan depan. Pengurusan izin sebagai penyelenggara agregasi jasa keuangan dan penyetoran modal Rp500 juta diperkirakan memakan dua bulan.',
+      opts: [
+        { t: 'Luncurkan sekarang; izin diurus sambil berjalan.', short: 'Meluncur tanpa izin', eff: { usr: 9000, kas: 40, pat: -14 }, bad: true, set: 'tanpaIzin', fb: 'POJK 4/2025 mewajibkan izin sebelum beroperasi. Mobilima pun beroperasi ketika izinnya masih proses, dan kasusnya menjadi pelajaran mahal.' },
+        { t: 'Tunda peluncuran sampai **izin terbit dan modal disetor**, sambil membangun komunitas dan konten edukasi.', short: 'Tunggu izin, bangun komunitas', eff: { pat: 12, usr: 1500, kas: -30 }, best: true, set: 'berizin', fb: 'Kepatuhan di muka lebih murah daripada penghentian di tengah jalan. Masa tunggu dapat dipakai membangun komunitas, seperti Oneshaf yang tumbuh dari jadwal kajian.' },
+        { t: 'Daftarkan sebagai **aplikasi komunitas** saja agar tidak perlu izin, padahal tetap menerima komisi.', short: 'Menyamar sebagai komunitas', eff: { usr: 6000, kas: 30, pat: -10 }, bad: true, set: 'tanpaIzin', fb: 'Substansi kegiatan menentukan rezim. Begitu ada penghimpunan, penyaringan, dan pembandingan produk keuangan berbayar, kegiatan itu adalah agregasi.' },
+      ],
+      ref: 'POJK 4/2025 tentang Penyelenggara Agregasi Jasa Keuangan (berlaku 26 Februari 2025).' },
+
+    { stage: 1, title: 'Cara menyaring produk syariah',
+      sit: 'Ada 240 produk dari 18 mitra. Tim perlu menentukan produk mana yang boleh diberi label "syariah" di aplikasi.',
+      opts: [
+        { t: 'Kriteria tertulis yang disahkan **penasihat syariah**: akad, opini DPS mitra, dan biaya diungkap lengkap.', short: 'Kriteria tertulis dan penasihat syariah', eff: { pat: 10, net: 5, kas: -20 }, best: true, fb: 'Label syariah adalah janji kepada pengguna. Kriteria tertulis dan penasihat syariah mencegah label dipakai sekadar pemasaran.' },
+        { t: 'Beri label syariah otomatis bila nama produk mengandung kata "syariah".', short: 'Label otomatis dari nama', eff: { usr: 1500, pat: -8 }, bad: true, fb: 'Nama tidak menjamin isi. Kasus Mobilima menunjukkan kata syariah dapat dipakai tanpa tata kelola yang menyertainya.' },
+        { t: 'Tidak menyaring sama sekali; pengguna yang menilai sendiri.', short: 'Tanpa penyaringan', eff: { pat: -6, net: -3, kas: 10 }, fb: 'Penyaringan adalah salah satu unsur definisi agregasi. Tanpa penyaringan, nilai tambah Timbang bagi pengguna Muslim hilang.' },
+      ],
+      ref: 'Definisi agregasi dalam POJK 4/2025: penghimpunan, penyaringan, dan/atau pembandingan informasi produk.' },
+
+    { stage: 2, title: 'Data yang diminta dari pengguna',
+      sit: 'Tim produk ingin rekomendasi lebih akurat. Ada tiga usulan formulir profil pengguna.',
+      opts: [
+        { t: 'Data **minimal** (penghasilan, kebutuhan, tenor) dengan persetujuan eksplisit dan penjelasan tujuan pemakaiannya.', short: 'Data minimal dan persetujuan', eff: { data: 12, net: 3, usr: 500 }, best: true, fb: 'Prinsip pembatasan tujuan dan minimalisasi data dalam UU 27/2022 sejalan dengan amanah: data dipakai sebatas yang diperlukan.' },
+        { t: 'Minta akses **kontak, galeri, dan lokasi** ponsel agar skor lebih tajam.', short: 'Akses kontak dan galeri', eff: { usr: 1000, kas: 30, data: -15 }, bad: true, set: 'kontak', fb: 'Akses kontak dan galeri tidak diperlukan untuk membandingkan produk. Praktik ini pernah dipakai penagih pinjaman ilegal untuk mempermalukan nasabah.' },
+        { t: 'Minta unggah KTP dan slip gaji sejak awal untuk semua pengguna.', short: 'Unggah KTP sejak awal', eff: { data: -6, usr: -1500 }, fb: 'Data sensitif dikumpulkan sebelum ada kebutuhan. Pengguna enggan, dan risiko kebocoran meningkat.' },
+      ],
+      ref: 'UU 27/2022 tentang Pelindungan Data Pribadi.' },
+
+    { stage: 3, title: 'Urutan rekomendasi',
+      sit: 'Halaman hasil menampilkan 12 produk pembiayaan rumah. Urutan teratas paling sering diklik. Tim penjualan mengusulkan cara mengurutkannya.',
+      opts: [
+        { t: 'Urutkan berdasarkan **total biaya bagi pengguna** dan kesesuaian kebutuhan; produk berbayar diberi label "Iklan".', short: 'Urutan netral dan label iklan', eff: { net: 14, usr: 3000, kas: 10 }, best: true, fb: 'Urutan bawaan yang netral adalah inti nilai agregator. Iklan tetap boleh selama terlihat jelas sebagai iklan.' },
+        { t: 'Urutkan berdasarkan **komisi tertinggi** tanpa memberi tahu pengguna.', short: 'Komisi tertinggi di atas', eff: { kas: 120, net: -18 }, bad: true, set: 'bias', fb: 'Pengguna mengira urutan itu rekomendasi netral. Menyembunyikan alasan urutan adalah tadlis dan merusak kepercayaan.' },
+        { t: 'Urutkan secara acak agar adil bagi semua mitra.', short: 'Urutan acak', eff: { net: 2, usr: -800 }, fb: 'Adil bagi mitra, tetapi tidak membantu pengguna. Netralitas berarti berpihak pada kepentingan pengguna, bukan sekadar acak.' },
+      ],
+      ref: 'Larangan tadlis (penyembunyian informasi) dalam jual beli.',
+      quiz: { q: 'Produk yang membayar biaya tayang ditampilkan di urutan teratas seolah-olah hasil perbandingan netral. Pelanggaran syariah yang paling tepat adalah', opts: ['Tadlis', 'Riba fadhl', 'Ihtikar', 'Bai’ al-wafa'], a: 0, why: 'Tadlis adalah menyembunyikan informasi yang memengaruhi keputusan pihak lain. Urutan berbayar yang tidak diungkap termasuk tadlis.' } },
+
+    { stage: 4, title: 'Tawaran menitipkan uang muka',
+      sit: 'Sebuah dealer mobil mitra multifinance menawarkan skema: pengguna **menyetor uang muka ke rekening Timbang** agar antrean pembiayaan lebih cepat, dan Timbang mendapat fee 1% dari dana titipan.',
+      opts: [
+        { t: 'Terima. Dana titipan memperkuat arus kas Timbang.', short: 'Terima titipan uang muka', eff: { kas: 140, pat: -18, data: -4 }, bad: true, set: 'pegangDana', fb: 'Agregator dilarang menghimpun, menyalurkan, atau mengelola dana konsumen (POJK 4/2025). Inilah pola Mobilima: uang muka konsumen tertahan sementara mobil tidak kunjung datang.' },
+        { t: 'Tolak. Pembayaran uang muka **langsung ke mitra** melalui penyedia jasa pembayaran; Timbang hanya merujuk.', short: 'Dana langsung ke mitra', eff: { pat: 12, net: 3, kas: 10 }, best: true, fb: 'Agregator tetap menjadi wasith. Dana mengalir langsung ke lembaga berizin, sehingga risiko penyalahgunaan dana tidak berpindah ke Timbang.' },
+        { t: 'Terima hanya untuk pengguna yang sudah lama dan tepercaya.', short: 'Titipan terbatas', eff: { kas: 50, pat: -10 }, bad: true, set: 'pegangDana', fb: 'Larangannya tidak bergantung pada siapa penggunanya. Sekali agregator memegang dana, akad dan rezim pengawasannya berubah.' },
+      ],
+      ref: 'POJK 4/2025: larangan menghimpun, menyalurkan, atau mengelola dana konsumen, kecuali transaksi dengan mitra penyedia jasa pembayaran.',
+      quiz: { q: 'Menurut POJK 4/2025, penyelenggara agregasi jasa keuangan', opts: ['Boleh menampung uang muka konsumen bila diizinkan mitra', 'Dilarang menghimpun, menyalurkan, atau mengelola dana konsumen', 'Wajib menyalurkan pembiayaan sendiri', 'Tidak memerlukan izin'], a: 1, why: 'POJK 4/2025 melarang agregator menghimpun, menyalurkan, atau mengelola dana konsumen, kecuali transaksi dengan mitra penyedia jasa pembayaran.' } },
+
+    { stage: 5, title: 'Model komisi dengan mitra',
+      sit: 'Kontrak komisi dengan mitra harus ditandatangani. Bagian keuangan menyiapkan tiga model.',
+      opts: [
+        { t: '**Komisi tetap per rujukan** yang diketahui, diungkap di halaman produk, dari mitra syariah.', short: 'Komisi per rujukan diungkap', eff: { kas: 80, net: 5, pat: 6 }, best: true, fb: 'Ujrah yang diketahui atas jasa perantara sesuai dengan wasathah. Karena besarnya sama untuk setiap rujukan, dorongan untuk memaksa pengguna mengambil produk tertentu kecil.' },
+        { t: "**Ju'alah per akad berhasil** tanpa batas, dengan target penjualan bulanan bagi tim layanan.", short: "Ju'alah tanpa batas dan target", eff: { kas: 130, net: -10 }, set: 'target', fb: "Ju'alah sah, tetapi target penjualan tanpa batas mendorong tim membujuk pengguna. Ju'alah perlu dibatasi dan diimbangi uji kelayakan." },
+        { t: 'Komisi persentase dari **bunga** pinjaman konvensional karena nilainya lebih besar.', short: 'Komisi dari bunga', eff: { kas: 150, pat: -16 }, bad: true, fb: 'Imbalan yang dihitung dari bunga mengaitkan pendapatan Timbang langsung dengan riba.' },
+      ],
+      ref: "Fatwa DSN-MUI 93/2014 (Wasathah) dan 62/2007 (Ju'alah)." },
+
+    { stage: 3, title: 'Promosi akhir tahun',
+      sit: 'Tim pemasaran ingin mendongkrak pengguna menjelang akhir tahun.',
+      opts: [
+        { t: 'Undian ponsel bagi pengguna yang **mengambil pembiayaan** lewat Timbang bulan ini.', short: 'Undian bagi yang ambil pembiayaan', eff: { usr: 6000, kas: 40, pat: -8, net: -6 }, bad: true, fb: 'Hadiah yang mendorong orang berutang demi peluang menang mengarah pada untung-untungan dan pembiayaan yang tidak dibutuhkan.' },
+        { t: '**Kalkulator dan kelas literasi** gratis bersama masjid dan komunitas, dengan cendera mata yang tidak diperjanjikan.', short: 'Literasi bersama komunitas', eff: { usr: 4000, net: 4, pat: 4, kas: -15 }, best: true, fb: 'Hadiah yang tidak diperjanjikan dan tidak bergantung pada pengambilan produk sesuai Fatwa DSN-MUI 86/2012. Pendekatan komunitas mengikuti kekuatan Oneshaf.' },
+        { t: 'Bayar influencer menyebut Timbang "**paling murah se-Indonesia**" tanpa data pembanding.', short: 'Klaim paling murah', eff: { usr: 5000, net: -8 }, bad: true, fb: 'Klaim tanpa dasar menyesatkan pengguna dan bertentangan dengan peran agregator sebagai sumber informasi yang jujur.' },
+      ],
+      ref: 'Fatwa DSN-MUI 86/2012 tentang Hadiah dalam Penghimpunan Dana Lembaga Keuangan Syariah.' },
+
+    { stage: 6, title: 'Tawaran membeli data',
+      sit: 'Sebuah perusahaan pemasaran menawar **data 50.000 pengguna** beserta riwayat pengajuannya senilai Rp300 juta.',
+      opts: [
+        { t: 'Jual seluruh data; kas Timbang langsung sehat.', short: 'Jual data pengguna', eff: { kas: 300, data: -25, pat: -8 }, bad: true, set: 'jualData', fb: 'Menjual data tanpa dasar pemrosesan yang sah melanggar UU 27/2022 dan merupakan khianat atas amanah pengguna.' },
+        { t: 'Tolak. Tawarkan **laporan tren pasar** dari data agregat anonim yang telah disetujui pengguna.', short: 'Hanya laporan agregat anonim', eff: { kas: 60, data: 14 }, best: true, fb: 'Ijarah jasa riset dari data agregat anonim menghasilkan pendapatan tanpa memindahkan data pribadi.' },
+        { t: 'Tolak tanpa mencari alternatif pendapatan.', short: 'Tolak tanpa alternatif', eff: { data: 5, kas: -10 }, fb: 'Amanah terjaga, tetapi tekanan biaya tetap ada. Diskusi 2 di kelas membahas campuran pendapatan yang sehat.' },
+      ],
+      ref: 'UU 27/2022 tentang Pelindungan Data Pribadi; Fatwa DSN-MUI 112/2017 tentang Ijarah.',
+      quiz: { q: 'Timbang menjual laporan tren dari data agregat anonim kepada bank mitra dengan imbalan tetap. Akad yang tepat untuk transaksi ini adalah', opts: ['Ijarah (jasa)', 'Salam', 'Wadiah', 'Mudharabah'], a: 0, why: 'Laporan riset adalah jasa yang dibayar dengan ujrah tetap, sehingga akadnya ijarah (Fatwa DSN-MUI 112/2017).' } },
+
+    { stage: 4, title: 'Pengguna dengan cicilan berat',
+      sit: 'Seorang pengguna bergaji Rp4 juta per bulan memilih pembiayaan motor dengan angsuran **Rp2,8 juta**. Rujukan ini memberi komisi.',
+      opts: [
+        { t: 'Rujuk saja; keputusan ada di tangan mitra.', short: 'Rujuk tanpa peringatan', eff: { kas: 15, net: -6 }, set: 'misselling', fb: 'Agregator ikut bertanggung jawab atas kualitas rujukannya. Angsuran 70% dari penghasilan hampir pasti memberatkan.' },
+        { t: 'Tampilkan **peringatan rasio angsuran** dan alternatif tenor atau produk yang lebih ringan sebelum merujuk.', short: 'Peringatan dan alternatif', eff: { net: 10, usr: 800, kas: 5 }, best: true, fb: 'Uji kelayakan sederhana melindungi pengguna dari misselling dan menjaga kualitas rujukan bagi mitra.' },
+        { t: 'Tolak pengajuan tanpa penjelasan.', short: 'Tolak tanpa penjelasan', eff: { net: 1, usr: -500 }, fb: 'Pengguna terlindungi, tetapi tidak memperoleh edukasi atau alternatif.' },
+      ],
+      ref: 'Prinsip perlindungan konsumen dan larangan dharar (bahaya) bagi pihak lain.' },
+
+    { stage: 5, title: 'Permintaan eksklusif mitra terbesar',
+      sit: 'Mitra terbesar, penyumbang **60% komisi**, meminta Timbang hanya menampilkan produk pembiayaan rumahnya selama setahun dengan komisi dua kali lipat.',
+      opts: [
+        { t: 'Terima. Pendapatan tahun depan aman.', short: 'Terima eksklusif', eff: { kas: 150, net: -14, usr: -2000 }, bad: true, set: 'eksklusif', fb: 'Agregator yang hanya menampilkan satu mitra berhenti menjadi pembanding. Ketergantungan pada satu mitra juga menjadi risiko usaha.' },
+        { t: 'Tolak eksklusivitas. **Ragamkan mitra** dan luncurkan **langganan premium** bagi pengguna.', short: 'Ragamkan mitra dan langganan', eff: { kas: 60, net: 8, usr: 1500 }, best: true, fb: 'Pendapatan dari pengguna (ijarah langganan) mengurangi ketergantungan pada komisi, sehingga netralitas lebih terjaga.' },
+        { t: 'Terima diam-diam sambil tetap menyebut diri "pembanding independen".', short: 'Eksklusif diam-diam', eff: { kas: 150, net: -20 }, bad: true, set: 'eksklusif', fb: 'Menyebut diri independen sambil terikat eksklusivitas adalah tadlis yang paling merusak kepercayaan.' },
+      ],
+      ref: 'Pelajaran ketergantungan mitra dalam manajemen risiko agregator.' },
+
+    { stage: 6, title: 'Arah Timbang tahun depan',
+      sit: 'Investor menilai pendapatan agregator tipis dan menawarkan tiga arah untuk tahun kedua.',
+      opts: [
+        { t: 'Mulai menyalurkan **pembiayaan sendiri** dari dana investor lewat aplikasi, tanpa izin baru.', short: 'Salurkan pembiayaan sendiri', eff: { kas: 120, pat: -18 }, bad: true, fb: 'Menyalurkan dana berarti menjadi lembaga pembiayaan atau P2P yang memerlukan izin tersendiri. Kandang.in menunjukkan betapa tipisnya batas antara memperantarai dan mengelola dana.' },
+        { t: 'Tetap agregator syariah: perkuat **langganan, laporan riset anonim, dan kerja sama komunitas**, dengan komisi yang diungkap.', short: 'Agregator dengan pendapatan beragam', eff: { kas: 80, net: 6, pat: 6, data: 4 }, best: true, fb: 'Campuran pendapatan yang sehat menjaga netralitas dan amanah data, sehingga nilai utama agregator tetap utuh.' },
+        { t: 'Jual seluruh basis data pengguna bersama perusahaan kepada pembeli tertinggi.', short: 'Jual perusahaan beserta data', eff: { kas: 200, data: -20 }, bad: true, fb: 'Data pengguna tidak otomatis boleh berpindah tanpa persetujuan dan pemberitahuan. Pengguna perlu diberi pilihan.' },
+      ],
+      ref: 'POJK 4/2025; kasus Kandang.in, Oneshaf, dan Mobilima.',
+      quiz: { q: 'Agregator yang mulai mengelola dana investor untuk disalurkan kepada peternak mitra dengan bagi hasil, akadnya berubah menjadi', opts: ['Tetap samsarah', 'Mudharabah atau wakalah pengelolaan dana', 'Wadiah', 'Hibah'], a: 1, why: 'Begitu perantara mengelola dana dengan bagi hasil, ia menjadi mudharib atau wakil pengelola dana, sehingga kewajiban dan pengawasannya berubah.' } },
+  ],
+  events: [
+    { id: 'e1', month: 4, if: 'ilegal', text: 'Pengguna yang dirujuk ke pinjaman daring belum berizin mengalami penagihan kasar. Media menyebut Timbang sebagai pintu masuknya.', eff: { pat: -8, net: -6, usr: -3000 } },
+    { id: 'e2', month: 6, if: 'tanpaIzin', text: 'Regulator meminta Timbang menghentikan sementara layanan berbayar sampai izin terbit. Pendapatan dua bulan hilang.', eff: { kas: -80, pat: -6, usr: -4000 } },
+    { id: 'e3', month: 6, if: 'berizin', text: 'Izin Timbang terbit. Dua bank syariah besar bersedia bermitra karena Timbang sudah berizin.', eff: { pat: 4, kas: 40, usr: 3000 }, good: true },
+    { id: 'e4', month: 8, if: 'bias', text: 'Sebuah media membandingkan urutan Timbang dengan biaya total dan menemukan produk termahal selalu di atas. Pengguna ramai meninggalkan aplikasi.', eff: { net: -10, usr: -6000 } },
+    { id: 'e5', month: 10, if: 'kontak', text: 'Data kontak pengguna bocor dan dipakai pihak lain untuk menagih. Pengaduan berdatangan.', eff: { data: -15, usr: -5000, kas: -40 } },
+    { id: 'e6', month: 11, if: 'pegangDana', text: 'Dealer mitra bangkrut. Uang muka 300 pengguna tertahan di rekening Timbang tanpa mobil yang dapat diserahkan, persis pola Mobilima. Polisi menerima laporan.', eff: { pat: -20, net: -8, kas: -200, usr: -8000 } },
+    { id: 'e7', month: 12, if: 'jualData', text: 'Pengguna menerima tawaran pinjaman yang menyebut riwayat pengajuannya di Timbang. Kepercayaan runtuh.', eff: { data: -10, usr: -6000 } },
+    { id: 'e8', month: 11, if: 'target', text: 'Tim layanan yang mengejar target membujuk pengguna mengambil tenor terpanjang. Pengaduan misselling meningkat.', eff: { net: -6 } },
+    { id: 'e9', month: 12, if: 'eksklusif', text: 'Pengguna menyadari hanya satu bank yang tampil di kategori rumah. Ulasan aplikasi turun tajam.', eff: { net: -6, usr: -3000 } },
+  ],
+  verdicts: [
+    [85, 'Wasith yang tepercaya', 'Timbang netral, menjaga amanah data, berizin, dan tetap tumbuh. Inilah agregator syariah yang dibahas di kelas.'],
+    [70, 'Kokoh dengan beberapa celah', 'Sebagian besar keputusan tepat. Periksa kembali bulan yang ditandai merah pada tinjauan.'],
+    [55, 'Tumbuh tetapi rapuh', 'Pendapatan naik, namun netralitas, data, atau kepatuhan tergerus. Akibat tertunda mulai terasa.'],
+    [0, 'Mengulang jejak Mobilima', 'Label syariah tidak diikuti tata kelola. Pelajari pembahasan, lalu ulangi permainan.'],
+  ],
+  refl: [
+    'Di titik mana Timbang berisiko berhenti menjadi perantara (wasith) dan berubah menjadi penghimpun dana? Kaitkan dengan POJK 4/2025 dan kasus Mobilima.',
+    "Bandingkan komisi per rujukan (samsarah) dan ju'alah per akad berhasil: mana yang lebih menjaga netralitas dan mengapa?",
+    'Keputusan mana yang paling memengaruhi nilai Anda, dan akibat tertunda apa yang muncul darinya?',
+    'Rancanglah campuran pendapatan agregator syariah dalam persen beserta akad masing-masing.',
+  ],
+  pdfKicker: 'AGREGATOR SYARIAH SIMULATION',
+  pdfTitle: 'Lembar Hasil Belajar: Timbang',
+};
+</script>
+<script src="../saham/lib/jspdf-2.5.1.umd.min.js" defer></script>
+<script src="../cf/engine.js?v=1" defer></script>
+</body>
+</html>

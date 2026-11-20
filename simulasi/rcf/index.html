@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reward Based Crowdfunding Simulation</title>
+<link rel="icon" href="../../assets/logo-tazkia.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="../cf/engine.css?v=1">
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+window.SIM = {
+  key: 'rcf',
+  eyebrow: 'Keuangan Digital Syariah · Magister · Sub-CPMK 10',
+  titleHtml: 'Reward Based <em>Crowdfunding</em> Simulation',
+  sub: 'Janji Karya: menepati imbalan atau mengejar rekor?',
+  lead: 'Anda memimpin **Janji Karya**, platform fiktif urun dana berbasis imbalan untuk produk kreatif lokal. Selama 12 bulan Anda memutuskan akad tingkatan imbalan, kurasi, skema pendanaan, biaya, pencairan, hingga cara menghadapi produk yang terlambat. Beberapa keputusan baru terasa akibatnya beberapa bulan kemudian.',
+  org: 'Platform Janji Karya',
+  role: 'CEO Janji Karya',
+  stages: ['Ajukan', 'Kurasi', 'Tayang', 'Dukung', 'Tutup', 'Produksi', 'Kirim'],
+  ind: [
+    { k: 'trust', label: 'Kepercayaan pendukung', start: 60 },
+    { k: 'sya', label: 'Kepatuhan syariah', start: 55 },
+    { k: 'kas', label: 'Kas platform', start: 400, money: true, target: 450 },
+    { k: 'usr', label: 'Pendukung aktif', start: 3000, unit: 'orang', target: 4500 },
+  ],
+  weights: { trust: 25, sya: 25, kas: 15, usr: 10, quiz: 25 },
+  goals: [
+    'Menganalisis alur RCF tujuh tahap, dari pengajuan proyek hingga imbalan terkirim (C4).',
+    "Menentukan akad yang tepat untuk setiap tingkatan imbalan: hibah, Istishna', atau Salam, serta wakalah bil ujrah atau ju'alah untuk platform (C4).",
+    'Mengevaluasi risiko gagal kirim, keterlambatan, kampanye fiktif, dan risiko syariah, beserta mitigasinya (C5).',
+    'Mensintesis rancangan RCF syariah yang berkelanjutan dan melindungi pendukung (C6).',
+  ],
+  materi: 'Materi pendamping: deck **Model Bisnis Reward Based Crowdfunding** (Minggu 11), studi kasus Mystartr, Wujudkan, dan Coolest Cooler.',
+  rules: [
+    ['12 bulan, 12 keputusan', 'Setiap bulan ada satu situasi dengan tiga pilihan. Pilihan tidak dapat diubah.'],
+    ['Lima kuis akad', 'Kuis muncul setelah pembahasan dan menyumbang 25 dari 100 poin.'],
+    ['Akibat tertunda', 'Keputusan yang longgar dapat memunculkan masalah beberapa bulan kemudian.'],
+    ['Retake', 'Permainan dapat diulang kapan saja. Semua percobaan tercatat di PDF.'],
+  ],
+  howto: [
+    'Isi **nama lengkap dan NIM**, lalu tekan **Mulai bulan pertama**.',
+    'Setiap bulan, baca kabar dan situasi, lalu **pilih satu dari tiga keputusan**.',
+    'Baca **pembahasan**: alasan, dasar akad atau aturan, dan perubahan indikator di panel kiri.',
+    'Pada bulan tertentu, jawab **kuis akad**.',
+    'Setelah bulan 12, pelajari tinjauan, isi refleksi, lalu **unduh PDF** untuk diunggah ke LMS.',
+    'Ingin mencoba strategi lain? Tekan **Ulangi permainan**. Tombol **❓ Panduan** selalu ada di kanan atas.',
+  ],
+  months: [
+    { stage: 0, title: 'Akad untuk tingkatan imbalan',
+      sit: 'Proyek pertama adalah **sepatu kulit buatan perajin Garut**. Pendukung Rp50 ribu mendapat ucapan terima kasih dan nama di situs, sedangkan pendukung Rp450 ribu mendapat sepasang sepatu yang baru diproduksi empat bulan lagi. Tim hukum menanyakan bagaimana semua dukungan ini dicatat.',
+      opts: [
+        { t: 'Sebut semua dukungan sebagai **donasi**, sedangkan sepatu hanyalah hadiah terima kasih.', short: 'Semua dukungan disebut donasi', eff: { sya: -10, trust: -5 }, bad: true, set: 'akadKabur', fb: 'Pendukung Rp450 ribu sesungguhnya membeli sepatu. Menyebutnya donasi menghapus haknya atas barang dan pengembalian dana, sehingga akadnya kabur (gharar) dan pendukung dirugikan bila sepatu tidak terkirim.' },
+        { t: "Tulis akad **per tingkatan**: hibah untuk imbalan simbolik, Istishna' untuk pra-pesan sepatu, lengkap dengan spesifikasi dan jadwal kirim.", short: 'Akad per tingkatan imbalan', eff: { sya: 15, trust: 8, kas: -20 }, best: true, fb: "Imbalan simbolik yang jauh di bawah nilai dukungan tepat diperlakukan sebagai hibah. Pra-pesan barang yang akan dibuat adalah Istishna', sehingga spesifikasi, harga, dan waktu penyerahan wajib jelas. Biaya penyusunan akad sedikit mengurangi kas." },
+        { t: 'Sebut dukungan sebagai **investasi**, dengan bonus bagi hasil 2% dari penjualan sepatu.', short: 'Dukungan disebut investasi', eff: { usr: 1200, sya: -12, trust: -4 }, bad: true, set: 'investasi', fb: 'Begitu imbalan berupa bagi hasil, model berpindah dari RCF ke urun dana efek yang memerlukan izin sebagai penyelenggara SCF (POJK 57/2020). Akadnya pun berubah menjadi musyarakah atau mudharabah dengan kewajiban pengungkapan yang jauh lebih berat.' },
+      ],
+      ref: "Fatwa DSN-MUI 06/2000 tentang Istishna'; Belleflamme, Lambert, dan Schwienbacher (2014) tentang pre-ordering.",
+      quiz: { q: "Pendukung membayar Rp450 ribu untuk sepatu yang baru dibuat empat bulan lagi sesuai spesifikasi kampanye. Akad yang paling tepat adalah", opts: ['Hibah', "Istishna'", 'Mudharabah', 'Qardh'], a: 1, why: "Istishna' adalah jual beli barang yang dipesan untuk dibuat dengan kriteria dan waktu penyerahan yang disepakati (Fatwa DSN-MUI 06/2000)." } },
+
+    { stage: 1, title: 'Kurasi proyek viral',
+      sit: 'Seorang kreator dengan 800 ribu pengikut mengajukan **jam tangan pintar dengan pengingat salat**. Targetnya Rp2 miliar, tetapi ia baru memiliki gambar tiga dimensi tanpa purwarupa fisik dan belum punya pabrik mitra.',
+      opts: [
+        { t: 'Tayangkan segera. Pengikutnya akan membawa ribuan pendukung baru.', short: 'Proyek viral tayang tanpa purwarupa', eff: { usr: 2500, kas: 60, trust: -3 }, bad: true, set: 'fiktif', fb: 'Volume naik cepat, tetapi tanpa purwarupa dan pabrik mitra, janji imbalan belum dapat diukur. Inilah pola kampanye yang paling sering berakhir gagal kirim.' },
+        { t: 'Minta **purwarupa fisik, surat pabrik mitra, dan uji anggaran produksi** sebelum tayang.', short: 'Minta purwarupa dan uji anggaran', eff: { trust: 8, usr: 600, kas: -15 }, best: true, fb: "Dalam Istishna' penjual harus mampu menyerahkan barang. Purwarupa, pabrik mitra, dan anggaran produksi adalah bukti kemampuan itu, sehingga kurasi menjadi pengendalian risiko pertama." },
+        { t: 'Tolak semua proyek teknologi karena terlalu berisiko.', short: 'Tolak semua proyek teknologi', eff: { usr: -400, trust: 2, kas: -20 }, fb: 'Aman, tetapi platform kehilangan kategori yang paling diminati pendukung. Kurasi yang baik menyaring proyek, bukan menutup kategori.' },
+      ],
+      ref: 'Mollick (2014): keterlambatan dan kegagalan kirim lebih mungkin terjadi pada proyek yang lebih besar dan yang dananya jauh melampaui target.' },
+
+    { stage: 2, title: 'Skema pendanaan kampanye',
+      sit: 'Tim produk menyusun aturan penutupan kampanye. Ada tiga usulan untuk proyek yang belum mencapai target ketika tenggat berakhir.',
+      opts: [
+        { t: '**All or nothing**: dana hanya ditarik bila target tercapai; bila tidak, seluruh dana kembali ke pendukung.', short: 'All or nothing', eff: { trust: 8, sya: 6 }, best: true, set: 'aon', fb: 'Target adalah syarat yang diketahui sejak awal. Bila tidak tercapai, proyek memang tidak layak diproduksi, sehingga dana kembali utuh. Skema ini juga dipakai Kickstarter.' },
+        { t: '**Keep it all**: pencipta tetap menerima dana yang terkumpul walaupun target tidak tercapai.', short: 'Keep it all', eff: { kas: 40, trust: -6, sya: -5 }, bad: true, set: 'kia', fb: 'Pencipta dapat menerima dana yang tidak cukup untuk memproduksi barang, sehingga janji imbalan hampir pasti gagal. Risiko gharar berpindah sepenuhnya kepada pendukung.' },
+        { t: 'Platform memutuskan kasus per kasus tanpa aturan tertulis.', short: 'Aturan kasus per kasus', eff: { trust: -4, sya: -4 }, fb: 'Pendukung tidak mengetahui syarat yang berlaku saat menyetor dana. Aturan penutupan harus diketahui di muka agar akadnya jelas.' },
+      ],
+      ref: 'Pusat bantuan Kickstarter tentang all or nothing; prinsip kejelasan syarat dalam akad.' },
+
+    { stage: 3, title: 'Biaya platform',
+      sit: 'Bagian keuangan mengusulkan struktur biaya agar platform menutup biaya kurasi, server, dan layanan pendukung.',
+      opts: [
+        { t: 'Biaya **5% dari dana yang berhasil**, diungkap di halaman kampanye; biaya pembayaran ditampilkan terpisah.', short: 'Biaya 5% diungkap', eff: { kas: 80, trust: 5, sya: 6 }, best: true, fb: "Imbalan yang hanya diterima bila kampanye berhasil sesuai dengan ju'alah, atau wakalah bil ujrah bila platform bertindak sebagai wakil penagih. Besarnya diketahui di muka." },
+        { t: 'Biaya 3% kepada pencipta, ditambah **biaya layanan tersembunyi** Rp7.500 per pendukung.', short: 'Biaya tersembunyi', eff: { kas: 130, trust: -9, sya: -8 }, bad: true, fb: 'Biaya yang tidak diungkap kepada pendukung termasuk tadlis. Kas naik, tetapi kepercayaan turun begitu pendukung menyadarinya.' },
+        { t: 'Gratis selama setahun untuk menarik pencipta.', short: 'Gratis setahun', eff: { kas: -60, usr: 900 }, fb: 'Pertumbuhan naik, tetapi kas tergerus. Wujudkan menutup layanan pada 2017 antara lain karena biaya operasional terlalu besar.' },
+      ],
+      ref: "Fatwa DSN-MUI 62/2007 tentang Ju'alah dan 113/2017 tentang Wakalah bil Ujrah.",
+      quiz: { q: 'Platform hanya menerima imbalan 5% bila kampanye mencapai target. Akad yang paling sesuai untuk imbalan ini adalah', opts: ['Ijarah dengan sewa tetap bulanan', "Ju'alah", 'Musyarakah', 'Wadiah'], a: 1, why: "Ju'alah adalah janji imbalan atas tercapainya hasil pekerjaan tertentu, sehingga cocok untuk biaya keberhasilan (Fatwa DSN-MUI 62/2007)." } },
+
+    { stage: 3, title: 'Ke mana dana pendukung disimpan',
+      sit: 'Dana pendukung mulai mengalir setiap hari. Tim keuangan perlu menentukan rekening penampungnya selama kampanye berjalan.',
+      opts: [
+        { t: '**Rekening penampung terpisah** di bank syariah, terpisah dari kas operasional platform.', short: 'Rekening penampung terpisah', eff: { trust: 8, sya: 8, kas: -10 }, best: true, set: 'escrow', fb: 'Dana pendukung adalah titipan sampai kampanye ditutup, sehingga wadiah di rekening terpisah menjaga dana tidak tercampur dan siap dikembalikan bila kampanye gagal.' },
+        { t: 'Masuk ke **rekening operasional** platform agar arus kas lebih longgar.', short: 'Dana masuk rekening operasional', eff: { kas: 70, sya: -10, trust: -3 }, bad: true, set: 'campur', fb: 'Dana pendukung tercampur dengan kas platform. Bila kas platform terpakai, pengembalian dana pendukung terancam.' },
+        { t: 'Langsung diteruskan ke rekening pencipta begitu masuk.', short: 'Dana langsung ke pencipta', eff: { trust: -6, sya: -4, usr: 300 }, bad: true, set: 'langsung', fb: 'Bila kampanye gagal, dana sulit ditarik kembali dari pencipta. Skema all or nothing pun tidak dapat dijalankan.' },
+      ],
+      ref: 'Prinsip wadiah dan pemisahan dana; UU 8/1999 tentang hak konsumen atas pengembalian dana.' },
+
+    { stage: 3, title: 'Promosi kampanye Ramadhan',
+      sit: 'Tim pemasaran mengusulkan promosi agar kampanye kopi Gayo dan mukena batik lebih cepat mencapai target.',
+      opts: [
+        { t: '**Undian umrah** bagi pendukung yang menyetor minimal Rp1 juta.', short: 'Undian umrah', eff: { usr: 1500, kas: 30, sya: -12 }, bad: true, fb: 'Pendukung membayar lebih demi peluang memenangkan hadiah besar yang tidak pasti. Unsur untung-untungan ini termasuk maysir.' },
+        { t: '**Harga khusus pendukung awal** untuk 100 pendukung pertama, diumumkan terbuka.', short: 'Harga pendukung awal', eff: { usr: 800, trust: 4, sya: 3 }, best: true, fb: 'Harga berbeda yang diumumkan di muka adalah bagian dari kesepakatan harga, sehingga sah. Belleflamme dkk. (2014) menyebutnya diskriminasi harga antara pendukung awal dan pembeli biasa.' },
+        { t: 'Minta influencer menyebut produk "**pasti tiba sebelum Lebaran**" walaupun jadwal pabrik belum pasti.', short: 'Klaim pasti tiba sebelum Lebaran', eff: { usr: 1200, trust: -8, sya: -6 }, bad: true, set: 'janjiPalsu', fb: 'Klaim yang belum dapat dipastikan adalah tadlis dan berpotensi melanggar hak konsumen atas informasi yang benar.' },
+      ],
+      ref: 'Fatwa DSN-MUI 86/2012 tentang Hadiah; UU 8/1999 tentang Perlindungan Konsumen.',
+      quiz: { q: 'Pendukung yang menyetor minimal Rp1 juta diikutkan undian umrah. Risiko syariah utamanya adalah', opts: ['Riba', 'Maysir', 'Ihtikar', 'Tidak ada risiko'], a: 1, why: 'Pendukung menambah setoran demi peluang hadiah yang tidak pasti, sehingga muncul unsur untung-untungan (maysir).' } },
+
+    { stage: 4, title: 'Kampanye kopi Gayo kurang 20%',
+      sit: 'Pada hari terakhir, kampanye kopi Gayo baru mencapai **80% dari target**. Petani meminta keringanan karena musim panen sudah dekat.',
+      opts: [
+        { t: 'Jalankan aturan: kampanye gagal dan dana dikembalikan, lalu bantu petani menyusun kampanye baru dengan target realistis.', short: 'Dana dikembalikan, kampanye ulang', eff: { trust: 7, sya: 5, kas: -10 }, best: true, fb: 'Aturan yang diumumkan di muka harus ditepati. Membantu kampanye baru dengan target yang realistis menjaga kepercayaan pendukung sekaligus membantu petani.' },
+        { t: 'Perpanjang tenggat dua minggu secara diam-diam.', short: 'Tenggat diperpanjang diam-diam', eff: { trust: -6, sya: -5, kas: 20 }, bad: true, fb: 'Mengubah syarat tanpa persetujuan pendukung merusak kejelasan akad. Perpanjangan hanya sah bila diumumkan dan pendukung diberi pilihan menarik dana.' },
+        { t: 'Cairkan 80% dana dan minta petani mengirim kopi lebih sedikit.', short: 'Cairkan 80% dana', eff: { kas: 25, trust: -5, sya: -6 }, bad: true, fb: 'Pendukung memesan jumlah dan spesifikasi tertentu. Mengurangi imbalan secara sepihak berarti mengubah objek akad tanpa kerelaan.' },
+      ],
+      ref: 'Prinsip an taradhin minkum (QS An-Nisa: 29) dan kejelasan syarat akad.' },
+
+    { stage: 5, title: 'Cara mencairkan dana produksi',
+      sit: 'Kampanye sepatu Garut berhasil menghimpun Rp1,2 miliar dari 2.600 pendukung. Perajin meminta seluruh dana dicairkan sekarang untuk membeli kulit dan mesin.',
+      opts: [
+        { t: 'Cairkan **100% sekaligus** agar produksi cepat.', short: 'Cair 100% sekaligus', eff: { kas: 20, trust: -2 }, set: 'cairSekaligus', fb: 'Cepat, tetapi tidak ada lagi alat kendali bila produksi melenceng. Coolest Cooler menerima seluruh dana di muka, lalu kehabisan biaya produksi.' },
+        { t: '**Bertahap per tonggak**: 40% bahan baku, 40% setelah contoh produksi diperiksa, 20% setelah pengiriman, disertai bukti.', short: 'Pencairan bertahap per tonggak', eff: { trust: 8, sya: 5, kas: -15 }, best: true, set: 'tonggak', fb: "Pencairan bertahap sejalan dengan Istishna' paralel: platform memastikan barang benar-benar dibuat sebelum seluruh harga diserahkan. Ini mitigasi utama risiko gagal kirim." },
+        { t: 'Tahan seluruh dana sampai sepatu selesai dibuat.', short: 'Tahan dana sampai selesai', eff: { trust: -4, usr: -300 }, fb: "Perajin tidak dapat membeli bahan baku, sehingga produksi tidak pernah dimulai. Dalam Istishna' pembayaran boleh bertahap sesuai kesepakatan." },
+      ],
+      ref: "Fatwa DSN-MUI 06/2000: pembayaran Istishna' dapat dilakukan bertahap sesuai kesepakatan." },
+
+    { stage: 5, title: 'Harga kulit naik 25%',
+      sit: 'Harga kulit sapi naik 25%. Perajin meminta setiap pendukung **menambah bayar Rp90 ribu** agar sepatu tetap dikirim.',
+      opts: [
+        { t: 'Wajibkan semua pendukung menambah bayar; yang menolak tidak dikirimi sepatu.', short: 'Wajib tambah bayar', eff: { trust: -10, sya: -10, kas: 10 }, bad: true, fb: "Harga Istishna' yang telah disepakati tidak dapat diubah sepihak. Kenaikan biaya adalah risiko pembuat." },
+        { t: 'Harga tetap. Perajin menanggung selisih dari dana cadangan atau pinjaman qardh platform; pendukung yang ingin batal boleh menarik dana.', short: 'Harga tetap, opsi tarik dana', eff: { trust: 9, sya: 8, kas: -40 }, best: true, fb: "Harga yang disepakati ditepati, sementara qardh tanpa imbalan membantu perajin melewati lonjakan biaya. Opsi tarik dana menjaga kerelaan pendukung." },
+        { t: 'Diam saja dan tunda produksi sampai harga turun.', short: 'Diam dan tunda produksi', eff: { trust: -8, sya: -3 }, bad: true, set: 'tunda', fb: 'Menunda tanpa kabar adalah awal runtuhnya kepercayaan. Pendukung berhak atas informasi yang benar tentang jadwal kirim.' },
+      ],
+      ref: "Fatwa DSN-MUI 06/2000 tentang Istishna'; Fatwa DSN-MUI 19/2001 tentang Al-Qardh.",
+      quiz: { q: "Dalam akad Istishna', bila biaya bahan baku naik setelah akad, maka", opts: ['Penjual boleh menaikkan harga sepihak', 'Harga yang disepakati tetap berlaku kecuali kedua pihak sepakat mengubahnya', 'Akad otomatis batal', 'Pembeli wajib menanggung kenaikan'], a: 1, why: "Harga Istishna' ditetapkan saat akad. Perubahan hanya sah bila disepakati kedua pihak, sehingga kenaikan biaya pada dasarnya menjadi risiko pembuat." } },
+
+    { stage: 6, title: 'Pengiriman terlambat dua bulan',
+      sit: 'Kurir kewalahan dan contoh produksi harus diperbaiki. Pengiriman sepatu dipastikan **terlambat dua bulan**. Keluhan mulai ramai di media sosial.',
+      opts: [
+        { t: 'Umumkan keterlambatan beserta penyebab dan jadwal baru, beri kabar mingguan, dan tawarkan pengembalian dana penuh bagi yang ingin batal.', short: 'Transparan dan opsi refund', eff: { trust: 7, sya: 4, kas: -20 }, best: true, fb: 'Keterlambatan dapat dimaafkan, sedangkan ketidakjujuran tidak. Pilihan batal menjaga kerelaan pendukung.' },
+        { t: 'Hapus komentar negatif dan tunggu keluhan reda.', short: 'Hapus komentar negatif', eff: { trust: -12, sya: -3 }, bad: true, fb: 'Menutupi masalah memperbesar krisis kepercayaan dan melanggar hak konsumen atas informasi.' },
+        { t: 'Salahkan kurir dan pabrik dalam pengumuman resmi.', short: 'Salahkan kurir', eff: { trust: -4 }, fb: 'Tanggung jawab kepada pendukung tetap ada pada pencipta dan platform, apa pun penyebabnya.' },
+      ],
+      ref: 'Coolest Cooler: kabar yang tidak menentu menjadi sumber kemarahan pendukung (GeekWire, 2017).' },
+
+    { stage: 6, title: 'Permintaan data pendukung',
+      sit: 'Sebuah perusahaan asuransi menawar **data 15.000 pendukung** senilai Rp150 juta untuk pemasaran produknya.',
+      opts: [
+        { t: 'Jual datanya. Pendukung sudah menyetujui syarat dan ketentuan umum.', short: 'Jual data pendukung', eff: { kas: 150, trust: -15, sya: -8 }, bad: true, set: 'jualData', fb: 'Persetujuan umum tidak cukup. UU 27/2022 tentang PDP mensyaratkan dasar pemrosesan yang jelas, dan menjual data titipan pengguna adalah khianat atas amanah.' },
+        { t: 'Tolak penjualan data. Tawarkan kerja sama iklan dengan asuransi syariah yang hanya menjangkau pendukung yang **memberi persetujuan eksplisit**.', short: 'Tolak jual data, iklan berizin', eff: { kas: 40, trust: 5, sya: 5 }, best: true, fb: 'Pendapatan tetap diperoleh melalui ijarah jasa iklan, sementara data tidak berpindah tangan. Persetujuan eksplisit menghormati hak pendukung.' },
+        { t: 'Berikan data tanpa nama secara gratis untuk memperkuat hubungan bisnis.', short: 'Berikan data tanpa nama', eff: { trust: -3, sya: -2 }, fb: 'Lebih aman, tetapi tetap tanpa persetujuan pendukung dan tanpa manfaat yang jelas bagi platform.' },
+      ],
+      ref: 'UU 27/2022 tentang Pelindungan Data Pribadi; prinsip amanah.' },
+
+    { stage: 6, title: 'Arah platform tahun depan',
+      sit: 'Investor menilai pendapatan RCF terlalu tipis dan menawarkan tiga arah pengembangan untuk tahun kedua.',
+      opts: [
+        { t: 'Langsung menawarkan **bagi hasil** kepada pendukung mulai bulan depan tanpa menunggu izin.', short: 'Bagi hasil tanpa izin', eff: { usr: 2000, kas: 60, sya: -14, trust: -6 }, bad: true, fb: 'Imbalan berupa bagi hasil masuk rezim urun dana efek, sehingga wajib berizin terlebih dahulu (POJK 57/2020).' },
+        { t: 'Tetap RCF syariah, tambah **layanan pendampingan kampanye** dan **pra-pesan lanjutan** bagi proyek yang berhasil, sambil menyiapkan izin SCF secara terpisah.', short: 'RCF plus layanan, izin SCF terpisah', eff: { kas: 90, trust: 5, sya: 6 }, best: true, fb: 'Pendapatan bertambah tanpa mengubah akad pendukung RCF. Langkah ini mirip lintasan Mystartr yang naik ke Equity Crowdfunding setelah memperoleh lisensi pada 2019.' },
+        { t: 'Hentikan kurasi agar lebih banyak proyek tayang.', short: 'Hentikan kurasi', eff: { usr: 1500, kas: 40, trust: -10 }, bad: true, fb: 'Volume naik, tetapi kampanye bermasalah ikut tayang. Pelajaran Wujudkan menunjukkan bahwa yang menentukan adalah proyek berhasil, bukan jumlah proyek.' },
+      ],
+      ref: 'POJK 57/2020 tentang Layanan Urun Dana Berbasis Teknologi Informasi; The Edge Malaysia tentang Mystartr.',
+      quiz: { q: 'Bila imbalan kepada pendukung berubah dari produk menjadi bagi hasil usaha, maka', opts: ['Tetap RCF dan tidak perlu izin', 'Model berpindah ke urun dana efek yang memerlukan izin', 'Menjadi donasi', 'Menjadi jual beli Salam'], a: 1, why: 'Bagi hasil menjadikan pendukung sebagai pemodal, sehingga berlaku rezim urun dana efek (POJK 57/2020) dengan akad musyarakah atau mudharabah.' } },
+  ],
+  events: [
+    { id: 'e1', month: 5, if: 'akadKabur', text: 'Seorang pendukung menggugat karena sepatu yang ia bayar disebut "donasi" sehingga tidak dapat dikembalikan. Kasusnya viral.', eff: { trust: -8 } },
+    { id: 'e2', month: 6, if: 'investasi', text: 'Regulator meminta klarifikasi karena kampanye menjanjikan bagi hasil tanpa izin urun dana efek.', eff: { sya: -6, trust: -6, kas: -30 } },
+    { id: 'e3', month: 10, if: 'fiktif', unless: 'escrow', text: 'Kreator jam tangan pintar menghilang setelah dana Rp1,4 miliar cair. Tanpa rekening penampung, dana tidak dapat ditarik kembali.', eff: { trust: -22, kas: -120, usr: -2500 } },
+    { id: 'e3b', month: 10, if: 'fiktif escrow', text: 'Kreator jam tangan pintar gagal menunjukkan purwarupa. Karena dana masih di rekening penampung, seluruh dana dapat dikembalikan.', eff: { trust: -4 }, good: true },
+    { id: 'e4', month: 9, if: 'cairSekaligus', text: 'Perajin sepatu kehabisan dana di tengah produksi karena seluruh dana sudah terpakai di muka. Pendukung menunggu tanpa kepastian.', eff: { trust: -10, kas: -40 } },
+    { id: 'e5', month: 11, if: 'janjiPalsu', text: 'Mukena batik tidak tiba sebelum Lebaran seperti yang dijanjikan influencer. Ratusan pendukung meminta uang kembali.', eff: { trust: -8, kas: -30 } },
+    { id: 'e6', month: 12, if: 'jualData', text: 'Pendukung menerima telepon pemasaran bertubi-tubi dan menelusurinya ke Janji Karya. Pengaduan masuk ke lembaga perlindungan konsumen.', eff: { trust: -8, sya: -4 } },
+    { id: 'e7', month: 8, if: 'campur', text: 'Kas operasional menipis. Pengembalian dana kampanye yang gagal terlambat seminggu karena dana pendukung ikut terpakai.', eff: { trust: -8, sya: -4 } },
+    { id: 'e8', month: 11, if: 'tonggak', text: 'Berkat pencairan bertahap, contoh produksi yang cacat terdeteksi sebelum dana tahap kedua cair. Perajin memperbaikinya tanpa merugikan pendukung.', eff: { trust: 5 }, good: true },
+    { id: 'e9', month: 8, if: 'aon', text: 'Media menilai Janji Karya tegas: tiga kampanye yang gagal mengembalikan dana secara utuh dalam dua hari.', eff: { trust: 4, usr: 500 }, good: true },
+  ],
+  verdicts: [
+    [85, 'Amanah dan berkelanjutan', 'Janji imbalan ditepati, akad jelas per tingkatan, dan platform tetap tumbuh. Inilah rancangan RCF syariah yang dibahas di kelas.'],
+    [70, 'Kokoh dengan beberapa celah', 'Sebagian besar keputusan tepat. Periksa kembali bulan yang ditandai merah pada tinjauan.'],
+    [55, 'Tumbuh tetapi rapuh', 'Platform tumbuh, namun beberapa keputusan menggerus kepercayaan atau kepatuhan syariah. Akibat tertunda mulai terasa.'],
+    [0, 'Mengulang jejak Coolest Cooler', 'Rekor pendanaan tidak diikuti janji yang tertunaikan. Pelajari pembahasan, lalu ulangi permainan.'],
+  ],
+  refl: [
+    'Pada tingkatan imbalan mana Anda menggunakan hibah dan pada tingkatan mana Istishna\' atau Salam? Jelaskan alasannya beserta akibatnya bagi hak pendukung.',
+    'Keputusan mana yang paling memengaruhi nilai Anda, dan akibat tertunda apa yang muncul darinya?',
+    'Bandingkan Janji Karya dengan Mystartr dan Wujudkan: apa yang membuat platform RCF bertahan atau tutup?',
+    'Rancanglah satu klausul kampanye yang melindungi pendukung bila imbalan tidak terkirim.',
+  ],
+  pdfKicker: 'REWARD BASED CROWDFUNDING SIMULATION',
+  pdfTitle: 'Lembar Hasil Belajar: Janji Karya',
+};
+</script>
+<script src="../saham/lib/jspdf-2.5.1.umd.min.js" defer></script>
+<script src="../cf/engine.js?v=1" defer></script>
+</body>
+</html>
