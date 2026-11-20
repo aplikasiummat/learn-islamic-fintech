@@ -65,11 +65,17 @@ window.KomiteKelas = (function () {
         }
       if (!clients.length) throw new Error('notfound');
     }
-    const last = {};  // topik -> isi mentah terakhir, untuk membuang pesan ganda dan pantulan relay
+    // Setiap pesan terenkripsi unik (IV acak), jadi isi mentah yang pernah dilihat cukup diproses sekali.
+    // Ini mencegah pantulan relay antarbroker menimpa status yang lebih baru dengan status lama.
+    const seen = new Set(), lihat = raw => { seen.add(raw); if (seen.size > 4000) seen.delete(seen.values().next().value) };
+    const last = {};
     const handle = async (t, m, from) => {
-      const raw = m.toString(); if (last[t] === raw) return; last[t] = raw;
+      const raw = m.toString();
+      if (raw.length) { if (seen.has(raw)) return; lihat(raw) } else { if (last[t] === '') return }
+      last[t] = raw;
       const sub = t.slice(base.length + 1);
-      if (h.role === 'host' && clients.length > 1 && (sub === 'ctl' || sub.startsWith('p/')))
+      // kontrol hanya ditulis pengajar langsung ke semua broker, jadi tidak perlu diteruskan; kanal pasangan diteruskan
+      if (h.role === 'host' && clients.length > 1 && sub.startsWith('p/'))
         clients.forEach(c => { if (c !== from) c.publish(t, raw, { qos: 1, retain: true }) });
       if (!raw.length) { if (sub.startsWith('s/') && h.onStatus) h.onStatus(sub.slice(2), null); return }
       let o; try { o = await open(key, raw) } catch (e) { return }
@@ -85,7 +91,7 @@ window.KomiteKelas = (function () {
       c.on('reconnect', () => { h.onConn && h.onConn(up()) });
       c.subscribe([base + '/ctl', base + '/p/+'].concat(h.role === 'host' ? [base + '/s/+'] : []), { qos: 1 });
     });
-    const pub = async (path, obj, retain) => { const raw = obj === null ? '' : await seal(key, obj); clients.forEach(c => c.publish(base + '/' + path, raw, { qos: 1, retain: !!retain })) };
+    const pub = async (path, obj, retain) => { const raw = obj === null ? '' : await seal(key, obj); if (raw) lihat(raw); last[base + '/' + path] = raw; clients.forEach(c => c.publish(base + '/' + path, raw, { qos: 1, retain: !!retain })) };
     return {
       code, brokers: clients.length,
       setCtl: o => pub('ctl', o, true),

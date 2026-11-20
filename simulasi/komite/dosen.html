@@ -11,7 +11,7 @@
 <script src="../saham/lib/mqtt-5.10.1.min.js"></script>
 <script src="../saham/lib/qrcode-1.0.0.min.js"></script>
 <script src="data.js?v=3"></script>
-<script src="kelas.js?v=1"></script>
+<script src="kelas.js?v=2"></script>
 <script src="bagan.js?v=2"></script>
 <style>
 .kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
@@ -54,12 +54,12 @@ $('#proj').onclick = () => { document.body.classList.toggle('proj'); if (documen
 function urlMain() { return new URL('main.html?kelas=' + KODE, location.href).href }
 
 function awal() {
-  app.innerHTML = `<div class="card hero"><div class="kicker">Untuk pengajar</div><h1>Buka kelas</h1>
-    <p style="color:#dbe6f6;max-width:760px">Buat kode kelas, tampilkan QR di layar, lalu peserta bermain di laptop atau HP masing-masing melawan komputer. Skor, kemajuan, dan soal tersulit tampil langsung di sini.</p>
-    <div class="row" style="margin-top:16px"><button class="btn gold" id="baru" type="button">✨ Buat kelas baru</button></div></div>
-    <div class="card"><h3>Buka lagi kelas yang sudah ada</h3><div class="row"><input id="kd" placeholder="Kode kelas" maxlength="8" style="max-width:260px;text-transform:uppercase;font-family:'JetBrains Mono',monospace" value="${esc(KODE)}"><button class="btn" id="buka" type="button">Buka</button></div></div>`;
-  $('#baru').onclick = () => { KODE = KomiteKelas.newCode(); P = {}; LIVE = {}; hapusT = 0; CTL = { judul: 'IHT Financial & Legal Professionals', mulai: false, stop: false, pesan: '', t: Date.now() }; simpan(); hubung() };
-  $('#buka').onclick = () => { const k = KomiteKelas.cleanCode($('#kd').value); if (k.length < 4) return; if (k !== KODE) { P = {}; LIVE = {}; hapusT = 0; CTL = null } KODE = k; CTL = CTL || { judul: 'IHT Financial & Legal Professionals', mulai: false, stop: false, pesan: '', t: Date.now() }; simpan(); hubung() };
+  app.innerHTML = `<div class="card hero"><div class="kicker">Untuk pengajar</div><h1>Satu klik, kelas langsung jalan</h1>
+    <p style="color:#dbe6f6;max-width:760px">Klik tombol di bawah. Kode kelas muncul besar di layar; peserta mengetik kode itu di HP atau laptop dan langsung bermain melawan komputer. Setelah semua selesai, turnamen antarpeserta berjalan sendiri sampai final. Anda cukup menonton dashboard.</p>
+    <div class="row" style="margin-top:16px"><button class="btn gold" id="baru" type="button" style="font-size:1.3rem;min-height:70px;min-width:320px">▶ Buka kelas</button></div></div>
+    <details class="card"><summary style="cursor:pointer;font-weight:700">Buka lagi kelas yang sudah ada</summary><div class="row" style="margin-top:12px"><input id="kd" placeholder="Kode kelas" maxlength="8" style="max-width:260px;text-transform:uppercase;font-family:'JetBrains Mono',monospace" value="${esc(KODE)}"><button class="btn" id="buka" type="button">Buka</button></div></details>`;
+  $('#baru').onclick = () => { KODE = KomiteKelas.newCode(); P = {}; LIVE = {}; hapusT = 0; CTL = { judul: 'IHT Financial & Legal Professionals', mulai: true, stop: false, pesan: '', t: Date.now() }; simpan(); hubung() };
+  $('#buka').onclick = () => { const k = KomiteKelas.cleanCode($('#kd').value); if (k.length < 4) return; if (k !== KODE) { P = {}; LIVE = {}; hapusT = 0; CTL = null } KODE = k; CTL = CTL || { judul: 'IHT Financial & Legal Professionals', mulai: true, stop: false, pesan: '', t: Date.now() }; simpan(); hubung() };
 }
 function simpan() { store.set('kode', KODE); store.set('ctl', CTL); store.set('peserta', P); store.set('hapusT', hapusT); store.set('turcfg', TURCFG) }
 function setConn(on, t) { const c = $('#conn'); c.className = 'chip ' + (on ? 'on' : 'off'); c.textContent = t || (on ? '● Kelas ' + KODE + ' aktif' : '○ Menyambung ulang ...') }
@@ -88,10 +88,10 @@ function render() {
   app.innerHTML = `
   <div class="grid2 hideproj">
     <div class="card hero"><div class="kicker">Kode kelas</div><div class="code">${KODE}</div>
-      <p style="color:#dbe6f6;margin:10px 0 4px">Peserta membuka tautan atau memindai QR, mengisi nama, memilih lawan, lalu menunggu Anda menekan Mulai.</p>
+      <p style="color:#dbe6f6;margin:10px 0 4px">Peserta membuka <b>learnislamicfintech.tazkia.ac.id/simulasi/komite</b>, mengetik kode ini, lalu langsung bermain. Atau pindai QR.</p>
       <p style="word-break:break-all;margin:0"><a href="${url}" target="_blank" rel="noopener">${esc(url)}</a></p>
       <div class="row" style="margin-top:14px">
-        <button class="btn ${CTL.mulai ? 'ghost' : 'gold'}" id="mulai" type="button">${CTL.mulai ? '✓ Sudah dimulai' : '▶ Mulai serentak'}</button>
+        ${CTL.mulai ? '' : '<button class="btn gold" id="mulai" type="button">▶ Mulai</button>'}
         <button class="btn red" id="stop" type="button">${CTL.stop ? '↺ Buka lagi' : '⏹ Hentikan, tampilkan hasil'}</button>
       </div></div>
     <div class="card" style="text-align:center"><div id="qr"></div><p class="muted" style="margin:8px 0 0">Pindai untuk bergabung</p></div>
@@ -107,7 +107,7 @@ function render() {
     <div id="turBody" style="margin-top:14px"></div></div>
   <div id="data"></div>`;
   if (window.QRCode) new QRCode($('#qr'), { text: url, width: 210, height: 210 });
-  $('#mulai').onclick = () => { if (!CTL.mulai) kontrol({ mulai: true, stop: false }) };
+  if ($('#mulai')) $('#mulai').onclick = () => kontrol({ mulai: true, stop: false });
   $('#stop').onclick = () => kontrol(CTL.stop ? { stop: false } : { stop: true });
   $('#kirimP').onclick = () => { const t = $('#pesan').value.trim(); if (t) { kontrol({ pesan: t + ' ' }); } };
   $('#csv').onclick = csv;
@@ -153,7 +153,9 @@ function mesin() {
   const T = CTL.tur;
   if (!T) {
     const R = rows(), sel = R.filter(r => r.sel && r.i > 0);
-    if (TURCFG.auto && sel.length >= 2 && sel.length === R.length) { if (!hitung) hitung = Date.now() + 15000; if (Date.now() >= hitung) { hitung = null; mulaiTurnamen() } }
+    const semua = sel.length === R.length, banyak = sel.length >= Math.ceil(R.length * .75);
+    if (!banyak) t75 = 0; else if (!t75) t75 = Date.now();
+    if (TURCFG.auto && sel.length >= 2 && (semua || (t75 && Date.now() - t75 > 180000))) { if (!hitung) hitung = Date.now() + 15000; if (Date.now() >= hitung) { hitung = null; t75 = 0; mulaiTurnamen() } }
     else hitung = null;
     renderTur(); return;
   }
@@ -190,7 +192,7 @@ function renderTur(pesan) {
   let head = '';
   if (!T) {
     const R = rows(), sel = R.filter(r => r.sel && r.i > 0).length;
-    head = `<p><b>${sel} dari ${R.length}</b> peserta sudah selesai melawan komputer.${hitung ? ` <b style="color:var(--gold2)">Turnamen dimulai dalam ${Math.max(0, Math.ceil((hitung - Date.now()) / 1000))} detik.</b>` : TURCFG.auto ? ' Turnamen mulai otomatis 15 detik setelah semua selesai. Bila ada yang belum selesai, tekan Hentikan di atas atau Mulai turnamen sekarang.' : ''}</p>`;
+    head = `<p><b>${sel} dari ${R.length}</b> peserta sudah selesai melawan komputer.${hitung ? ` <b style="color:var(--gold2)">Turnamen dimulai dalam ${Math.max(0, Math.ceil((hitung - Date.now()) / 1000))} detik.</b>` : TURCFG.auto ? ' Turnamen mulai otomatis 15 detik setelah semua selesai, atau 3 menit setelah tiga perempat peserta selesai (yang belum selesai tidak ikut turnamen).' + (t75 && sel < R.length ? ' Batas tunggu: ' + Math.max(0, Math.ceil((t75 + 180000 - Date.now()) / 1000)) + ' detik.' : '') : ''}</p>`;
   } else if (T.st === 'run') {
     const R = T.R[T.cur], sisa = Math.max(0, Math.round((R.dl - Date.now()) / 1000)), sel = R.M.filter(m => m.w).length;
     head = `<p><b style="color:var(--gold2)">${Bagan.namaRonde(T, T.cur)}</b> · ${sel} dari ${R.M.length} laga selesai · batas waktu ${mm(sisa)}${R.tEnd ? ' · <b>babak berikutnya segera dimulai</b>' : ''}</p>`;
@@ -202,6 +204,7 @@ function renderTur(pesan) {
   box.innerHTML = (pesan ? `<p style="color:var(--red)">${esc(pesan)}</p>` : '') + head + (T ? Bagan.html(T, LIVE, null) : '');
 }
 setInterval(mesin, 1000);
+let t75 = 0;
 let bersihKlik = 0;
 function confirmBersih() { const b = $('#bersih'); if (Date.now() - bersihKlik < 4000) return true; bersihKlik = Date.now(); b.textContent = 'Klik sekali lagi untuk mengosongkan'; setTimeout(() => { if ($('#bersih')) $('#bersih').textContent = '🧹 Kosongkan papan skor' }, 4000); return false }
 

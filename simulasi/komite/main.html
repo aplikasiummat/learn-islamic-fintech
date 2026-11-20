@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="komite.css?v=3">
 <script src="../saham/lib/mqtt-5.10.1.min.js"></script>
 <script src="data.js?v=3"></script>
-<script src="kelas.js?v=1"></script>
+<script src="kelas.js?v=2"></script>
 <script src="bagan.js?v=2"></script>
 <script src="turnamen.js?v=1"></script>
 </head>
@@ -106,9 +106,9 @@ function layarAwal() {
   <div class="grid2">
     <div class="card">
       <h3>1. Identitas</h3>
+      <label for="kode" style="margin-top:0">Kode kelas dari pengajar <span class="muted">(kosongkan bila main sendiri)</span></label><input id="kode" maxlength="8" value="${esc(kode)}" placeholder="KETIK KODE" style="text-transform:uppercase;font-family:'JetBrains Mono',monospace;letter-spacing:.2em;font-size:1.5rem;border-color:var(--gold)">
       <label for="nama">Nama Anda (atau nama kelompok)</label><input id="nama" maxlength="40" value="${esc(nm)}" placeholder="contoh: Rina, Legal Kantor Pusat">
       <label for="unit">Jabatan atau unit kerja</label><input id="unit" maxlength="40" value="${esc(un)}" placeholder="contoh: Legal, Risiko, Pembiayaan">
-      <label for="kode">Kode kelas dari pengajar <span class="muted">(boleh kosong bila main sendiri)</span></label><input id="kode" maxlength="8" value="${esc(kode)}" placeholder="contoh: K7QX2" style="text-transform:uppercase;font-family:'JetBrains Mono',monospace;letter-spacing:.15em">
     </div>
     <div class="card">
       <h3>2. Pilih lawan</h3>
