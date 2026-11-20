@@ -74,8 +74,8 @@ const T = {
   cntEyebrow:"Capaian", cntTitle:"Belajar tanpa biaya, kapan saja",
   newsEyebrow:"Bahan Ajar Terbaru", newsTitle:"Deck kuliah terbaru", seeAll:"Selengkapnya",
   footRel:"Situs Terkait", footAddr:"Universitas Tazkia · Sentul City, Bogor, Jawa Barat",
-  mSimDbcf:"Simulasi Donasi (DBCF)", mSimSaham:"Simulasi Saham Syariah", mSimMmq:"Simulasi Musyarakah Mutanaqishah", mSimKomite:"Duel Komite Kredit",
-  sim4CardT:"Duel Komite Kredit", sim4CardD:"Reviewer legal dan risiko melawan komputer: 5C, neraca, siklus kas, opini audit, trik AO, pemalsuan data MUK, dan sidang komite. Dengan dashboard pengajar.", sim4Meta:"10 babak · 15–30 menit · lawan komputer",
+  mSimDbcf:"Simulasi Donasi (DBCF)", mSimSaham:"Simulasi Saham Syariah", mSimMmq:"Simulasi Musyarakah Mutanaqishah", mSimKomite:"Duel Komite Pembiayaan BPRS",
+  sim4CardT:"Duel Komite Pembiayaan BPRS", sim4CardD:"Reviewer legal dan risiko melawan komputer: 5C, neraca, siklus kas, opini audit, trik AO, pemalsuan data MUP, dan sidang komite pembiayaan BPRS. Dengan dashboard pengajar.", sim4Meta:"10 babak · 15–30 menit · lawan komputer",
   sim3CardT:"Simulasi Musyarakah Mutanaqishah (MMQ)", sim3CardD:"Tiga permainan kelompok tentang MMQ: Maqasid dan Pemilihan Akad, Cabang vs Pusat, dan Jejak Audit MMQ, lengkap dengan konsol fasilitator dan papan skor kelas.", sim3Meta:"3 permainan · 15–30 menit",
   ssCrumb:"Saham Syariah", ssTitle:"Bursa Syariah", ssStart:"Mulai Simulasi", ssHow:"Cara Bermain",
   ssLead:"Rasakan jual beli saham seperti di Bursa Efek Indonesia, dengan aturan syariah yang benar-benar bekerja. Dua puluh menit, sepuluh hari bursa, dan modal virtual Rp100 juta di akun SOTS.",
@@ -179,8 +179,8 @@ const T = {
   cntEyebrow:"Milestones", cntTitle:"Learn at no cost, anytime",
   newsEyebrow:"Latest Materials", newsTitle:"Latest lecture decks", seeAll:"See all",
   footRel:"Related Sites", footAddr:"Universitas Tazkia · Sentul City, Bogor, West Java",
-  mSimDbcf:"Donation Simulation (DBCF)", mSimSaham:"Islamic Stock Simulation", mSimMmq:"Diminishing Partnership (MMQ) Simulation", mSimKomite:"Credit Committee Duel",
-  sim4CardT:"Credit Committee Duel", sim4CardD:"Legal and risk reviewers versus the computer: 5C, balance sheet, cash cycle, audit opinion, loan officer tricks, falsified credit memos, and the committee hearing. With an instructor dashboard (Indonesian).", sim4Meta:"10 rounds · 15–30 minutes · vs computer",
+  mSimDbcf:"Donation Simulation (DBCF)", mSimSaham:"Islamic Stock Simulation", mSimMmq:"Diminishing Partnership (MMQ) Simulation", mSimKomite:"BPRS Financing Committee Duel",
+  sim4CardT:"BPRS Financing Committee Duel", sim4CardD:"Legal and risk reviewers versus the computer: 5C, balance sheet, cash cycle, audit opinion, account officer tricks, falsified financing memos, and the committee hearing. With an instructor dashboard (Indonesian).", sim4Meta:"10 rounds · 15–30 minutes · vs computer",
   sim3CardT:"Diminishing Partnership (MMQ) Simulation", sim3CardD:"Three group games on musyarakah mutanaqishah: Maqasid and Contract Choice, Branch vs Head Office, and MMQ Audit Trail, with a facilitator console and class scoreboard. Interface in Indonesian.", sim3Meta:"3 games · 15–30 minutes",
   ssCrumb:"Islamic Stocks", ssTitle:"Bursa Syariah", ssStart:"Start the Simulation", ssHow:"How to Play",
   ssLead:"Trade stocks the way the Indonesia Stock Exchange works, with Shariah rules that actually bite. Twenty minutes, ten trading days, and Rp100 million of virtual capital in a SOTS account.",
@@ -335,7 +335,7 @@ function renderMods(){
     if (sim2Ok) html += simCard2();
     const sim3Ok = (filter==="all" || filter==="sim") && (!q || (T.id.sim3CardT+" "+T.id.sim3CardD+" mmq musyarakah mutanaqishah pnm audit akad").toLowerCase().includes(q));
     if (sim3Ok) html += simCard3();
-    const sim4Ok = (filter==="all" || filter==="sim") && (!q || (T.id.sim4CardT+" "+T.id.sim4CardD+" "+T.en.sim4CardD+" komite kredit bpr legal fraud muk neraca 5c").toLowerCase().includes(q));
+    const sim4Ok = (filter==="all" || filter==="sim") && (!q || (T.id.sim4CardT+" "+T.id.sim4CardD+" "+T.en.sim4CardD+" komite pembiayaan bprs kredit legal fraud mup muk neraca 5c").toLowerCase().includes(q));
     if (sim4Ok) html += simCard4();
     cat.innerHTML = html || `<div class="empty">${T[lang].empty}</div>`;
   }

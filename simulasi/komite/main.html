@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Duel Komite Kredit</title>
+<title>Duel Komite Pembiayaan BPRS</title>
 <link rel="icon" href="../../assets/logo-tazkia.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="komite.css?v=1">
+<link rel="stylesheet" href="komite.css?v=2">
 <script src="../saham/lib/mqtt-5.10.1.min.js"></script>
-<script src="data.js?v=1"></script>
+<script src="data.js?v=2"></script>
 <script src="kelas.js?v=1"></script>
 </head>
 <body>
-<div class="top"><a class="chip" href="index.html">☰ Menu</a><div class="t">Duel <span>Komite Kredit</span></div><span class="chip" id="hdrNama"></span><span class="chip" id="conn" style="display:none"></span><button class="chip" id="snd" type="button" style="cursor:pointer">🔊</button></div>
+<div class="top"><a class="chip" href="index.html">☰ Menu</a><div class="t">Duel <span>Komite Pembiayaan BPRS</span></div><span class="chip" id="hdrNama"></span><span class="chip" id="conn" style="display:none"></span><button class="chip" id="snd" type="button" style="cursor:pointer">🔊</button></div>
 <div class="wrap" id="app"></div>
 <canvas class="confetti" id="cf"></canvas>
 
@@ -94,8 +94,8 @@ function layarAwal() {
   app.innerHTML = `
   <div class="card hero">
     <div class="kicker">IHT Financial &amp; Legal Professionals · Hari Pertama</div>
-    <h1>Duel Komite Kredit</h1>
-    <p style="font-size:1.15rem;max-width:760px;color:#dbe6f6">Anda reviewer legal dan risiko. Lawan Anda: analis robot. Sepuluh babak dari materi hari ini, dari 5C dan neraca, siklus kas, opini audit, trik AO, pemalsuan data di MUK, sampai sidang komite. Jawab tepat dan cepat untuk mengalahkan komputer.</p>
+    <h1>Duel Komite Pembiayaan BPRS</h1>
+    <p style="font-size:1.15rem;max-width:760px;color:#dbe6f6">Anda reviewer legal dan risiko di sebuah BPRS. Lawan Anda: analis robot. Sembilan babak dari materi hari ini, dari 5C dan neraca, siklus kas, opini audit, trik AO, pemalsuan data di MUP, sampai sidang komite. Jawab tepat dan cepat untuk mengalahkan komputer.</p>
     <div class="map">${D.BABAK.map(b => `<span title="${esc(b.nama)}">${b.ikon}</span>`).join('')}</div>
   </div>
   <div class="grid2">
@@ -109,7 +109,7 @@ function layarAwal() {
       <h3>2. Pilih lawan</h3>
       <div class="foes">${D.LAWAN.map(l => `<button type="button" class="foe${l.k === lw ? ' sel' : ''}" data-l="${l.k}"><span class="em">${l.ikon}</span><b>${l.nama}</b><small>${l.ket}</small></button>`).join('')}</div>
       <h3 style="margin-top:18px">3. Pilih durasi</h3>
-      <div class="seg"><button type="button" data-m="lengkap" class="sel"><b>Lengkap · ±30 menit</b><small>${D.BABAK.reduce((a, b) => a + b.qs.length, 0)} soal, 10 babak</small></button><button type="button" data-m="kilat"><b>Kilat · ±15 menit</b><small>${D.BABAK.reduce((a, b) => a + Math.min(2, b.qs.length), 0)} soal, 10 babak</small></button></div>
+      <div class="seg"><button type="button" data-m="lengkap" class="sel"><b>Lengkap · ±30 menit</b><small>${D.BABAK.reduce((a, b) => a + b.qs.length, 0)} soal, ${D.BABAK.length} babak</small></button><button type="button" data-m="kilat"><b>Kilat · ±15 menit</b><small>${D.BABAK.reduce((a, b) => a + Math.min(2, b.qs.length), 0)} soal, ${D.BABAK.length} babak</small></button></div>
     </div>
   </div>
   <div class="card" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
@@ -344,7 +344,7 @@ function render() {
   if (S.phase === 'rev') return layarBahas();
   return layarAkhir();
 }
-if (S && qs.get('baru') === '1') { S = null; store.set('state', null) }
+if (S && (qs.get('baru') === '1' || !Array.isArray(S.list) || S.list.some(([b, k]) => !D.BABAK[b] || !D.BABAK[b].qs[k]))) { S = null; store.set('state', null) }
 if (S && S.kelas) sambung(S.kelas);
 render();
 </script>
