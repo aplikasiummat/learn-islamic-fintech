@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Duel Komite Kredit</title>
+<link rel="icon" href="../../assets/logo-tazkia.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="komite.css?v=1">
+<script src="../saham/lib/mqtt-5.10.1.min.js"></script>
+<script src="data.js?v=1"></script>
+<script src="kelas.js?v=1"></script>
+</head>
+<body>
+<div class="top"><a class="chip" href="index.html">☰ Menu</a><div class="t">Duel <span>Komite Kredit</span></div><span class="chip" id="hdrNama"></span><span class="chip" id="conn" style="display:none"></span><button class="chip" id="snd" type="button" style="cursor:pointer">🔊</button></div>
+<div class="wrap" id="app"></div>
+<canvas class="confetti" id="cf"></canvas>
+
+<script>
+'use strict';
+const D = window.KOMITE, $ = s => document.querySelector(s), app = $('#app');
+const qs = new URLSearchParams(location.search);
+const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const LET = 'ABCDEFGH';
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('komite.' + k); return v ? JSON.parse(v) : d } catch (e) { return d } },
+  set(k, v) { try { localStorage.setItem('komite.' + k, JSON.stringify(v)) } catch (e) { } },
+};
+let S = store.get('state', null), CH = null, CTL = null, timerH = null, draft = null, muted = store.get('mute', false);
+
+/* ---------- utilitas ---------- */
+function rng(seed) { let h = 2166136261; for (const c of seed) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296 } }
+function shuffle(n, r) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1));[a[i], a[j]] = [a[j], a[i]] } return a }
+const Q = i => { const [b, k] = S.list[i]; return D.BABAK[b].qs[k] };
+const B = i => D.BABAK[S.list[i][0]];
+const foe = () => D.LAWAN.find(l => l.k === S.lawan) || D.LAWAN[1];
+function save() { store.set('state', S); hdr(); kirim() }
+function hdr() { $('#hdrNama').textContent = S ? S.nama : 'Belum masuk' }
+
+/* ---------- bunyi ---------- */
+let AC = null;
+function bunyi(jenis) {
+  if (muted) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const seq = { ok: [[660, .09], [880, .14]], bad: [[220, .18], [180, .22]], tik: [[1200, .03]], menang: [[523, .12], [659, .12], [784, .12], [1046, .3]], kalah: [[392, .18], [330, .18], [262, .35]], mulai: [[440, .08], [660, .12]] }[jenis] || [];
+    let t = AC.currentTime;
+    seq.forEach(([f, d]) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = jenis === 'bad' || jenis === 'kalah' ? 'sawtooth' : 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d + .02); t += d * .9 });
+  } catch (e) { }
+}
+$('#snd').onclick = () => { muted = !muted; store.set('mute', muted); $('#snd').textContent = muted ? '🔇' : '🔊' };
+$('#snd').textContent = muted ? '🔇' : '🔊';
+
+function konfeti() {
+  const c = $('#cf'), x = c.getContext('2d'); c.width = innerWidth; c.height = innerHeight;
+  const P = Array.from({ length: 160 }, () => ({ x: Math.random() * c.width, y: -20 - Math.random() * c.height * .5, vx: (Math.random() - .5) * 3, vy: 2 + Math.random() * 4, s: 6 + Math.random() * 8, r: Math.random() * 6, c: ['#f2b632', '#4aa3ff', '#ff4d5e', '#2fd08a', '#a98bff'][Math.floor(Math.random() * 5)] }));
+  let f = 0; (function step() { x.clearRect(0, 0, c.width, c.height); P.forEach(p => { p.x += p.vx; p.y += p.vy; p.r += .1; x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.fillStyle = p.c; x.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); x.restore() }); if (++f < 220) requestAnimationFrame(step); else x.clearRect(0, 0, c.width, c.height) })();
+}
+function toast(t, ms) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), ms || 5000) }
+
+/* ---------- kelas (papan skor pengajar) ---------- */
+function ringkasBabak() {
+  const bk = D.BABAK.map(() => [0, 0]);
+  Object.entries(S.ans).forEach(([i, a]) => { const b = S.list[i][0]; bk[b][0] += a.pts; bk[b][1] += a.bpts });
+  return bk;
+}
+let kirimT = null;
+function kirim() {
+  if (!CH || !S) return; clearTimeout(kirimT);
+  kirimT = setTimeout(() => {
+    const h = S.list.map((_, i) => { const a = S.ans[i]; return !a ? '-' : a.f >= 1 ? '1' : a.f > 0 ? 'p' : '0' }).join('');
+    CH.setStatus(S.id, { nama: S.nama, unit: S.unit, lawan: S.lawan, mode: S.mode, n: S.list.length, i: Object.keys(S.ans).length, skor: S.skor, bot: S.bot, benar: Object.values(S.ans).filter(a => a.f >= 1).length, sel: S.phase === 'end', h, keys: S.list.map(x => x.join('.')).join(','), bk: ringkasBabak(), t: Date.now(), t0: S.t0 }).catch(() => { });
+  }, 300);
+}
+function setConn(on, label) { const c = $('#conn'); c.style.display = ''; c.className = 'chip ' + (on ? 'on' : 'off'); c.textContent = label || (on ? '● Kelas ' + S.kelas : '○ Menyambung ulang') }
+async function sambung(kode) {
+  setConn(false, '○ Mencari kelas ' + kode + ' ...');
+  try {
+    CH = await KomiteKelas.join(kode, {
+      role: 'player',
+      onCtl: o => { const lama = CTL; CTL = o; if (o.pesan && (!lama || lama.pesan !== o.pesan)) toast('📣 ' + o.pesan, 8000); if (S && S.phase === 'wait' && o.mulai) { S.phase = 'intro'; S.t0 = Date.now(); save(); bunyi('mulai'); render() } if (S && o.stop && S.phase !== 'end' && (!lama || !lama.stop)) { akhiri(); toast('Pengajar menutup permainan. Ini hasil Anda.') } },
+      onConn: on => setConn(on),
+    });
+    setConn(true); kirim();
+  } catch (e) { CH = null; setConn(false, e.message === 'notfound' ? '✕ Kelas ' + kode + ' tidak ditemukan' : '✕ Tidak tersambung'); if (S && S.phase === 'wait') { S.phase = 'intro'; save(); render(); toast('Kelas tidak ditemukan. Anda tetap bisa bermain; skor tidak tampil di papan pengajar.', 7000) } }
+}
+
+/* ---------- layar awal ---------- */
+function layarAwal() {
+  const kode = KomiteKelas.cleanCode(qs.get('kelas') || store.get('kode', ''));
+  const nm = store.get('nama', ''), un = store.get('unit', '');
+  let lw = store.get('lawan', 'analis'), md = 'lengkap';
+  app.innerHTML = `
+  <div class="card hero">
+    <div class="kicker">IHT Financial &amp; Legal Professionals · Hari Pertama</div>
+    <h1>Duel Komite Kredit</h1>
+    <p style="font-size:1.15rem;max-width:760px;color:#dbe6f6">Anda reviewer legal dan risiko. Lawan Anda: analis robot. Sepuluh babak dari materi hari ini, dari 5C dan neraca, siklus kas, opini audit, trik AO, pemalsuan data di MUK, sampai sidang komite. Jawab tepat dan cepat untuk mengalahkan komputer.</p>
+    <div class="map">${D.BABAK.map(b => `<span title="${esc(b.nama)}">${b.ikon}</span>`).join('')}</div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>1. Identitas</h3>
+      <label for="nama">Nama Anda (atau nama kelompok)</label><input id="nama" maxlength="40" value="${esc(nm)}" placeholder="contoh: Rina, Legal Kantor Pusat">
+      <label for="unit">Jabatan atau unit kerja</label><input id="unit" maxlength="40" value="${esc(un)}" placeholder="contoh: Legal, Risk, Kredit">
+      <label for="kode">Kode kelas dari pengajar <span class="muted">(boleh kosong bila main sendiri)</span></label><input id="kode" maxlength="8" value="${esc(kode)}" placeholder="contoh: K7QX2" style="text-transform:uppercase;font-family:'JetBrains Mono',monospace;letter-spacing:.15em">
+    </div>
+    <div class="card">
+      <h3>2. Pilih lawan</h3>
+      <div class="foes">${D.LAWAN.map(l => `<button type="button" class="foe${l.k === lw ? ' sel' : ''}" data-l="${l.k}"><span class="em">${l.ikon}</span><b>${l.nama}</b><small>${l.ket}</small></button>`).join('')}</div>
+      <h3 style="margin-top:18px">3. Pilih durasi</h3>
+      <div class="seg"><button type="button" data-m="lengkap" class="sel"><b>Lengkap · ±30 menit</b><small>${D.BABAK.reduce((a, b) => a + b.qs.length, 0)} soal, 10 babak</small></button><button type="button" data-m="kilat"><b>Kilat · ±15 menit</b><small>${D.BABAK.reduce((a, b) => a + Math.min(2, b.qs.length), 0)} soal, 10 babak</small></button></div>
+    </div>
+  </div>
+  <div class="card" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+    <div style="flex:1;min-width:240px" class="muted">Setiap soal ${D.DETIK} detik. Jawaban benar penuh = ${D.POIN} poin + bonus kecepatan sampai ${D.BONUS} poin. Soal mengelompokkan dan memilih banyak jawaban dinilai sebagian. Setiap pembahasan ditutup dengan <b style="color:#ff9aa4">Kacamata Legal</b>.</div>
+    <button class="btn gold" id="go" type="button" style="min-width:260px">⚔️ Mulai duel</button>
+  </div>`;
+  app.querySelectorAll('.foe').forEach(b => b.onclick = () => { lw = b.dataset.l; app.querySelectorAll('.foe').forEach(x => x.classList.toggle('sel', x === b)) });
+  app.querySelectorAll('.seg button').forEach(b => b.onclick = () => { md = b.dataset.m; app.querySelectorAll('.seg button').forEach(x => x.classList.toggle('sel', x === b)) });
+  $('#go').onclick = () => {
+    const nama = $('#nama').value.trim(), unit = $('#unit').value.trim(), kd = KomiteKelas.cleanCode($('#kode').value);
+    if (nama.length < 2) { $('#nama').focus(); toast('Isi nama dulu, ya.'); return }
+    store.set('nama', nama); store.set('unit', unit); store.set('lawan', lw); store.set('kode', kd);
+    const att = store.get('att', 0) + 1; store.set('att', att);
+    const list = []; D.BABAK.forEach((b, bi) => b.qs.forEach((_, qi) => { if (md === 'lengkap' || qi < 2) list.push([bi, qi]) }));
+    S = { id: 'p' + Math.random().toString(36).slice(2, 10), nama: att > 1 ? nama + ' · percobaan ' + att : nama, unit, lawan: lw, mode: md, kelas: kd, list, i: 0, ans: {}, skor: 0, bot: 0, ord: {}, phase: kd ? 'wait' : 'intro', t0: Date.now() };
+    save(); bunyi('mulai');
+    if (kd) sambung(kd);
+    render();
+  };
+}
+
+/* ---------- papan duel ---------- */
+function papan() {
+  const f = foe(), tot = S.skor + S.bot, pct = tot ? Math.round(S.skor / tot * 100) : 50;
+  const cur = S.list[Math.min(S.i, S.list.length - 1)][0];
+  const bk = ringkasBabak();
+  return `<div class="duel">
+    <div class="side"><div class="ava">🧑‍⚖️</div><div style="min-width:0"><div class="nm">${esc(S.nama)}</div><div class="sc me" id="scMe">${S.skor}</div></div></div>
+    <div class="vs">VS<small>${Math.min(S.i + 1, S.list.length)} / ${S.list.length}</small></div>
+    <div class="side r"><div class="ava">${f.ikon}</div><div style="min-width:0"><div class="nm">${f.nama}</div><div class="sc bot" id="scBot">${S.bot}</div></div></div>
+    <div class="tug"><i style="width:${pct}%"></i></div>
+  </div>
+  <div class="map">${D.BABAK.map((b, bi) => { const sel = S.list.filter(x => x[0] === bi).every(x => S.ans[S.list.indexOf(x)]); const cls = bi === cur && S.phase !== 'end' ? 'now' : sel ? (bk[bi][0] >= bk[bi][1] ? 'done' : 'lost') : ''; return `<span class="${cls}" title="${esc(b.nama)}">${b.ikon}</span>` }).join('')}</div>`;
+}
+
+/* ---------- intro babak ---------- */
+function layarIntro() {
+  const b = B(S.i), bi = S.list[S.i][0], nq = S.list.filter(x => x[0] === bi).length;
+  app.innerHTML = papan() + `<div class="card intro" style="border-top:6px solid ${b.warna}">
+    <div class="em">${b.ikon}</div><div class="kicker">Babak ${bi + 1} dari ${D.BABAK.length}</div><h2>${esc(b.nama)}</h2>
+    <p class="muted" style="max-width:700px;margin:0 auto 20px;font-size:1.1rem">${b.ringkas}</p>
+    <p><b>${nq} soal</b> · ${D.DETIK} detik per soal</p>
+    <button class="btn gold" id="mulaiB" type="button">Mulai babak ${bi + 1} ▶</button></div>`;
+  $('#mulaiB').onclick = () => { S.phase = 'q'; S.tq = Date.now(); draft = null; save(); bunyi('mulai'); render() };
+}
+
+/* ---------- soal ---------- */
+function urutan(i) {
+  if (!S.ord[i]) {
+    const q = Q(i), r = rng(S.id + ':' + i);
+    const n = q.t === 'sort' ? q.items.length : q.t === 'order' ? q.items.length : q.o.length;
+    S.ord[i] = shuffle(n, r); store.set('state', S);
+  }
+  return S.ord[i];
+}
+function kosong(q) { return q.t === 'mc' ? null : q.t === 'multi' ? [] : q.t === 'sort' ? q.items.map(() => null) : [] }
+
+function layarSoal() {
+  const q = Q(S.i), b = B(S.i), ord = urutan(S.i);
+  if (!draft) draft = kosong(q);
+  const nomorDiBabak = S.list.slice(0, S.i + 1).filter(x => x[0] === S.list[S.i][0]).length, nDiBabak = S.list.filter(x => x[0] === S.list[S.i][0]).length;
+  const petunjuk = { mc: 'Pilih satu jawaban, lalu kunci.', multi: 'Pilih SEMUA jawaban yang benar, lalu kunci. Pilihan salah mengurangi nilai.', sort: 'Untuk setiap baris, pilih kotak yang tepat.', order: 'Klik langkah sesuai urutan yang benar.' }[q.t];
+  let body = '';
+  if (q.t === 'mc' || q.t === 'multi') {
+    body = `<div class="opts">${ord.map((oi, k) => `<button type="button" class="opt" data-o="${oi}"><span class="L">${q.t === 'multi' ? '☐' : LET[k]}</span><span>${q.o[oi]}</span></button>`).join('')}</div>`;
+  } else if (q.t === 'sort') {
+    body = ord.map(ii => `<div class="sortrow" data-r="${ii}"><div class="it">${esc(q.items[ii][0])}</div><div class="bins">${q.bins.map((bn, bj) => `<button type="button" data-i="${ii}" data-b="${bj}">${esc(bn)}</button>`).join('')}</div></div>`).join('');
+  } else {
+    body = `<div class="orderbox"><div class="pool"><h4>Pilihan</h4><div id="pool"></div></div><div class="seq"><h4>Urutan Anda</h4><div id="seq"></div><button type="button" class="btn ghost sm" id="ulang">↺ Ulangi urutan</button></div></div>`;
+  }
+  app.innerHTML = papan() + `<div class="card" style="border-top:6px solid ${b.warna}">
+    <div class="qhead"><span class="bk" style="background:${b.warna}">${b.ikon} ${esc(b.nama)}</span><span class="no">Soal ${nomorDiBabak} dari ${nDiBabak}</span>
+      <div class="timer" id="tm"><svg width="64" height="64"><circle cx="32" cy="32" r="27" stroke="#25406b" stroke-width="6" fill="none"/><circle id="tmc" cx="32" cy="32" r="27" stroke="#f2b632" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="169.6" stroke-dashoffset="0"/></svg><b id="tmb">${D.DETIK}</b></div></div>
+    <div class="q">${q.q}</div>
+    ${q.ctx ? (q.ctx === D.SRA ? `<details class="case" open><summary>Data CV Sumber Rejeki Abadi</summary><div class="ctx">${q.ctx}</div></details>` : `<div class="ctx">${q.ctx}</div>`) : ''}
+    <p class="muted" style="margin:0 0 10px">${petunjuk}</p>
+    ${body}
+    <div class="row" style="margin-top:16px"><div class="muted" id="pr" style="flex:1"></div><button class="btn gold" id="kunci" type="button" disabled>🔒 Kunci jawaban</button></div>
+  </div>`;
+  const cek = () => { const ok = q.t === 'mc' ? draft != null : q.t === 'multi' ? draft.length > 0 : q.t === 'sort' ? draft.every(x => x != null) : draft.length === q.items.length; $('#kunci').disabled = !ok;
+    $('#pr').textContent = q.t === 'sort' ? draft.filter(x => x != null).length + ' dari ' + q.items.length + ' baris terisi' : q.t === 'order' ? draft.length + ' dari ' + q.items.length + ' langkah' : q.t === 'multi' ? draft.length + ' pilihan' : '' };
+  if (q.t === 'mc' || q.t === 'multi') {
+    app.querySelectorAll('.opt').forEach(el => el.onclick = () => {
+      const oi = +el.dataset.o;
+      if (q.t === 'mc') { draft = oi; app.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', x === el)) }
+      else { draft = draft.includes(oi) ? draft.filter(x => x !== oi) : draft.concat(oi); el.classList.toggle('sel'); el.querySelector('.L').textContent = draft.includes(oi) ? '☑' : '☐' }
+      cek();
+    });
+  } else if (q.t === 'sort') {
+    app.querySelectorAll('.bins button').forEach(el => el.onclick = () => { const ii = +el.dataset.i, bj = +el.dataset.b; draft[ii] = bj; el.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('sel', x === el)); cek() });
+  } else {
+    const gambar = () => {
+      $('#pool').innerHTML = ord.filter(ii => !draft.includes(ii)).map(ii => `<button type="button" data-ii="${ii}">${esc(q.items[ii])}</button>`).join('') || '<p class="muted">Semua langkah sudah diurutkan.</p>';
+      $('#seq').innerHTML = draft.map((ii, k) => `<div><i>${k + 1}</i>${esc(q.items[ii])}</div>`).join('') || '<p class="muted">Klik langkah pertama di kiri.</p>';
+      $('#pool').querySelectorAll('button').forEach(el => el.onclick = () => { draft.push(+el.dataset.ii); gambar(); cek() });
+    };
+    $('#ulang').onclick = () => { draft = []; gambar(); cek() }; gambar();
+  }
+  cek();
+  $('#kunci').onclick = () => kunci(false);
+  jalankanTimer();
+}
+
+function sisa() { return Math.max(0, D.DETIK - (Date.now() - S.tq) / 1000) }
+function jalankanTimer() {
+  clearInterval(timerH); let last = -1;
+  const step = () => {
+    const s = sisa(), el = $('#tmb'); if (!el) { clearInterval(timerH); return }
+    const d = Math.ceil(s); el.textContent = d; $('#tmc').style.strokeDashoffset = 169.6 * (1 - s / D.DETIK);
+    $('#tmc').style.stroke = s < 10 ? '#ff4d5e' : s < 25 ? '#ffa53b' : '#f2b632';
+    $('#tm').classList.toggle('low', s < 10);
+    if (s < 10 && d !== last) bunyi('tik'); last = d;
+    if (s <= 0) { clearInterval(timerH); kunci(true) }
+  };
+  step(); timerH = setInterval(step, 250);
+}
+
+/* ---------- penilaian ---------- */
+function nilai(q, pick) {
+  if (pick == null) return 0;
+  if (q.t === 'mc') return pick === q.a ? 1 : 0;
+  if (q.t === 'multi') { const hit = pick.filter(x => q.a.includes(x)).length, miss = pick.filter(x => !q.a.includes(x)).length; return Math.max(0, (hit - miss) / q.a.length) }
+  if (q.t === 'sort') return pick.filter((b, ii) => b === q.items[ii][1]).length / q.items.length;
+  if (q.t === 'order') return pick.filter((ii, k) => ii === k).length / q.items.length;
+  return 0;
+}
+function poin(f, detik) { return Math.round(D.POIN * f) + (f >= 1 ? Math.round(D.BONUS * Math.max(0, D.DETIK - detik) / D.DETIK) : 0) }
+function jawabBot(q, i) {
+  const r = rng(S.id + ':bot:' + i), L = foe(), p = L.akurasi;
+  const detik = Math.round(L.detik[0] + r() * (L.detik[1] - L.detik[0]));
+  let pick;
+  if (q.t === 'mc') { if (r() < p) pick = q.a; else { const w = q.o.map((_, k) => k).filter(k => k !== q.a); pick = w[Math.floor(r() * w.length)] } }
+  else if (q.t === 'multi') { pick = q.o.map((_, k) => k).filter(k => q.a.includes(k) ? r() < p + .08 : r() > p + .1) }
+  else if (q.t === 'sort') { pick = q.items.map(it => r() < p ? it[1] : (it[1] + 1 + Math.floor(r() * (q.bins.length - 1))) % q.bins.length) }
+  else { pick = q.items.map((_, k) => k); for (let k = 0; k < pick.length - 1; k++) if (r() > p) [pick[k], pick[k + 1]] = [pick[k + 1], pick[k]] }
+  const f = nilai(q, pick); return { pick, f, detik, pts: poin(f, detik) };
+}
+function kunci(habis) {
+  if (S.phase !== 'q' || S.ans[S.i]) return;
+  clearInterval(timerH);
+  const q = Q(S.i), detik = Math.min(D.DETIK, Math.round((Date.now() - S.tq) / 1000));
+  let pick = draft;
+  if (q.t === 'sort' && pick && pick.every(x => x == null)) pick = null;
+  if ((q.t === 'multi' || q.t === 'order') && pick && !pick.length) pick = null;
+  const f = nilai(q, pick), pts = poin(f, detik), bot = jawabBot(q, S.i);
+  S.ans[S.i] = { pick, f, pts, detik, habis: !!habis, b: bot.pick, bf: bot.f, bpts: bot.pts, bt: bot.detik };
+  S.skor += pts; S.bot += bot.pts; S.phase = 'rev'; save();
+  bunyi(f >= 1 ? 'ok' : 'bad');
+  render();
+}
+
+/* ---------- pembahasan ---------- */
+function layarBahas() {
+  const q = Q(S.i), a = S.ans[S.i], b = B(S.i), f = foe(), ord = urutan(S.i);
+  let body = '';
+  if (q.t === 'mc' || q.t === 'multi') {
+    const benar = k => q.t === 'mc' ? k === q.a : q.a.includes(k), dipilih = k => a.pick == null ? false : q.t === 'mc' ? a.pick === k : a.pick.includes(k), botP = k => q.t === 'mc' ? a.b === k : a.b.includes(k);
+    body = `<div class="opts">${ord.map((oi, k) => `<div class="opt ${benar(oi) ? 'ok' : dipilih(oi) ? 'bad' : ''}" style="cursor:default"><span class="L">${q.t === 'multi' ? (benar(oi) ? '✓' : '·') : LET[k]}</span><span>${q.o[oi]}${dipilih(oi) ? ' <b style="color:var(--gold2)">← Anda</b>' : ''}</span>${botP(oi) ? `<span class="bt">${f.ikon} ${f.nama.replace('Bot ', '')}</span>` : ''}</div>`).join('')}</div>`;
+  } else if (q.t === 'sort') {
+    body = ord.map(ii => { const mine = a.pick ? a.pick[ii] : null, ok = q.items[ii][1]; return `<div class="sortrow ${mine === ok ? 'ok' : 'bad'}"><div class="it">${esc(q.items[ii][0])}</div><div class="bins">${q.bins.map((bn, bj) => `<button type="button" disabled class="${bj === ok ? 'ok' : bj === mine ? 'bad' : ''}">${esc(bn)}${bj === mine ? ' ← Anda' : ''}</button>`).join('')}</div></div>` }).join('');
+  } else {
+    body = `<div class="orderbox"><div class="seq"><h4>Urutan Anda</h4>${(a.pick || []).map((ii, k) => `<div class="${ii === k ? 'ok' : 'bad'}"><i>${k + 1}</i>${esc(q.items[ii])}</div>`).join('') || '<p class="muted">Tidak dijawab.</p>'}</div><div class="seq"><h4>Urutan yang benar</h4>${q.items.map((t, k) => `<div class="ok"><i>${k + 1}</i>${esc(t)}</div>`).join('')}</div></div>`;
+  }
+  const pct = x => Math.round(x * 100) + '%';
+  const menang = a.pts > a.bpts ? '<span class="pill w">Anda unggul di soal ini</span>' : a.pts < a.bpts ? `<span class="pill l">${f.nama} unggul</span>` : '<span class="pill d">Seri</span>';
+  const last = S.i === S.list.length - 1, nextNewB = !last && S.list[S.i + 1][0] !== S.list[S.i][0];
+  app.innerHTML = papan() + `<div class="card" style="border-top:6px solid ${b.warna}">
+    <div class="qhead"><span class="bk" style="background:${b.warna}">${b.ikon} ${esc(b.nama)}</span>${menang}</div>
+    <div class="q">${q.q}</div>
+    <div class="verdict">
+      <div style="border-color:${a.f >= 1 ? 'var(--green)' : a.f > 0 ? 'var(--amber)' : 'var(--red)'}"><div class="muted">🧑‍⚖️ Anda ${a.habis ? '· waktu habis' : '· ' + a.detik + ' detik'}</div><div class="big" style="color:${a.f >= 1 ? 'var(--green)' : a.f > 0 ? 'var(--amber)' : 'var(--red)'}">${a.f >= 1 ? '✓ Tepat' : a.f > 0 ? '◐ ' + pct(a.f) + ' tepat' : '✕ Belum tepat'} · +${a.pts}</div></div>
+      <div><div class="muted">${f.ikon} ${f.nama} · ${a.bt} detik</div><div class="big" style="color:var(--red)">${a.bf >= 1 ? '✓ Tepat' : a.bf > 0 ? '◐ ' + pct(a.bf) : '✕ Salah'} · +${a.bpts}</div></div>
+    </div>
+    ${body}
+    <div class="exp"><b>Pembahasan.</b> ${q.exp}</div>
+    <div class="lgl"><span class="ic">⚖️</span><div><b class="h">Kacamata Legal</b>${q.legal}</div></div>
+    <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn gold" id="lanjut" type="button">${last ? '🏁 Lihat hasil duel' : nextNewB ? 'Babak berikutnya ▶' : 'Soal berikutnya ▶'}</button></div>
+  </div>`;
+  ['scMe', 'scBot'].forEach(id => { const el = $('#' + id); el.animate([{ transform: 'scale(1.35)' }, { transform: 'scale(1)' }], { duration: 500 }) });
+  $('#lanjut').onclick = () => {
+    if (last) { akhiri(); return }
+    S.i++; draft = null;
+    if (nextNewB) S.phase = 'intro'; else { S.phase = 'q'; S.tq = Date.now() }
+    save(); render(); scrollTo(0, 0);
+  };
+}
+
+/* ---------- akhir ---------- */
+function akhiri() { clearInterval(timerH); if (S.phase === 'end') return; S.phase = 'end'; S.tEnd = Date.now(); save(); render() }
+function gelar(p) {
+  if (p >= .85) return ['🛡️', 'Penjaga Gerbang Komite', 'Anda menangkap hampir semua risiko sebelum masuk ke perjanjian.'];
+  if (p >= .7) return ['🎯', 'Reviewer Tajam', 'Fondasi kuat. Asah lagi babak yang masih merah.'];
+  if (p >= .5) return ['📘', 'Calon Reviewer Andal', 'Sebagian besar konsep sudah dipahami. Ulangi pembahasan di bawah.'];
+  return ['🔁', 'Perlu Ronde Ulang', 'Baca pembahasan di bawah, lalu tantang lagi Bot Magang.'];
+}
+function layarAkhir() {
+  const f = foe(), n = S.list.length, done = Object.keys(S.ans).length;
+  const benar = Object.values(S.ans).filter(a => a.f >= 1).length, akurasi = done ? Object.values(S.ans).reduce((s, a) => s + a.f, 0) / n : 0;
+  const win = S.skor > S.bot, draw = S.skor === S.bot, [gi, gn, gk] = gelar(akurasi);
+  const bk = ringkasBabak(), mx = Math.max(1, ...bk.flat());
+  const salah = S.list.map((_, i) => i).filter(i => !S.ans[i] || S.ans[i].f < 1);
+  app.innerHTML = papan() + `
+  <div class="card hero winner">
+    <div class="em">${win ? '🏆' : draw ? '🤝' : f.ikon}</div>
+    <div class="kicker">${done < n ? 'Permainan dihentikan · ' + done + ' dari ' + n + ' soal' : 'Duel selesai'}</div>
+    <h1>${win ? 'Anda mengalahkan ' + f.nama + '!' : draw ? 'Seri melawan ' + f.nama : f.nama + ' menang kali ini'}</h1>
+    <p style="font-size:1.2rem;color:#dbe6f6">${S.skor} poin lawan ${S.bot} poin</p>
+    <div class="badge"><span class="em">${gi}</span><div><b>${gn}</b><br><span style="color:#f3e3b8">${gk}</span></div></div>
+  </div>
+  <div class="statgrid"><div><b>${benar}/${n}</b><small>soal tepat penuh</small></div><div><b>${Math.round(akurasi * 100)}%</b><small>ketepatan rata-rata</small></div><div><b>${done ? Math.round(Object.values(S.ans).reduce((s, a) => s + a.detik, 0) / done) : 0} dtk</b><small>waktu rata-rata per soal</small></div><div><b>${Math.round(((S.tEnd || Date.now()) - S.t0) / 60000)} mnt</b><small>lama bermain</small></div></div>
+  <div class="card"><h3>Skor per babak</h3><p class="muted" style="margin-top:0"><span style="color:var(--blue)">■</span> Anda &nbsp; <span style="color:var(--red)">■</span> ${f.nama}</p>
+    <div class="bkbars">${D.BABAK.map((b, bi) => `<div class="bkbar"><div class="lb">${b.ikon} ${esc(b.nama)}</div><div class="tr"><i class="me" style="width:${bk[bi][0] / mx * 100}%"></i><i class="bot" style="width:${bk[bi][1] / mx * 100}%"></i></div><div class="muted" style="text-align:right">${bk[bi][0]}</div></div>`).join('')}</div></div>
+  ${salah.length ? `<div class="card"><h3>Pelajari lagi · ${salah.length} soal</h3>${salah.map(i => { const q = Q(i); return `<div style="border-top:1px solid var(--line);padding:12px 0"><div class="kicker" style="color:${B(i).warna === '#0D2746' ? 'var(--gold)' : 'var(--muted)'}">${B(i).ikon} ${esc(B(i).nama)}</div><div style="font-weight:700;margin:4px 0">${q.q}</div><div class="exp" style="margin:6px 0">${q.exp}</div><div class="lgl" style="margin:6px 0"><span class="ic">⚖️</span><div><b class="h">Kacamata Legal</b>${q.legal}</div></div></div>` }).join('')}</div>` : '<div class="card"><h3>Sempurna! Semua soal tepat penuh.</h3></div>'}
+  <div class="row noprint" style="margin-top:10px"><button class="btn gold" id="lagi" type="button">⚔️ Main lagi</button><button class="btn ghost" id="cetak" type="button">🖨️ Cetak atau simpan PDF</button><a class="btn ghost" href="index.html">☰ Kembali ke menu</a></div>`;
+  if (win) { bunyi('menang'); konfeti() } else bunyi('kalah');
+  $('#lagi').onclick = () => { const kd = S.kelas; S = null; store.set('state', null); if (CH) { CH.close(); CH = null } history.replaceState(null, '', kd ? '?kelas=' + kd : location.pathname); render() };
+  $('#cetak').onclick = () => print();
+}
+
+function layarTunggu() {
+  app.innerHTML = papan() + `<div class="card wait"><div class="spin"></div><h2>Menunggu pengajar memulai</h2><p class="muted">Anda sudah masuk kelas <b style="font-family:'JetBrains Mono',monospace;color:var(--gold2)">${esc(S.kelas)}</b> sebagai <b>${esc(S.nama)}</b>. Permainan dimulai otomatis saat pengajar menekan Mulai.</p>
+    <button class="btn ghost sm" id="sendiri" type="button">Mulai sekarang tanpa menunggu</button></div>`;
+  $('#sendiri').onclick = () => { S.phase = 'intro'; S.t0 = Date.now(); save(); render() };
+}
+
+function render() {
+  hdr();
+  if (!S) return layarAwal();
+  if (S.phase === 'wait') { if (CTL && CTL.mulai) { S.phase = 'intro'; save() } else return layarTunggu() }
+  if (S.phase === 'intro') return layarIntro();
+  if (S.phase === 'q') { if (S.ans[S.i]) { S.phase = 'rev'; return layarBahas() } return layarSoal() }
+  if (S.phase === 'rev') return layarBahas();
+  return layarAkhir();
+}
+if (S && qs.get('baru') === '1') { S = null; store.set('state', null) }
+if (S && S.kelas) sambung(S.kelas);
+render();
+</script>
+</body>
+</html>

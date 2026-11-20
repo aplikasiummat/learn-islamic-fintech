@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard Pengajar Komite</title>
+<link rel="icon" href="../../assets/logo-tazkia.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="komite.css?v=1">
+<script src="../saham/lib/mqtt-5.10.1.min.js"></script>
+<script src="../saham/lib/qrcode-1.0.0.min.js"></script>
+<script src="data.js?v=1"></script>
+<script src="kelas.js?v=1"></script>
+<style>
+.kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+@media (max-width:900px){.kpi{grid-template-columns:repeat(2,1fr)}}
+.kpi>div{background:#0b1a33;border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center}
+.kpi b{display:block;font-family:'JetBrains Mono',monospace;font-size:1.9rem;line-height:1.1}
+.kpi small{color:var(--muted)}
+.code{font-family:'JetBrains Mono',monospace;font-size:3rem;letter-spacing:.2em;color:var(--gold2);line-height:1}
+#qr{background:#fff;padding:10px;border-radius:12px;display:inline-block}
+.prog{height:8px;background:#0b1a33;border-radius:999px;overflow:hidden;min-width:80px}
+.prog i{display:block;height:100%;background:var(--gold)}
+.hm{display:flex;gap:2px;flex-wrap:wrap}
+.hm i{width:10px;height:14px;border-radius:2px;background:#25406b}
+.hm i.g{background:var(--green)} .hm i.p{background:var(--amber)} .hm i.r{background:var(--red)}
+.pod{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:14px;align-items:end;text-align:center;margin:10px 0 20px}
+.pod>div{background:#0b1a33;border:1px solid var(--line);border-radius:16px 16px 6px 6px;padding:16px 10px}
+.pod .em{font-size:2.6rem}
+.pod b{display:block;font-family:'Archivo',sans-serif;font-size:1.15rem}
+.pod .p1{border-color:var(--gold);min-height:230px;background:linear-gradient(180deg,#3a2a08,#0b1a33)}
+.pod .p2{min-height:190px} .pod .p3{min-height:160px}
+body.proj .hideproj{display:none!important}
+body.proj html{font-size:22px}
+body.proj table.tb{font-size:1.15rem}
+</style>
+</head>
+<body>
+<div class="top"><a class="chip" href="index.html">☰ Menu</a><div class="t">Dashboard Pengajar · <span>Duel Komite Kredit</span></div><span class="chip off" id="conn">○ Belum ada kelas</span><button class="chip" type="button" id="proj" style="cursor:pointer">📽️ Mode layar</button></div>
+<div class="wrap" id="app"></div>
+<script>
+'use strict';
+const D = window.KOMITE, $ = s => document.querySelector(s), app = $('#app');
+const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const strip = h => String(h).replace(/<[^>]+>/g, '');
+const store = { get(k, d) { try { const v = localStorage.getItem('komitedosen.' + k); return v ? JSON.parse(v) : d } catch (e) { return d } }, set(k, v) { try { localStorage.setItem('komitedosen.' + k, JSON.stringify(v)) } catch (e) { } } };
+let CH = null, KODE = store.get('kode', ''), CTL = store.get('ctl', null), P = store.get('peserta', {}), hapus = store.get('hapus', []);
+const lawanNama = k => (D.LAWAN.find(l => l.k === k) || {}).nama || k;
+const lawanIkon = k => (D.LAWAN.find(l => l.k === k) || {}).ikon || '🤖';
+$('#proj').onclick = () => { document.body.classList.toggle('proj'); if (document.body.classList.contains('proj')) document.documentElement.requestFullscreen?.().catch(() => { }); else document.exitFullscreen?.().catch(() => { }); };
+
+function urlMain() { return new URL('main.html?kelas=' + KODE, location.href).href }
+
+function awal() {
+  app.innerHTML = `<div class="card hero"><div class="kicker">Untuk pengajar</div><h1>Buka kelas</h1>
+    <p style="color:#dbe6f6;max-width:760px">Buat kode kelas, tampilkan QR di layar, lalu peserta bermain di laptop atau HP masing-masing melawan komputer. Skor, kemajuan, dan soal tersulit tampil langsung di sini.</p>
+    <div class="row" style="margin-top:16px"><button class="btn gold" id="baru" type="button">✨ Buat kelas baru</button></div></div>
+    <div class="card"><h3>Buka lagi kelas yang sudah ada</h3><div class="row"><input id="kd" placeholder="Kode kelas" maxlength="8" style="max-width:260px;text-transform:uppercase;font-family:'JetBrains Mono',monospace" value="${esc(KODE)}"><button class="btn" id="buka" type="button">Buka</button></div></div>`;
+  $('#baru').onclick = () => { KODE = KomiteKelas.newCode(); P = {}; hapus = []; CTL = { judul: 'IHT Financial & Legal Professionals', mulai: false, stop: false, pesan: '', t: Date.now() }; simpan(); hubung() };
+  $('#buka').onclick = () => { const k = KomiteKelas.cleanCode($('#kd').value); if (k.length < 4) return; if (k !== KODE) { P = {}; hapus = [] } KODE = k; CTL = CTL || { judul: 'IHT Financial & Legal Professionals', mulai: false, stop: false, pesan: '', t: Date.now() }; simpan(); hubung() };
+}
+function simpan() { store.set('kode', KODE); store.set('ctl', CTL); store.set('peserta', P); store.set('hapus', hapus) }
+function setConn(on, t) { const c = $('#conn'); c.className = 'chip ' + (on ? 'on' : 'off'); c.textContent = t || (on ? '● Kelas ' + KODE + ' aktif' : '○ Menyambung ulang ...') }
+
+async function hubung() {
+  setConn(false, '○ Membuka kelas ' + KODE + ' ...'); render();
+  try {
+    if (CH) CH.close();
+    CH = await KomiteKelas.join(KODE, {
+      role: 'host',
+      onStatus: (id, o) => { if (hapus.includes(id)) return; if (o) P[id] = o; else delete P[id]; simpan(); renderData() },
+      onConn: on => setConn(on),
+    });
+    await CH.setCtl(CTL); setConn(true);
+  } catch (e) { setConn(false, '✕ Gagal tersambung. Periksa internet, lalu muat ulang.') }
+}
+async function kontrol(perubahan) { CTL = Object.assign({}, CTL, perubahan, { t: Date.now() }); simpan(); if (CH) await CH.setCtl(CTL); render() }
+
+function rows() {
+  return Object.entries(P).map(([id, o]) => Object.assign({ id }, o)).sort((a, b) => b.skor - a.skor || (a.t - a.t0) - (b.t - b.t0));
+}
+function render() {
+  if (!KODE) return awal();
+  const url = urlMain();
+  app.innerHTML = `
+  <div class="grid2 hideproj">
+    <div class="card hero"><div class="kicker">Kode kelas</div><div class="code">${KODE}</div>
+      <p style="color:#dbe6f6;margin:10px 0 4px">Peserta membuka tautan atau memindai QR, mengisi nama, memilih lawan, lalu menunggu Anda menekan Mulai.</p>
+      <p style="word-break:break-all;margin:0"><a href="${url}" target="_blank" rel="noopener">${esc(url)}</a></p>
+      <div class="row" style="margin-top:14px">
+        <button class="btn ${CTL.mulai ? 'ghost' : 'gold'}" id="mulai" type="button">${CTL.mulai ? '✓ Sudah dimulai' : '▶ Mulai serentak'}</button>
+        <button class="btn red" id="stop" type="button">${CTL.stop ? '↺ Buka lagi' : '⏹ Hentikan, tampilkan hasil'}</button>
+      </div></div>
+    <div class="card" style="text-align:center"><div id="qr"></div><p class="muted" style="margin:8px 0 0">Pindai untuk bergabung</p></div>
+  </div>
+  <div class="card hideproj"><div class="row"><input id="pesan" placeholder="Kirim pengumuman ke semua layar peserta, misalnya: 5 menit lagi" maxlength="120" style="flex:3"><button class="btn" id="kirimP" type="button" style="flex:1">📣 Kirim</button></div>
+    <div class="row" style="margin-top:10px"><button class="btn ghost sm" id="csv" type="button">⬇️ Unduh CSV</button><button class="btn ghost sm" id="bersih" type="button">🧹 Kosongkan papan skor</button><button class="btn ghost sm" id="tutup" type="button">Ganti kelas</button></div></div>
+  <div id="data"></div>`;
+  if (window.QRCode) new QRCode($('#qr'), { text: url, width: 210, height: 210 });
+  $('#mulai').onclick = () => { if (!CTL.mulai) kontrol({ mulai: true, stop: false }) };
+  $('#stop').onclick = () => kontrol(CTL.stop ? { stop: false } : { stop: true });
+  $('#kirimP').onclick = () => { const t = $('#pesan').value.trim(); if (t) { kontrol({ pesan: t + ' ' }); } };
+  $('#csv').onclick = csv;
+  $('#bersih').onclick = () => { if (!confirmBersih()) return; Object.keys(P).forEach(id => { hapus.push(id); CH && CH.clear(id) }); P = {}; simpan(); renderData() };
+  $('#tutup').onclick = () => { if (CH) CH.close(); CH = null; KODE = ''; store.set('kode', ''); setConn(false, '○ Belum ada kelas'); render() };
+  renderData();
+}
+let bersihKlik = 0;
+function confirmBersih() { const b = $('#bersih'); if (Date.now() - bersihKlik < 4000) return true; bersihKlik = Date.now(); b.textContent = 'Klik sekali lagi untuk mengosongkan'; setTimeout(() => { if ($('#bersih')) $('#bersih').textContent = '🧹 Kosongkan papan skor' }, 4000); return false }
+
+function renderData() {
+  const box = $('#data'); if (!box) return;
+  const R = rows(), sel = R.filter(r => r.sel), menang = R.filter(r => r.i > 0 && r.skor > r.bot).length;
+  const rata = R.length ? Math.round(R.reduce((s, r) => s + r.skor, 0) / R.length) : 0;
+  // statistik per babak dan per soal
+  const perB = D.BABAK.map(() => [0, 0]), perQ = {};
+  R.forEach(r => { const keys = (r.keys || '').split(','); (r.h || '').split('').forEach((c, k) => { if (c === '-' || !keys[k]) return; const [b] = keys[k].split('.').map(Number); const v = c === '1' ? 1 : c === 'p' ? .5 : 0; perB[b][0] += v; perB[b][1]++; perQ[keys[k]] = perQ[keys[k]] || [0, 0]; perQ[keys[k]][0] += v; perQ[keys[k]][1]++ }) });
+  const sulit = Object.entries(perQ).filter(([, v]) => v[1] >= 1).map(([k, v]) => { const [b, q] = k.split('.').map(Number); return { b, q, p: v[0] / v[1], n: v[1] } }).sort((a, b) => a.p - b.p).slice(0, 5);
+  const top = R.slice(0, 3);
+  box.innerHTML = `
+  <div class="kpi"><div><b>${R.length}</b><small>peserta</small></div><div><b>${sel.length}</b><small>selesai</small></div><div><b>${rata}</b><small>rata-rata skor</small></div><div><b style="color:var(--green)">${menang}</b><small>mengalahkan komputer</small></div><div><b style="color:var(--red)">${R.filter(r => r.i > 0).length - menang}</b><small>kalah atau seri</small></div></div>
+  ${top.length ? `<div class="pod">${[1, 0, 2].map(k => top[k] ? `<div class="p${k + 1}"><div class="em">${['🥇', '🥈', '🥉'][k]}</div><b>${esc(top[k].nama)}</b><div class="muted">${esc(top[k].unit || '')}</div><div style="font-family:'JetBrains Mono',monospace;font-size:1.6rem;color:var(--gold2)">${top[k].skor}</div><small class="muted">vs ${lawanIkon(top[k].lawan)} ${top[k].bot}</small></div>` : '<div style="visibility:hidden"></div>').join('')}</div>` : ''}
+  <div class="card"><h3>Papan skor langsung</h3>${R.length ? `<div class="scroll"><table class="tb"><tr><th>#</th><th>Peserta</th><th>Lawan</th><th>Kemajuan</th><th>Jejak jawaban</th><th style="text-align:right">Skor</th><th style="text-align:right">Komputer</th><th>Status</th></tr>
+    ${R.map((r, k) => `<tr><td>${k + 1}</td><td><b>${esc(r.nama)}</b><br><small class="muted">${esc(r.unit || '')} · ${r.mode === 'kilat' ? 'Kilat' : 'Lengkap'}</small></td><td>${lawanIkon(r.lawan)} ${esc(lawanNama(r.lawan))}</td>
+      <td><div class="prog"><i style="width:${r.n ? r.i / r.n * 100 : 0}%"></i></div><small class="muted">${r.i}/${r.n} · ${r.benar} tepat</small></td>
+      <td><div class="hm">${(r.h || '').split('').map(c => `<i class="${c === '1' ? 'g' : c === 'p' ? 'p' : c === '0' ? 'r' : ''}"></i>`).join('')}</div></td>
+      <td class="n" style="color:var(--blue);font-size:1.15rem">${r.skor}</td><td class="n" style="color:var(--red)">${r.bot}</td>
+      <td>${r.sel ? (r.skor > r.bot ? '<span class="pill w">Menang</span>' : r.skor === r.bot ? '<span class="pill d">Seri</span>' : '<span class="pill l">Kalah</span>') : r.i === 0 ? '<span class="pill p">Menunggu</span>' : (r.skor >= r.bot ? '<span class="pill w">Unggul</span>' : '<span class="pill l">Tertinggal</span>')}</td></tr>`).join('')}</table></div>` : '<p class="muted">Belum ada peserta. Tampilkan QR di layar agar peserta bergabung.</p>'}</div>
+  <div class="grid2">
+    <div class="card"><h3>Ketepatan kelas per babak</h3><div class="bkbars">${D.BABAK.map((b, bi) => { const p = perB[bi][1] ? perB[bi][0] / perB[bi][1] : null; return `<div class="bkbar"><div class="lb">${b.ikon} ${esc(b.nama)}</div><div class="tr"><i style="width:${p == null ? 0 : p * 100}%;background:${p == null ? '#25406b' : p >= .7 ? 'var(--green)' : p >= .5 ? 'var(--amber)' : 'var(--red)'}"></i></div><div class="muted" style="text-align:right">${p == null ? '–' : Math.round(p * 100) + '%'}</div></div>` }).join('')}</div>
+      <p class="muted" style="margin-bottom:0">Merah = bahas ulang di kelas. Jawaban sebagian dihitung setengah.</p></div>
+    <div class="card"><h3>Lima soal tersulit</h3>${sulit.length ? sulit.map(s => { const b = D.BABAK[s.b], q = b.qs[s.q]; return `<details style="border-top:1px solid var(--line);padding:8px 0"><summary style="cursor:pointer"><b style="color:${s.p < .5 ? 'var(--red)' : 'var(--amber)'}">${Math.round(s.p * 100)}%</b> · ${b.ikon} ${esc(strip(q.q)).slice(0, 110)} <small class="muted">(${s.n} jawaban)</small></summary><div class="exp">${q.exp}</div><div class="lgl"><span class="ic">⚖️</span><div><b class="h">Kacamata Legal</b>${q.legal}</div></div></details>` }).join('') : '<p class="muted">Muncul setelah peserta menjawab.</p>'}</div>
+  </div>`;
+}
+function csv() {
+  const R = rows(), head = ['Peringkat', 'Nama', 'Unit', 'Mode', 'Lawan', 'Soal dijawab', 'Total soal', 'Tepat penuh', 'Skor', 'Skor komputer', 'Hasil'].concat(D.BABAK.map(b => 'Babak: ' + b.nama));
+  const lines = [head].concat(R.map((r, k) => [k + 1, r.nama, r.unit, r.mode, lawanNama(r.lawan), r.i, r.n, r.benar, r.skor, r.bot, r.skor > r.bot ? 'Menang' : r.skor === r.bot ? 'Seri' : 'Kalah'].concat((r.bk || []).map(x => x[0]))));
+  const txt = '﻿' + lines.map(l => l.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/csv' })); a.download = 'skor-duel-komite-' + KODE + '.csv'; a.click();
+}
+if (KODE) hubung(); else render();
+</script>
+</body>
+</html>
