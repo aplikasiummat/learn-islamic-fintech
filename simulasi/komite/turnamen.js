@@ -70,7 +70,7 @@ const TUR = (function () {
       return;
     }
     if (p.k === 'out') { app.innerHTML = `<div class="card hero"><div class="kicker">Turnamen berjalan</div><h2>Anda tersingkir di ${Bagan.namaRonde(t, p.r)}</h2><p style="color:#dbe6f6">Ikuti terus laga lainnya di bagan. Bagan diperbarui langsung.</p></div>` + bagan; return }
-    if (p.k === 'bye') { app.innerHTML = `<div class="card hero"><div class="kicker">${Bagan.namaRonde(t, p.r)}</div><h2>Anda lolos otomatis ke babak berikutnya</h2><p style="color:#dbe6f6">Jumlah peserta ganjil, dan skor Anda di babak lawan komputer termasuk yang tertinggi. Laga berikutnya mulai otomatis setelah babak ini selesai.</p></div>` + bagan; return }
+    if (p.k === 'bye') { app.innerHTML = `<div class="card hero"><div class="kicker">${Bagan.namaRonde(t, p.r)}</div><h2>Anda lolos otomatis ke babak berikutnya</h2><p style="color:#dbe6f6">Jumlah pemain di babak ini ganjil, dan skor Anda di babak lawan komputer termasuk yang tertinggi. Laga berikutnya mulai otomatis setelah babak ini selesai.</p></div>` + bagan; return }
     if (p.k === 'hasil') {
       const menang = p.m.w === PID, sMe = p.m.a === PID ? p.m.sa : p.m.sb, sOp = p.m.a === PID ? p.m.sb : p.m.sa, akhir = Bagan.totalRonde(t) - p.r === 1;
       app.innerHTML = `<div class="card hero winner"><div class="em">${menang ? '🎉' : '🛡️'}</div><div class="kicker">${Bagan.namaRonde(t, p.r)} · ${sMe} lawan ${sOp}</div>

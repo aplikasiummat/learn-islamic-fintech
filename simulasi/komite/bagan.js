@@ -3,10 +3,12 @@
 window.Bagan = (function () {
   'use strict';
   const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const totalRonde = T => T && T.R && T.R[0] ? Math.round(Math.log2(T.R[0].M.length * 2)) : 0;
+  // semua pemain bertanding di setiap babak; bila ganjil, satu pemain lolos otomatis
+  const ukuran = T => { const n = Object.keys(T.P).length, out = []; let s = n; while (s > 1) { out.push(s); s = Math.ceil(s / 2) } return out };
+  const totalRonde = T => T && T.P && T.R ? ukuran(T).length : 0;
   function namaRonde(T, r) {
-    const sisa = totalRonde(T) - r;
-    return sisa === 1 ? 'Final' : sisa === 2 ? 'Semifinal' : sisa === 3 ? 'Perempat final' : sisa === 4 ? 'Babak 16 besar' : 'Babak ' + (r + 1);
+    const s = ukuran(T)[r] || 0;
+    return s === 2 ? 'Final' : s <= 4 ? 'Semifinal' : s <= 8 ? 'Perempat final' : 'Babak ' + (r + 1) + ' · ' + s + ' besar';
   }
   const kunci = (T, m, pid) => T.id + '_' + m.id + '_' + pid;
   // skor yang tampil: skor akhir bila laga selesai, bila belum skor langsung dari peserta
@@ -25,7 +27,7 @@ window.Bagan = (function () {
     if (!T || !T.R) return '';
     const tot = totalRonde(T); let out = '<div class="bracket">';
     for (let r = 0; r < tot; r++) {
-      const R = T.R[r], nM = T.R[0].M.length / Math.pow(2, r);
+      const R = T.R[r], nM = Math.ceil(ukuran(T)[r] / 2);
       out += `<div class="br-col"><div class="br-h">${namaRonde(T, r)}${R && r === T.cur && T.st === 'run' ? ' <i class="live">● LIVE</i>' : ''}</div>`;
       for (let k = 0; k < nM; k++) {
         const m = R && R.M[k];
@@ -41,7 +43,7 @@ window.Bagan = (function () {
   function podium(T) {
     if (!T || T.st !== 'done') return [];
     const f = T.R[T.R.length - 1].M[0], out = [T.juara, f.a === T.juara ? f.b : f.a];
-    const sf = T.R[T.R.length - 2]; if (sf) sf.M.forEach(m => { const l = m.w === m.a ? m.b : m.a; if (l) out.push(l) });
+    const sf = T.R[T.R.length - 2]; if (sf) sf.M.forEach(m => { if (!m.b) return; const l = m.w === m.a ? m.b : m.a; if (l) out.push(l) });
     return out.filter(Boolean);
   }
   return { html, namaRonde, totalRonde, kunci, podium, esc };

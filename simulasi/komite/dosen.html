@@ -12,7 +12,7 @@
 <script src="../saham/lib/qrcode-1.0.0.min.js"></script>
 <script src="data.js?v=3"></script>
 <script src="kelas.js?v=2"></script>
-<script src="bagan.js?v=2"></script>
+<script src="bagan.js?v=3"></script>
 <style>
 .kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
 @media (max-width:900px){.kpi{grid-template-columns:repeat(2,1fr)}}
@@ -137,16 +137,18 @@ function mulaiTurnamen() {
   if (R.length < 2) { renderTur('Perlu minimal 2 peserta yang sudah selesai melawan komputer.'); return }
   const P2 = {}; R.forEach(r => P2[r.id] = { nm: r.nama, un: r.unit || '', q: r.skor });
   const ids = R.map(r => r.id).sort((a, b) => P2[b].q - P2[a].q);
-  const N = Math.pow(2, Math.ceil(Math.log2(ids.length))), bye = N - ids.length, nM = N / 2;
-  // peserta dengan skor kualifikasi tertinggi mendapat bye; sisanya diacak
-  const byeIds = ids.slice(0, bye), lain = acak(ids.slice(bye));
-  const pos = [...Array(nM).keys()].filter(i => i % 2 === 0).concat([...Array(nM).keys()].filter(i => i % 2 === 1)).slice(0, bye);
-  const M = []; for (let i = 0; i < nM; i++) {
-    if (pos.includes(i)) { const a = byeIds[pos.indexOf(i)]; M.push({ id: '0-' + i, a, b: null, w: a, sa: 0, sb: null, why: 'bye' }) }
-    else M.push({ id: '0-' + i, a: lain.shift(), b: lain.shift(), w: null });
-  }
+  const M = susunLaga(0, ids, P2, {});
   const n = TURCFG.n;
   pubTur({ id: 'T' + Math.random().toString(36).slice(2, 7), st: 'run', n, P: P2, R: [{ qs: pilihSoal([], n), t0: Date.now(), dl: batas(n), M }], cur: 0, juara: null });
+}
+// semua pemain diacak berpasangan; bila ganjil, satu pemain (skor lawan komputer tertinggi yang belum pernah bye) lolos otomatis
+function susunLaga(r, ids, P2, pernahBye) {
+  let main = ids.slice(), bye = null;
+  if (main.length % 2) { bye = main.slice().sort((a, b) => (pernahBye[a] ? 1 : 0) - (pernahBye[b] ? 1 : 0) || P2[b].q - P2[a].q)[0]; main = main.filter(x => x !== bye) }
+  main = acak(main);
+  const M = []; for (let i = 0; i < main.length; i += 2) M.push({ id: r + '-' + i / 2, a: main[i], b: main[i + 1], w: null });
+  if (bye) M.splice(Math.floor(Math.random() * (M.length + 1)), 0, { id: r + '-bye', a: bye, b: null, w: bye, sa: 0, sb: null, why: 'bye' });
+  return M;
 }
 function mesin() {
   if (!CH || !CTL || !KODE) return;
@@ -177,8 +179,9 @@ function mesin() {
     else if (now - R.tEnd > 8000) {
       if (R.M.length === 1) { T.juara = R.M[0].w; T.st = 'done' }
       else {
-        const win = R.M.map(m => m.w), M = [], r = T.cur + 1;
-        for (let i = 0; i < win.length; i += 2) M.push({ id: r + '-' + i / 2, a: win[i], b: win[i + 1], w: null });
+        const win = R.M.map(m => m.w), r = T.cur + 1, pernahBye = {};
+        T.R.forEach(x => x.M.forEach(m => { if (!m.b) pernahBye[m.a] = 1 }));
+        const M = susunLaga(r, win, T.P, pernahBye);
         T.R.push({ qs: pilihSoal(T.R.flatMap(x => x.qs), T.n), t0: now, dl: batas(T.n), M }); T.cur = r;
       }
       ubah = true;
