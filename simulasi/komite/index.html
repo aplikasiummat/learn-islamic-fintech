@@ -63,7 +63,7 @@
       <div class="facts4">
         <div><b>9</b><span>babak dari materi hari pertama</span></div>
         <div><b>33</b><span>soal, atau 18 soal mode kilat</span></div>
-        <div><b>3</b><span>tingkat lawan komputer</span></div>
+        <div><b>🏆</b><span>turnamen gugur otomatis sampai final</span></div>
         <div><b>Live</b><span>dashboard pengajar</span></div>
       </div>
     </div>
@@ -74,7 +74,7 @@
     <div class="wrap">
       <div class="center reveal" style="margin-bottom:34px"><div class="eyebrow">Sembilan Babak</div><h2 class="h2">Dari membaca neraca sampai memutus di komite</h2></div>
       <div class="games" id="games"></div>
-      <div class="note2 reveal"><b>Untuk pengajar.</b> Buka dashboard pengajar, buat kode kelas, lalu tampilkan QR di layar. Peserta mengisi nama dan unit kerja, memilih lawan (Bot Magang, Bot Analis Senior, atau Bot Ketua Komite), lalu menunggu. Tekan <i>Mulai serentak</i>; dashboard menampilkan papan skor, podium, ketepatan kelas per babak, dan lima soal tersulit untuk dibahas ulang. Hasil dapat diunduh sebagai CSV.
+      <div class="note2 reveal"><b>Untuk pengajar.</b> Buka dashboard pengajar, buat kode kelas, lalu tampilkan QR di layar. Peserta mengisi nama dan unit kerja, memilih lawan (Bot Magang, Bot Analis Senior, atau Bot Ketua Komite), lalu menunggu. Tekan <i>Mulai serentak</i>; dashboard menampilkan papan skor, podium, ketepatan kelas per babak, dan lima soal tersulit untuk dibahas ulang. Hasil dapat diunduh sebagai CSV. Setelah semua peserta selesai melawan komputer, sistem otomatis mengacak pasangan dan menjalankan <b>turnamen gugur</b> antarpeserta dengan soal kasus lapangan BPRS, sampai final; bagan dan podium juara tampil langsung di dashboard.
         <div class="cta" style="margin-top:12px"><a class="btn gold" href="dosen.html">Buka dashboard pengajar</a></div></div>
       <p class="note2 reveal">Permainan ini disusun untuk In-House Training Financial &amp; Legal Professionals, 20 November 2026, materi hari pertama: Dasar-Dasar Keuangan untuk Legal Perbankan, Memahami Laporan Keuangan Nasabah, sesi siang Layak, Lolos Komite, atau Fraud, serta Case Study pemalsuan data dalam MUP. Konteks permainan adalah Bank Pembiayaan Rakyat Syariah (BPRS), sehingga imbalan ditulis margin dan memorandumnya disebut MUP (Memorandum Usulan Pembiayaan). Nama nasabah dan angka kasus bersifat fiktif; rujukan hukum bersifat ringkas untuk pembelajaran, bukan pendapat hukum.</p>
     </div>
@@ -113,7 +113,7 @@
 </footer>
 <button class="totop" type="button" aria-label="Ke atas">↑</button>
 
-<script src="data.js?v=2"></script>
+<script src="data.js?v=3"></script>
 <script>
 document.getElementById('games').innerHTML = KOMITE.BABAK.map((b, i) => `<div class="game reveal"><span class="ar" style="font-family:inherit;font-size:34px">${b.ikon}</span><small>Babak ${i + 1} · ${b.qs.length} soal</small><h3>${b.nama}</h3><p>${b.ringkas}</p></div>`).join('');
 const k = new URLSearchParams(location.search).get('kelas');

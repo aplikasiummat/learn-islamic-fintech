@@ -185,3 +185,29 @@ table.tb td.n{text-align:right;font-family:'JetBrains Mono',monospace}
 .spin{width:54px;height:54px;border-radius:50%;border:5px solid var(--line);border-top-color:var(--gold);animation:sp 1s linear infinite;margin:0 auto 16px}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media print{.top,.noprint{display:none!important} body{background:#fff;color:#000} .card{box-shadow:none;border-color:#ccc;background:#fff;color:#000}}
+
+/* bagan turnamen */
+.bracket{display:flex;gap:18px;overflow-x:auto;padding:6px 2px 12px}
+.br-col{display:flex;flex-direction:column;justify-content:space-around;gap:12px;min-width:210px;flex:1}
+.br-h{font-family:'Archivo',sans-serif;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;font-size:.82rem;text-align:center}
+.br-h .live{font-style:normal;color:var(--red);animation:pulse .8s infinite alternate}
+.bm{background:#0b1a33;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.bm.mine{border-color:var(--blue);box-shadow:0 0 0 2px rgba(74,163,255,.35)}
+.bm.wait{opacity:.45}
+.bm-p{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);min-height:40px}
+.bm-p:last-child{border-bottom:0}
+.bm-p .nm{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bm-p .pg{font-size:.78rem;color:var(--muted)}
+.bm-p b{font-family:'JetBrains Mono',monospace;min-width:36px;text-align:right}
+.bm-p.win{background:#123a2c} .bm-p.win b{color:var(--green)}
+.bm-p.lose{opacity:.5;text-decoration:line-through}
+.bm-p.me .nm{color:var(--gold2)}
+.bm-p.bye span{color:var(--muted);font-style:italic;font-size:.85rem}
+.bm.trophy{text-align:center;padding:18px 10px;border-color:var(--gold);background:linear-gradient(180deg,#3a2a08,#0b1a33)}
+.bm.trophy .em{font-size:2.6rem}
+.bm.trophy b{display:block;font-family:'Archivo',sans-serif;font-size:1.15rem;color:var(--gold2)}
+.matchbar{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;background:linear-gradient(90deg,rgba(74,163,255,.18),rgba(6,15,32,.5) 45%,rgba(6,15,32,.5) 55%,rgba(242,182,50,.18));border:1px solid var(--line);border-radius:18px;padding:12px 16px;margin:12px 0}
+.matchbar .r{text-align:right}
+.matchbar .nm{font-family:'Archivo',sans-serif;font-weight:800}
+.matchbar .sc{font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:700}
+.matchbar .vs{font-size:1rem}
