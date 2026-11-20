@@ -157,7 +157,7 @@ function mesin() {
     const R = rows(), sel = R.filter(r => r.sel && r.i > 0);
     const semua = sel.length === R.length, banyak = sel.length >= Math.ceil(R.length * .75);
     if (!banyak) t75 = 0; else if (!t75) t75 = Date.now();
-    if (TURCFG.auto && sel.length >= 2 && (semua || (t75 && Date.now() - t75 > 180000))) { if (!hitung) hitung = Date.now() + 15000; if (Date.now() >= hitung) { hitung = null; t75 = 0; mulaiTurnamen() } }
+    if (TURCFG.auto && sel.length >= 2 && (semua || (t75 && Date.now() - t75 > 180000))) { if (!hitung) hitung = Date.now() + 5000; if (Date.now() >= hitung) { hitung = null; t75 = 0; mulaiTurnamen() } }
     else hitung = null;
     renderTur(); return;
   }
@@ -176,7 +176,7 @@ function mesin() {
   });
   if (R.M.every(m => m.w)) {
     if (!R.tEnd) { R.tEnd = now; ubah = true }
-    else if (now - R.tEnd > 8000) {
+    else if (now - R.tEnd > 5000) {
       if (R.M.length === 1) { T.juara = R.M[0].w; T.st = 'done' }
       else {
         const win = R.M.map(m => m.w), r = T.cur + 1, pernahBye = {};
@@ -195,7 +195,7 @@ function renderTur(pesan) {
   let head = '';
   if (!T) {
     const R = rows(), sel = R.filter(r => r.sel && r.i > 0).length;
-    head = `<p><b>${sel} dari ${R.length}</b> peserta sudah selesai melawan komputer.${hitung ? ` <b style="color:var(--gold2)">Turnamen dimulai dalam ${Math.max(0, Math.ceil((hitung - Date.now()) / 1000))} detik.</b>` : TURCFG.auto ? ' Turnamen mulai otomatis 15 detik setelah semua selesai, atau 3 menit setelah tiga perempat peserta selesai (yang belum selesai tidak ikut turnamen).' + (t75 && sel < R.length ? ' Batas tunggu: ' + Math.max(0, Math.ceil((t75 + 180000 - Date.now()) / 1000)) + ' detik.' : '') : ''}</p>`;
+    head = `<p><b>${sel} dari ${R.length}</b> peserta sudah selesai melawan komputer.${hitung ? ` <b style="color:var(--gold2)">Turnamen dimulai dalam ${Math.max(0, Math.ceil((hitung - Date.now()) / 1000))} detik.</b>` : TURCFG.auto ? ' Turnamen langsung mulai begitu semua selesai, atau 3 menit setelah tiga perempat peserta selesai (yang belum selesai tidak ikut turnamen).' + (t75 && sel < R.length ? ' Batas tunggu: ' + Math.max(0, Math.ceil((t75 + 180000 - Date.now()) / 1000)) + ' detik.' : '') : ''}</p>`;
   } else if (T.st === 'run') {
     const R = T.R[T.cur], sisa = Math.max(0, Math.round((R.dl - Date.now()) / 1000)), sel = R.M.filter(m => m.w).length;
     head = `<p><b style="color:var(--gold2)">${Bagan.namaRonde(T, T.cur)}</b> · ${sel} dari ${R.M.length} laga selesai · batas waktu ${mm(sisa)}${R.tEnd ? ' · <b>babak berikutnya segera dimulai</b>' : ''}</p>`;

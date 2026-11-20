@@ -93,7 +93,7 @@ const TUR = (function () {
 
   function soal(p, q, b, ord) {
     const t = T(); if (!draftT) draftT = q.t === 'mc' ? null : q.t === 'sort' ? q.items.map(() => null) : [];
-    const petunjuk = { mc: 'Pilih satu jawaban, lalu kunci.', multi: 'Pilih SEMUA jawaban yang benar. Pilihan salah mengurangi nilai.', sort: 'Untuk setiap baris, pilih kotak yang tepat.', order: 'Klik langkah sesuai urutan yang benar.' }[q.t];
+    const petunjuk = { mc: 'Klik satu jawaban: langsung terkunci.', multi: 'Pilih SEMUA jawaban yang benar. Pilihan salah mengurangi nilai.', sort: 'Untuk setiap baris, pilih kotak yang tepat.', order: 'Klik langkah sesuai urutan yang benar.' }[q.t];
     let body = '';
     if (q.t === 'mc' || q.t === 'multi') body = `<div class="opts">${ord.map((oi, k) => `<button type="button" class="opt" data-o="${oi}"><span class="L">${q.t === 'multi' ? '☐' : LET[k]}</span><span>${q.o[oi]}</span></button>`).join('')}</div>`;
     else if (q.t === 'sort') body = ord.map(ii => `<div class="sortrow"><div class="it">${esc(q.items[ii][0])}</div><div class="bins">${q.bins.map((bn, bj) => `<button type="button" data-i="${ii}" data-b="${bj}">${esc(bn)}</button>`).join('')}</div></div>`).join('');
@@ -102,11 +102,11 @@ const TUR = (function () {
       <div class="qhead"><span class="bk" style="background:${b.warna}">${b.ikon} ${esc(b.nama)}</span><span class="no">Soal ${tm.ans.length + 1} dari ${t.n}</span>
       <div class="timer" id="tm"><svg width="64" height="64"><circle cx="32" cy="32" r="27" stroke="#25406b" stroke-width="6" fill="none"/><circle id="tmc" cx="32" cy="32" r="27" stroke="#f2b632" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="169.6"/></svg><b id="tmb">${D.DETIK}</b></div></div>
       <div class="q">${q.q}</div>${q.ctx ? `<div class="ctx">${q.ctx}</div>` : ''}<p class="muted" style="margin:0 0 10px">${petunjuk}</p>${body}
-      <div class="row" style="margin-top:16px"><div style="flex:1"></div><button class="btn gold" id="kunciT" type="button" disabled>🔒 Kunci jawaban</button></div></div>`;
+      <div class="row" style="margin-top:16px"><div style="flex:1"></div><button class="btn gold" id="kunciT" type="button" disabled${q.t === 'mc' ? ' hidden' : ''}>🔒 Kunci jawaban</button></div></div>`;
     const cek = () => { $('#kunciT').disabled = !(q.t === 'mc' ? draftT != null : q.t === 'multi' ? draftT.length > 0 : q.t === 'sort' ? draftT.every(x => x != null) : draftT.length === q.items.length) };
     if (q.t === 'mc' || q.t === 'multi') app.querySelectorAll('.opt').forEach(el => el.onclick = () => {
       const oi = +el.dataset.o;
-      if (q.t === 'mc') { draftT = oi; app.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', x === el)) }
+      if (q.t === 'mc') { draftT = oi; app.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', x === el)); kunciJawab(); return }
       else { draftT = draftT.includes(oi) ? draftT.filter(x => x !== oi) : draftT.concat(oi); el.classList.toggle('sel'); el.querySelector('.L').textContent = draftT.includes(oi) ? '☑' : '☐' }
       cek();
     });

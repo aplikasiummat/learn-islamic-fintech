@@ -12,7 +12,7 @@
 <script src="data.js?v=3"></script>
 <script src="kelas.js?v=2"></script>
 <script src="bagan.js?v=3"></script>
-<script src="turnamen.js?v=2"></script>
+<script src="turnamen.js?v=3"></script>
 </head>
 <body>
 <div class="top"><a class="chip" href="index.html">☰ Menu</a><div class="t">Duel <span>Komite Pembiayaan BPRS</span></div><span class="chip" id="hdrNama"></span><span class="chip" id="conn" style="display:none"></span><button class="chip" id="snd" type="button" style="cursor:pointer">🔊</button></div>
@@ -92,8 +92,28 @@ async function sambung(kode) {
 }
 
 /* ---------- layar awal ---------- */
+/* ---------- langkah 1: kode kelas ---------- */
+let kodePilih = KomiteKelas.cleanCode(qs.get('kelas') || '') || null;   // null = belum diisi, '' = main sendiri
+function layarKode() {
+  app.innerHTML = `
+  <div class="card hero" style="text-align:center;padding:40px 24px">
+    <div class="kicker">IHT Financial &amp; Legal Professionals</div>
+    <h1>Duel Komite Pembiayaan BPRS</h1>
+    <p style="font-size:1.15rem;color:#dbe6f6;margin:0 auto 22px;max-width:620px">Masukkan kode kelas yang tampil di layar pengajar.</p>
+    <input id="kodeBesar" maxlength="8" autocomplete="off" autocapitalize="characters" placeholder="KODE KELAS" value="${esc(store.get('kode', ''))}"
+      style="max-width:420px;text-align:center;text-transform:uppercase;font-family:'JetBrains Mono',monospace;letter-spacing:.3em;font-size:2.4rem;padding:18px;border:3px solid var(--gold)">
+    <div style="margin-top:18px"><button class="btn gold" id="masuk" type="button" style="min-width:260px;font-size:1.25rem">Masuk ▶</button></div>
+    <p style="margin-top:22px"><a href="#" id="sendiri" style="color:#c9d8ee">Tidak ada kode? Main sendiri melawan komputer</a></p>
+  </div>`;
+  const k = $('#kodeBesar'); k.focus();
+  const masuk = () => { const v = KomiteKelas.cleanCode(k.value); if (v.length < 4) { toast('Kode kelas terdiri dari 5 huruf/angka. Lihat layar pengajar.'); k.focus(); return } kodePilih = v; store.set('kode', v); render() };
+  $('#masuk').onclick = masuk; k.onkeydown = e => { if (e.key === 'Enter') masuk() };
+  $('#sendiri').onclick = e => { e.preventDefault(); kodePilih = ''; store.set('kode', ''); render() };
+}
+
 function layarAwal() {
-  const kode = KomiteKelas.cleanCode(qs.get('kelas') || store.get('kode', ''));
+  if (kodePilih == null) return layarKode();
+  const kode = kodePilih;
   const nm = store.get('nama', ''), un = store.get('unit', '');
   let lw = store.get('lawan', 'analis'), md = 'lengkap';
   app.innerHTML = `
@@ -105,8 +125,9 @@ function layarAwal() {
   </div>
   <div class="grid2">
     <div class="card">
-      <h3>1. Identitas</h3>
-      <label for="kode" style="margin-top:0">Kode kelas dari pengajar <span class="muted">(kosongkan bila main sendiri)</span></label><input id="kode" maxlength="8" value="${esc(kode)}" placeholder="KETIK KODE" style="text-transform:uppercase;font-family:'JetBrains Mono',monospace;letter-spacing:.2em;font-size:1.5rem;border-color:var(--gold)">
+      <h3>1. Nama Anda</h3>
+      <input type="hidden" id="kode" value="${esc(kode)}">
+      <p style="margin:0 0 6px">${kode ? `Kelas <b style="font-family:'JetBrains Mono',monospace;color:var(--gold2);letter-spacing:.15em;font-size:1.2rem">${esc(kode)}</b>` : '<b>Main sendiri</b> (tanpa kelas)'} · <a href="#" id="gantiKode">ganti</a></p>
       <label for="nama">Nama Anda (atau nama kelompok)</label><input id="nama" maxlength="40" value="${esc(nm)}" placeholder="contoh: Rina, Legal Kantor Pusat">
       <label for="unit">Jabatan atau unit kerja</label><input id="unit" maxlength="40" value="${esc(un)}" placeholder="contoh: Legal, Risiko, Pembiayaan">
     </div>
@@ -121,6 +142,7 @@ function layarAwal() {
     <div style="flex:1;min-width:240px" class="muted">Setiap soal ${D.DETIK} detik. Jawaban benar penuh = ${D.POIN} poin + bonus kecepatan sampai ${D.BONUS} poin. Soal mengelompokkan dan memilih banyak jawaban dinilai sebagian. Setiap pembahasan ditutup dengan <b style="color:#ff9aa4">Kacamata Legal</b>.</div>
     <button class="btn gold" id="go" type="button" style="min-width:260px">⚔️ Mulai duel</button>
   </div>`;
+  $('#gantiKode').onclick = e => { e.preventDefault(); kodePilih = null; history.replaceState(null, '', location.pathname); render() };
   app.querySelectorAll('.foe').forEach(b => b.onclick = () => { lw = b.dataset.l; app.querySelectorAll('.foe').forEach(x => x.classList.toggle('sel', x === b)) });
   app.querySelectorAll('.seg button').forEach(b => b.onclick = () => { md = b.dataset.m; app.querySelectorAll('.seg button').forEach(x => x.classList.toggle('sel', x === b)) });
   $('#go').onclick = () => {
@@ -176,7 +198,7 @@ function layarSoal() {
   const q = Q(S.i), b = B(S.i), ord = urutan(S.i);
   if (!draft) draft = kosong(q);
   const nomorDiBabak = S.list.slice(0, S.i + 1).filter(x => x[0] === S.list[S.i][0]).length, nDiBabak = S.list.filter(x => x[0] === S.list[S.i][0]).length;
-  const petunjuk = { mc: 'Pilih satu jawaban, lalu kunci.', multi: 'Pilih SEMUA jawaban yang benar, lalu kunci. Pilihan salah mengurangi nilai.', sort: 'Untuk setiap baris, pilih kotak yang tepat.', order: 'Klik langkah sesuai urutan yang benar.' }[q.t];
+  const petunjuk = { mc: 'Klik satu jawaban: langsung terkunci.', multi: 'Pilih SEMUA jawaban yang benar, lalu kunci. Pilihan salah mengurangi nilai.', sort: 'Untuk setiap baris, pilih kotak yang tepat.', order: 'Klik langkah sesuai urutan yang benar.' }[q.t];
   let body = '';
   if (q.t === 'mc' || q.t === 'multi') {
     body = `<div class="opts">${ord.map((oi, k) => `<button type="button" class="opt" data-o="${oi}"><span class="L">${q.t === 'multi' ? '☐' : LET[k]}</span><span>${q.o[oi]}</span></button>`).join('')}</div>`;
@@ -192,14 +214,14 @@ function layarSoal() {
     ${q.ctx ? (q.ctx === D.SRA ? `<details class="case" open><summary>Data CV Sumber Rejeki Abadi</summary><div class="ctx">${q.ctx}</div></details>` : `<div class="ctx">${q.ctx}</div>`) : ''}
     <p class="muted" style="margin:0 0 10px">${petunjuk}</p>
     ${body}
-    <div class="row" style="margin-top:16px"><div class="muted" id="pr" style="flex:1"></div><button class="btn gold" id="kunci" type="button" disabled>🔒 Kunci jawaban</button></div>
+    <div class="row" style="margin-top:16px"><div class="muted" id="pr" style="flex:1"></div><button class="btn gold" id="kunci" type="button" disabled${q.t === 'mc' ? ' hidden' : ''}>🔒 Kunci jawaban</button></div>
   </div>`;
   const cek = () => { const ok = q.t === 'mc' ? draft != null : q.t === 'multi' ? draft.length > 0 : q.t === 'sort' ? draft.every(x => x != null) : draft.length === q.items.length; $('#kunci').disabled = !ok;
     $('#pr').textContent = q.t === 'sort' ? draft.filter(x => x != null).length + ' dari ' + q.items.length + ' baris terisi' : q.t === 'order' ? draft.length + ' dari ' + q.items.length + ' langkah' : q.t === 'multi' ? draft.length + ' pilihan' : '' };
   if (q.t === 'mc' || q.t === 'multi') {
     app.querySelectorAll('.opt').forEach(el => el.onclick = () => {
       const oi = +el.dataset.o;
-      if (q.t === 'mc') { draft = oi; app.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', x === el)) }
+      if (q.t === 'mc') { draft = oi; app.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', x === el)); kunci(false); return }
       else { draft = draft.includes(oi) ? draft.filter(x => x !== oi) : draft.concat(oi); el.classList.toggle('sel'); el.querySelector('.L').textContent = draft.includes(oi) ? '☑' : '☐' }
       cek();
     });
@@ -331,7 +353,7 @@ function layarAkhir() {
   ${S.kelas ? '<div class="card noprint" style="border-color:var(--gold)"><h3>🏆 Babak berikutnya: turnamen antarpeserta</h3><p class="muted" style="margin:0">Biarkan halaman ini terbuka. Setelah semua peserta selesai, sistem mengacak pasangan dan laga Anda muncul otomatis di layar ini. Soal laga berupa kasus lapangan BPRS.</p></div>' : ''}
   <div class="row noprint" style="margin-top:10px"><button class="btn gold" id="lagi" type="button">⚔️ Main lagi</button><button class="btn ghost" id="cetak" type="button">🖨️ Cetak atau simpan PDF</button><a class="btn ghost" href="index.html">☰ Kembali ke menu</a></div>`;
   if (win) { bunyi('menang'); konfeti() } else bunyi('kalah');
-  $('#lagi').onclick = () => { const kd = S.kelas; S = null; store.set('state', null); history.replaceState(null, '', kd ? '?kelas=' + kd : location.pathname); render() };
+  $('#lagi').onclick = () => { const kd = S.kelas; kodePilih = kd || ''; S = null; store.set('state', null); history.replaceState(null, '', kd ? '?kelas=' + kd : location.pathname); render() };
   $('#cetak').onclick = () => print();
 }
 
