@@ -69,6 +69,22 @@ tr.off td{opacity:.55}
 .log{list-style:none;margin:0;padding:0;font-size:.86rem;max-height:300px;overflow:auto}
 .log li{padding:7px 0;border-bottom:1px solid var(--line)}
 .log time{font-family:var(--mono);font-size:.75rem;color:var(--muted);margin-right:6px}
+.proj{position:fixed;inset:0;z-index:50;background:radial-gradient(ellipse at 50% 0%,#1b3a63,#06101f 70%);color:#fff;overflow:auto;padding:22px 32px}
+.proj .ph{display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px;margin-bottom:18px}
+.proj .ph h2{font-family:var(--display);font-size:2rem;margin:0}.proj .ph .big{font-family:var(--mono);font-size:2.4rem;color:#f2c200}
+.proj .ph .k{display:flex;flex-direction:column;font-size:.8rem;color:#a9b7cc;text-transform:uppercase;letter-spacing:.08em}.proj .ph .k b{font-family:var(--mono);font-size:1.6rem;color:#fff;letter-spacing:0;text-transform:none}
+.proj .x{margin-left:auto;border:1px solid #4d6890;background:transparent;color:#fff;border-radius:8px;padding:8px 14px;font-weight:700}
+.prow{display:grid;grid-template-columns:56px minmax(160px,280px) minmax(0,1fr) 130px 120px;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:1.25rem;transition:background .4s}
+.prow .rk{font-family:var(--mono);font-size:1.5rem;font-weight:700;text-align:center;color:#a9b7cc}.prow.t1 .rk{color:#f2c200}.prow.t2 .rk{color:#dfe6f1}.prow.t3 .rk{color:#d9a067}
+.prow .nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .bar{height:22px;border-radius:11px;background:rgba(255,255,255,.08);position:relative;overflow:hidden}
+.prow .bar i{position:absolute;inset:0 auto 0 0;border-radius:11px;background:linear-gradient(90deg,#c9960a,#3cc684);transition:width .8s}
+.prow .bar i.neg{background:#ff6b5e}
+.prow .bar s{position:absolute;right:0;top:-2px;bottom:-2px;border-right:3px dashed #f2c200}
+.prow .rv{font-family:var(--mono);text-align:right;font-weight:700}.prow .rv.up{color:#3cc684}.prow .rv.down{color:#ff6b5e}
+.prow .tg{font-size:.85rem;text-align:center;border-radius:6px;padding:4px 6px;background:rgba(255,255,255,.08);color:#a9b7cc}.prow .tg.ok{background:#0f8a4f;color:#fff}.prow .tg.hit{background:#f2c200;color:#10243f;font-weight:800}
+.proj .foot2{margin-top:16px;color:#a9b7cc;font-size:.95rem}
+@media (max-width:800px){.prow{grid-template-columns:40px minmax(0,1fr) 90px;font-size:1rem}.prow .bar,.prow .tg{display:none}}
 .msg{font-size:.88rem;border-radius:6px;padding:8px 10px;margin-top:8px;display:none}.msg.show{display:block}
 .msg.err{background:var(--down-soft);color:var(--down)}.msg.ok{background:var(--up-soft);color:var(--up)}
 .est{font-size:.85rem;color:var(--muted)}
@@ -91,7 +107,7 @@ tr.off td{opacity:.55}
     <div class="pad">
       <div class="field"><label for="c-name">Nama kelas</label><input type="text" id="c-name" maxlength="50" placeholder="Misal: PLKI FEB UI · Kelas A"></div>
       <div class="field"><label for="c-dur">Durasi permainan (10 hari bursa)</label>
-        <select id="c-dur"><option value="500">10 menit</option><option value="750">15 menit</option><option value="1000" selected>20 menit</option><option value="1500">30 menit</option><option value="2000">40 menit</option></select></div>
+        <select id="c-dur"><option value="250">10 menit</option><option value="375" selected>15 menit</option><option value="500">20 menit</option><option value="750">30 menit</option><option value="1000">40 menit</option></select></div>
       <label class="chk"><input type="checkbox" id="c-reg" checked> Izinkan akun Regular (margin dan short selling sebagai pembanding)</label>
       <div class="row" style="margin-top:14px"><button class="btn gold big" id="c-go" type="button">Buka kelas dan buat kode</button></div>
       <div class="msg" id="c-msg"></div>
@@ -123,17 +139,17 @@ tr.off td{opacity:.55}
           </div>
           <label class="chk" style="margin-top:12px"><input type="checkbox" id="l-reg"> Akun Regular diizinkan</label>
           <p class="est" id="cls-name" style="margin:10px 0 0"></p>
-          <div class="row" style="margin-top:12px"><button class="btn line" id="b-csv" type="button">Unduh nilai (CSV)</button><button class="btn line" id="b-new" type="button">Kelas baru</button><button class="btn line" id="b-wipe" type="button">Hapus data kelas</button></div>
+          <div class="row" style="margin-top:12px"><button class="btn gold" id="b-proj" type="button">Layar kelas (proyektor)</button><button class="btn line" id="b-csv" type="button">Unduh nilai (CSV)</button><button class="btn line" id="b-new" type="button">Kelas baru</button><button class="btn line" id="b-wipe" type="button">Hapus data kelas</button></div>
           <div class="msg" id="l-msg"></div>
         </div>
       </section>
 
       <section class="panel">
         <header><h2>Papan peringkat</h2>
-          <div class="row" style="align-items:center"><label class="est" for="sort">Urutkan</label><select id="sort" style="width:auto"><option value="r">Imbal hasil</option><option value="sc">Nilai simulasi</option><option value="bs">Profil perilaku</option><option value="ms">Misi</option></select></div></header>
+          <div class="row" style="align-items:center"><label class="est" for="sort">Urutkan</label><select id="sort" style="width:auto"><option value="r">Imbal hasil</option><option value="sk">Porsi sukuk</option><option value="sc">Nilai simulasi</option><option value="bs">Profil perilaku</option><option value="ms">Misi</option></select></div></header>
         <div class="scroll"><table>
-          <thead><tr><th>#</th><th>Mahasiswa</th><th class="n">Imbal hasil</th><th class="n">Ekuitas</th><th class="n">Nilai</th><th>Perilaku</th><th class="n">Misi</th><th class="n">Trade</th><th>Posisi</th></tr></thead>
-          <tbody id="board"><tr><td colspan="9" class="est" style="padding:24px;text-align:center">Belum ada mahasiswa. Tampilkan kode di layar kelas.</td></tr></tbody>
+          <thead><tr><th>#</th><th>Mahasiswa</th><th class="n">Imbal hasil</th><th class="n">Ekuitas</th><th class="n">Nilai</th><th>Perilaku</th><th class="n">Misi</th><th class="n">Trade saham / sukuk</th><th class="n">Sukuk</th><th>Target +50%</th><th>Posisi</th></tr></thead>
+          <tbody id="board"><tr><td colspan="11" class="est" style="padding:24px;text-align:center">Belum ada mahasiswa. Tampilkan kode di layar kelas.</td></tr></tbody>
         </table></div>
       </section>
     </div>
@@ -161,6 +177,13 @@ tr.off td{opacity:.55}
   </div>
 </div>
 
+<div class="proj" id="proj" hidden>
+  <div class="ph"><h2 id="pj-name">Bursa Syariah</h2><span class="big" id="pj-left">15:00</span>
+    <span class="k">Hari bursa<b id="pj-day">1</b></span><span class="k">Peserta<b id="pj-n">0</b></span><span class="k">Capai +50% (syarat ✓)<b id="pj-hit">0</b></span><span class="k">Kode<b id="pj-code">—</b></span>
+    <button type="button" class="x" id="pj-x">Tutup (Esc)</button></div>
+  <div id="pj-rows"></div>
+  <p class="foot2">Garis putus-putus emas = target +50%. Target sah hanya jika mahasiswa bertransaksi saham dan sukuk minimal 3 kali masing-masing, dan memegang keduanya pada 5 penutupan hari.</p>
+</div>
 <script src="lib/mqtt-5.10.1.min.js" defer></script>
 <script src="lib/qrcode-1.0.0.min.js" defer></script>
 <script src="kelas.js?v=1.4.0" defer></script>
@@ -181,6 +204,8 @@ const PRESETS=[
  {title:'Cement oversupply pushes prices down',body:'Producers cut prices to keep market share.',why:'Lower margins reduce value. Check the debt ratio too: SEMN is outside the DES.',imp:{SEMN:-7,PRPT:-2}},
  {title:'Fake bids detected in PRPT (najsy)',body:'IDX flags unusual market activity; large bids vanish before matching.',why:'A price pushed up by fake demand is not value. Investors who chase it often lose.',imp:{PRPT:-6}},
  {title:'MUI reminds investors to purify dividends',body:'A public reminder on tathir of non-halal income from sharia stocks.',why:'Check your purification due in the account panel and pay it.',kind:'note'},
+ {title:'SBSN auction oversubscribed five times',body:'Banks and insurers rush into sovereign sukuk; the government accepts the lowest yields in a year.',why:'Strong auction demand lowers yields, so prices of existing sukuk rise, long series most.',imp:{},sk:-.35},
+ {title:'Rating agency puts Indonesia on negative outlook',body:'Foreign investors sell SBSN and stocks; the rupiah weakens.',why:'A sovereign rating warning raises the risk premium: sukuk yields up, prices down, and stocks follow.',imp:{BSYR:-3,TLKS:-2},mkt:-1.5,sk:.4,fx:150,flow:-400},
  {title:'Market-wide sell-off on global recession fears',body:'Asian markets drop 2 to 3 percent.',why:'A broad fall hits almost everything. Panic selling locks in losses; ask whether values changed.',imp:{},mkt:-3,flow:-500,fx:200}
 ];
 let CH=null,ctl=null,code='',students={},log=[],lastBoard='',armed=null;
@@ -208,7 +233,7 @@ async function publish(){await CH.setCtl(ctl);store();draw()}
 $('c-go').onclick=async()=>{$('c-go').disabled=true;msg('c-msg','Membuka kelas…');for(let i=0;i<80&&!(window.BSKelas&&window.mqtt);i++)await new Promise(r=>setTimeout(r,250));
   try{code=BSKelas.newCode();await connect(code,true);
     const seed=crypto.getRandomValues(new Uint32Array(1))[0]|0;
-    ctl={v:1,name:$('c-name').value.trim()||'Kelas Bursa Syariah',seed,days:10,tpd:120,tickMs:Number($('c-dur').value)||1000,allowReg:$('c-reg').checked,state:'lobby',baseTick:0,baseTime:BSKelas.now(),events:[],created:Date.now()};
+    ctl={v:1,name:$('c-name').value.trim()||'Kelas Bursa Syariah',seed,days:20,tpd:120,tickMs:Number($('c-dur').value)||375,allowReg:$('c-reg').checked,state:'lobby',baseTick:0,baseTime:BSKelas.now(),events:[],created:Date.now()};
     await publish();showLive()}
   catch(e){msg('c-msg',e.message==='lib'?'Pustaka koneksi gagal dimuat. Periksa internet lalu muat ulang halaman.':'Tidak bisa terhubung ke server kelas. Jaringan kampus mungkin memblokir port 8084/8884; coba data seluler atau Wi-Fi lain.','err');$('c-go').disabled=false}};
 (function(){let sv=null;try{sv=JSON.parse(localStorage.getItem(SAVE)||'null')}catch(e){}
@@ -238,7 +263,7 @@ $('b-wipe').onclick=async()=>{if(armed!=='wipe'){armed='wipe';$('b-wipe').textCo
   armed=null;await CH.wipe(Object.keys(students));try{localStorage.removeItem(SAVE)}catch(e){}msg('l-msg','Data kelas dihapus dari server. Unduh CSV dulu jika Anda memerlukan nilainya.');students={};setTimeout(()=>location.reload(),1800)};
 
 // ---------- issues
-$('presets').innerHTML=PRESETS.map((p,i)=>{const im=Object.entries(p.imp||{}).map(([k,v])=>`${k} ${v>0?'+':''}${v}%`).concat(p.mkt?[`pasar ${p.mkt>0?'+':''}${p.mkt}%`]:[]).join(' · ');
+$('presets').innerHTML=PRESETS.map((p,i)=>{const im=Object.entries(p.imp||{}).map(([k,v])=>`${k} ${v>0?'+':''}${v}%`).concat(p.mkt?[`pasar ${p.mkt>0?'+':''}${p.mkt}%`]:[]).concat(p.sk?[`yield sukuk ${p.sk>0?'+':''}${Math.round(p.sk*100)} bp`]:[]).join(' · ');
   return `<button type="button" data-p="${i}"><b>${esc(p.title)}</b><span class="${p.kind==='note'?'':((p.mkt||0)+Object.values(p.imp||{}).reduce((a,b)=>a+b,0))>=0?'up':'down'}">${p.kind==='note'?'pengumuman, tanpa dampak harga':esc(im)}</span></button>`}).join('');
 $('presets').onclick=e=>{const b=e.target.closest('[data-p]');if(b)send(Object.assign({},PRESETS[Number(b.dataset.p)]))};
 $('i-tk').innerHTML='<option value="">(tidak ada saham tertentu)</option>'+TK.map(([k,n])=>`<option value="${k}">${k} · ${n}</option>`).join('');
@@ -261,24 +286,36 @@ function rows(){const key=$('sort').value,now=BSKelas.now();
 function drawBoard(){const rs=rows();$('cnt').textContent=rs.length;$('onl').textContent=rs.filter(r=>r.on).length;
   $('board').innerHTML=rs.length?rs.map((r,i)=>`<tr class="${r.on||r.over?'':'off'}"><td class="rank">${i<3?`<span class="medal m${i+1}">${i+1}</span>`:i+1}</td>
     <td><b>${esc(r.n)}</b><br><span class="est">${esc(r.nim)}${r.cls?' · '+esc(r.cls):''}</span></td><td class="n ${r.r>0?'up':r.r<0?'down':''}">${fp(r.r)}</td><td class="n">Rp${fmt(r.eq)}</td>
-    <td class="n">${r.sc} <span class="est">${esc(r.gr)}</span></td><td><span class="beh ${behC(r.bs)}">${esc(r.bl)} · ${r.bs}</span></td><td class="n">${r.ms}/15</td><td class="n">${r.tr}</td>
+    <td class="n">${r.sc} <span class="est">${esc(r.gr)}</span></td><td><span class="beh ${behC(r.bs)}">${esc(r.bl)} · ${r.bs}</span></td><td class="n">${r.ms}/19</td><td class="n">${r.st!=null?r.st+' / '+r.skt:r.tr}</td><td class="n">${r.sk!=null?r.sk+'%':'–'}</td><td>${r.q?(r.r>=50?'<span class="beh i">🎯 tercapai</span>':'<span class="beh i">syarat ✓</span>'):'<span class="beh m">syarat belum</span>'}</td>
     <td class="est">${r.over?'Selesai':'Hari '+r.d}${r.ac==='reg'?' · Regular':''}${r.on||r.over?'':' · offline'}</td></tr>`).join('')
-   :'<tr><td colspan="9" class="est" style="padding:24px;text-align:center">Belum ada mahasiswa. Tampilkan kode di layar kelas.</td></tr>'}
+   :'<tr><td colspan="11" class="est" style="padding:24px;text-align:center">Belum ada mahasiswa. Tampilkan kode di layar kelas.</td></tr>'}
 function pushBoard(){const b=Object.entries(students).map(([id,o])=>({id,n:o.n,r:o.r})).sort((a,b)=>b.r-a.r).slice(0,80);const sig=JSON.stringify(b);if(sig===lastBoard)return;lastBoard=sig;CH.setBoard({rows:b,at:Date.now()})}
 $('sort').onchange=drawBoard;
-$('b-csv').onclick=()=>{const rs=rows();const head=['Peringkat','Nama','NIM','Kelas','Imbal hasil (%)','Ekuitas (Rp)','Nilai simulasi','Huruf','Skor perilaku','Profil perilaku','Misi','Jumlah trade','Akun terakhir','Hari','Selesai'];
+$('b-csv').onclick=()=>{const rs=rows();const head=['Peringkat','Nama','NIM','Kelas','Imbal hasil (%)','Ekuitas (Rp)','Nilai simulasi','Huruf','Skor perilaku','Profil perilaku','Misi','Jumlah trade','Trade saham','Trade sukuk','Porsi sukuk (%)','Syarat target','Akun terakhir','Hari','Selesai'];
   const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const csv=[head.map(q).join(';')].concat(rs.map((r,i)=>[i+1,r.n,r.nim,r.cls,String(r.r).replace('.',','),Math.round(r.eq),r.sc,r.gr,r.bs,r.bl,r.ms,r.tr,r.ac==='reg'?'Regular':'SOTS',r.d,r.over?'ya':'belum'].map(q).join(';'))).join('\r\n');
+  const csv=[head.map(q).join(';')].concat(rs.map((r,i)=>[i+1,r.n,r.nim,r.cls,String(r.r).replace('.',','),Math.round(r.eq),r.sc,r.gr,r.bs,r.bl,r.ms,r.tr,r.st,r.skt,r.sk,r.q?'terpenuhi':'belum',r.ac==='reg'?'Regular':'SOTS',r.d,r.over?'ya':'belum'].map(q).join(';'))).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));a.download=`Nilai-Bursa-Syariah-${code}.csv`;a.click()};
 
 // ---------- draw
 function draw(){if(!ctl)return;const st=ctl.state,g=tickNow(),max=ctl.days*ctl.tpd;
   $('st-pill').textContent=st==='lobby'?'Lobi':st==='run'?'Berjalan':st==='pause'?'Dijeda':'Selesai';$('st-pill').className='pill '+(st==='run'?'run':st==='end'?'end':'');
   $('b-start').hidden=st==='run'||st==='end';$('b-start').textContent=st==='pause'?'Lanjutkan':'Mulai';$('b-pause').hidden=st!=='run';$('b-end').disabled=st==='end';$('l-reg').checked=!!ctl.allowReg;
-  $('clk').textContent=g>=max?'Hari 10 · tutup':when(g);const ls=Math.max(0,Math.round((max-g)*ctl.tickMs/1000));$('left').textContent=st==='end'?'Selesai':String(Math.floor(ls/60)).padStart(2,'0')+':'+String(ls%60).padStart(2,'0');
+  $('clk').textContent=g>=max?`Hari ${ctl.days} · tutup`:when(g);const ls=Math.max(0,Math.round((max-g)*ctl.tickMs/1000));$('left').textContent=st==='end'?'Selesai':String(Math.floor(ls/60)).padStart(2,'0')+':'+String(ls%60).padStart(2,'0');
   $('log').innerHTML=log.length?log.slice().reverse().map(e=>`<li><time>${when(e.tick)}</time><b>${esc(e.title)}</b> <span class="est">${e.kind==='note'?'pengumuman':Object.entries(e.imp||{}).map(([k,v])=>k+' '+(v>0?'+':'')+v+'%').concat(e.mkt?['pasar '+(e.mkt>0?'+':'')+e.mkt+'%']:[]).join(' · ')} · ${e.tick<=g?'sudah berlaku':'menunggu'}</span></li>`).join(''):'<li class="est">Belum ada isu.</li>';
   if(st==='run'&&g>=max){ctl.baseTick=max;ctl.state='end';publish()}}
-let n=0;function loop(){draw();drawBoard();if(++n%10===0)pushBoard()}
+
+// ---------- projector view: the live race to +50%
+function drawProj(){if($('proj').hidden||!ctl)return;const rs=Object.entries(students).map(([id,o])=>Object.assign({id},o)).sort((a,b)=>(b.r||0)-(a.r||0));
+  const g=tickNow(),max=ctl.days*ctl.tpd,ls=Math.max(0,Math.round((max-g)*ctl.tickMs/1000));
+  $('pj-name').textContent=ctl.name;$('pj-left').textContent=ctl.state==='lobby'?'Menunggu mulai':ctl.state==='end'?'Selesai':String(Math.floor(ls/60)).padStart(2,'0')+':'+String(ls%60).padStart(2,'0');
+  $('pj-day').textContent=Math.min(ctl.days,Math.floor(g/ctl.tpd)+1)+' / '+ctl.days;$('pj-n').textContent=rs.length;$('pj-hit').textContent=rs.filter(r=>r.q&&r.r>=50).length;$('pj-code').textContent=code;
+  const top=Math.max(60,...rs.map(r=>r.r||0));
+  $('pj-rows').innerHTML=rs.slice(0,14).map((r,i)=>{const w=Math.max(0,(r.r||0)/top*100),tg=r.q&&r.r>=50?['hit','🎯 TARGET']:r.q?['ok','syarat ✓']:['',`saham ${r.st??'?'} · sukuk ${r.skt??'?'}`];
+    return `<div class="prow t${i+1}"><span class="rk">${i+1}</span><span class="nm">${esc(r.n)}</span><span class="bar"><i class="${(r.r||0)<0?'neg':''}" style="width:${(r.r||0)<0?Math.min(100,-(r.r)/top*100):w}%"></i><s style="right:${100-50/top*100}%"></s></span><span class="rv ${(r.r||0)>=0?'up':'down'}">${fp(r.r)}</span><span class="tg ${tg[0]}">${tg[1]}</span></div>`}).join('')||'<p style="font-size:1.3rem;color:#a9b7cc">Belum ada mahasiswa. Tampilkan kode kelas.</p>'}
+$('b-proj').onclick=()=>{$('proj').hidden=false;drawProj();try{const f=document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();if(f&&f.catch)f.catch(()=>{})}catch(e){}};
+$('pj-x').onclick=()=>{$('proj').hidden=true;try{const f=document.fullscreenElement&&document.exitFullscreen();if(f&&f.catch)f.catch(()=>{})}catch(e){}};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('proj').hidden)$('pj-x').click()});
+let n=0;function loop(){draw();drawBoard();drawProj();if(++n%10===0)pushBoard()}
 })();
 </script>
 </body>

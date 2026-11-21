@@ -320,6 +320,22 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
 .fl-up{animation:flup .7s ease-out}.fl-down{animation:fldn .7s ease-out}
 @keyframes flup{from{background:var(--up-soft);box-shadow:0 0 0 2px var(--up)}to{background:transparent;box-shadow:none}}
 @keyframes fldn{from{background:var(--down-soft);box-shadow:0 0 0 2px var(--down)}to{background:transparent;box-shadow:none}}
+.skboard{margin-top:14px;border-top:3px solid var(--halal)}
+.sktab{width:100%;border-collapse:collapse;font-size:.86rem;min-width:860px}
+.sktab th{text-align:right;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--line)}
+.sktab th:first-child,.sktab th:last-child{text-align:left}
+.sktab td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.sktab td.n{text-align:right;font-family:var(--mono)}
+.sktab .nm{font-size:.76rem;color:var(--muted)}.sktab .sknote{max-width:420px}
+.skt{display:flex;gap:4px}.skt input{width:84px;height:32px}
+.skt button{border:0;border-radius:6px;padding:0 12px;font-weight:700;color:#fff;background:var(--up)}.skt .sks{background:var(--down)}
+.macro .tgt{flex:2 1 300px;border:2px solid var(--gold)}.macro .tgt.hit{background:var(--up-soft);border-color:var(--up)}
+.tbar{height:8px;border-radius:4px;background:var(--surface2);overflow:hidden;margin:3px 0}.tbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--up))}
+.macro .tgt small{font-family:var(--body)!important;font-size:.72rem;color:var(--muted)}
+.coach{display:flex;align-items:center;gap:10px;margin:12px 0 0;padding:8px 12px;border-radius:8px;background:var(--halal-soft);border:1px solid var(--halal);font-size:.9rem}
+.coach .lbl{flex:none;background:var(--halal);color:#fff;font-weight:800;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:4px}
+.coach .txt{flex:1;min-width:0}
+.coach button{flex:none;border:1px solid var(--halal);background:transparent;color:var(--halal);border-radius:6px;padding:3px 10px;font-weight:700}
 /* economic calendar */
 .cal{list-style:none;margin:0;padding:0;max-height:520px;overflow:auto}
 .cal li{padding:9px 12px;border-bottom:1px solid var(--line);font-size:.86rem;display:flex;flex-direction:column;gap:4px}
@@ -367,7 +383,7 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
       <p>Register before you trade. Your progress is saved under your NIM on this device, and your report shows your name and NIM.</p>
       <div class="field"><label>How do you want to play?</label>
         <div class="modes" role="group" aria-label="Game mode">
-          <button type="button" data-mode="timed" aria-pressed="true"><b>20 minutes</b><span>Solo, 10 trading days on a clock</span></button>
+          <button type="button" data-mode="timed" aria-pressed="true"><b>15 minutes</b><span>Solo, one month (20 trading days) on a clock</span></button>
           <button type="button" data-mode="free" aria-pressed="false"><b>No time limit</b><span>Solo, play at your own pace</span></button>
           <button type="button" data-mode="class" aria-pressed="false"><b>Join a class</b><span>Play together, with a code from your lecturer</span></button>
         </div></div>
@@ -375,7 +391,7 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
       <div class="field"><label for="r-name">Full name (nama lengkap)</label><input type="text" id="r-name" autocomplete="name" maxlength="60"></div>
       <div class="field"><label for="r-nim">Student ID (NIM)</label><input type="text" id="r-nim" inputmode="numeric" maxlength="20"></div>
       <div class="field"><label for="r-cls">Class (optional)</label><input type="text" id="r-cls" maxlength="40" placeholder="e.g. PLKI FEB UI, Class A"></div>
-      <button class="go" type="submit" id="r-go">Start with Rp100.000.000</button>
+      <button class="go" type="submit" id="r-go">Start with Rp1.000.000.000</button>
       <div class="msg" id="r-msg" role="status"></div>
     </form>
     <div class="known" id="known"></div>
@@ -397,8 +413,8 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
 
 <div class="wrap">
   <div class="top">
-    <div class="brand"><h1>Bursa Syariah Simulator</h1><small><a href="./" style="color:#f2c200">← Learn Islamic Fintech</a> · Islamic capital market · 10 trading days · <a href="../sukuk/main.html" style="color:#f2c200">Sukuk market →</a></small></div>
-    <div class="clock"><span class="phase" id="phase">Pre-opening</span><span class="mono" id="simdate">Mon 16 Nov 2026</span><span class="mono" id="simclock">08:45</span><span class="phase" id="left" title="Session length: 10 trading days, 20 minutes at 1×">20:00 left</span></div>
+    <div class="brand"><h1>Bursa Syariah Simulator</h1><small><a href="./" style="color:#f2c200">← Learn Islamic Fintech</a> · Stocks and sukuk · one month (20 trading days) · <a href="../sukuk/main.html" style="color:#f2c200">Sukuk-only desk →</a></small></div>
+    <div class="clock"><span class="phase" id="phase">Pre-opening</span><span class="mono" id="simdate">Mon 16 Nov 2026</span><span class="mono" id="simclock">08:45</span><span class="phase" id="left" title="Session length: 20 trading days, 15 minutes at 1×">15:00 left</span></div>
     <div class="idx">
       <div>ISSI (sim)<b id="ix-issi">—</b></div>
       <div>Composite (sim)<b id="ix-comp">—</b></div>
@@ -422,6 +438,7 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
     <div class="news-drop" id="news-drop" hidden><ul class="news" id="news"></ul></div>
   </div>
 
+  <div class="coach" id="coach" aria-live="polite"></div>
   <div class="macro" id="macro" aria-live="polite"></div>
 
   <form class="ticket tradebar" id="ticket" novalidate onsubmit="return false" aria-label="Order ticket">
@@ -446,6 +463,11 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
     <div class="msg" id="o-msg" role="status"></div>
   </form>
 
+  <section class="panel skboard" id="skboard" aria-label="Sukuk board">
+    <header><h2>Sukuk board · SBSN and corporate sukuk</h2><span class="est" id="sk-sum"></span></header>
+    <div class="scroll"><table class="sktab"><thead><tr><th>Series</th><th>Clean price</th><th>Yield</th><th>Today</th><th>You hold</th><th>P/L</th><th>Nominal (Rp million) and order</th></tr></thead><tbody id="sk-body"></tbody></table></div>
+    <div class="pad" style="padding-top:0"><div class="msg" id="sk-msg" role="status"></div><p class="est" style="margin:6px 0 0">Price in % of face value; you also pay or receive the accrued ujrah. Sukuk earn ujrah every day you hold them and protect you when stocks fall. <b>The +50% target counts only with at least 3 stock trades, 3 sukuk trades, and 5 daily closes holding both.</b></p></div>
+  </section>
   <div class="mode">
     <div class="seg" role="group" aria-label="Account type">
       <button id="m-sots" aria-pressed="true">SOTS account (sharia)</button>
@@ -499,7 +521,7 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
         <div class="pad" style="display:flex;flex-direction:column;gap:12px">
           <div class="kv">
             <span>Cash (settled)</span><b id="a-cash">—</b>
-            <span>Receivable, waiting for T+2</span><b id="a-recv">—</b>
+            <span>Sukuk value</span><b id="a-suk">—</b>
             <span>Locked in open orders</span><b id="a-lock">—</b>
             <span>Stock value</span><b id="a-stock">—</b>
             <span id="a-loan-l" hidden>Margin loan</span><b id="a-loan" class="down" hidden>—</b>
@@ -522,6 +544,8 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
     </aside>
   </div>
 
+
+
   <div class="tabs">
     <div class="tablist" role="tablist">
       <button role="tab" id="tab-missions" aria-selected="true" aria-controls="p-missions">Missions</button>
@@ -530,7 +554,7 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
       <button role="tab" id="tab-journal" aria-selected="false" aria-controls="p-journal">Akad journal</button>
       <button role="tab" id="tab-rules" aria-selected="false" aria-controls="p-rules">How it mirrors IDX</button>
     </div>
-    <div class="tabpanel" role="tabpanel" id="p-missions"><div class="report" id="report"></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:-4px 0 14px"><button class="go" type="button" data-pdf style="background:var(--gold);color:#10243f;padding:10px 18px">Download PDF report</button><span class="est" id="pdf-note">Score so far, your behaviour profile (homo islamicus or homo economicus), and an analysis of your game. Download it again after Day 10 for the final version.</span></div><div class="attbox" id="att-box"></div><div class="missions" id="missions"></div></div>
+    <div class="tabpanel" role="tabpanel" id="p-missions"><div class="report" id="report"></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:-4px 0 14px"><button class="go" type="button" data-pdf style="background:var(--gold);color:#10243f;padding:10px 18px">Download PDF report</button><span class="est" id="pdf-note">Score so far, your behaviour profile (homo islamicus or homo economicus), and an analysis of your game. Download it again after Day 20 for the final version.</span></div><div class="attbox" id="att-box"></div><div class="missions" id="missions"></div></div>
     <div class="tabpanel" role="tabpanel" id="p-ipo" hidden>
       <ol class="stepper" id="ipo-steps"></ol>
       <div class="ipogrid">
@@ -577,18 +601,18 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
         <section><h3>Sessions</h3>
           <ul><li>Pre-opening 08:45 to 09:00: orders queue, matched at the opening price</li><li>Session 1 09:00 to 12:00: continuous auction</li><li>Break 12:00 to 13:30: orders queue</li><li>Session 2 13:30 to 15:50: continuous auction</li><li>Pre-closing 15:50 to 16:00: orders queue, matched at the close</li></ul></section>
         <section><h3>Costs and settlement</h3>
-          <p>Buy fee 0.15%, sell fee 0.25% (includes the 0.1% final tax on sales). Sale money settles at T+2, so it is a receivable for two trading days. Dividends are paid to holders on the record day, and the price is adjusted on the next open.</p></section>
+          <p>Buy fee 0.15%, sell fee 0.25% (includes the 0.1% final tax on sales). On the real IDX sale money settles at T+2; in this game it is in your cash at once so you can trade again straight away. Dividends are paid to holders on the record day, and the price is adjusted on the next open.</p></section>
         <section><h3>Sharia layer</h3>
           <ul><li>SOTS: only DES stocks, no margin, no short selling</li><li>Akad: wakalah to your broker, bay' al-musawamah on the exchange, musyarakah as a shareholder</li><li>Primary market (IPO): prospectus, book building, OJK effective statement, e-IPO offering, pooling allotment, distribution, listing; the underwriter works under wakalah bil ujrah</li><li>Purify the non-halal share of dividends</li></ul></section>
         <section><h3>Macro and index events</h3>
           <p>The economic calendar mirrors what moves the IDX: BPS inflation, the BI Rate decision (RDG BI), the US Fed, coal (HBA) and CPO prices, the rupiah, the MSCI index review and its rebalancing day, and the OJK review of the Daftar Efek Syariah each May and November. Prices react to the <b>surprise</b> against expectations, not to the news itself, and each sector reacts differently. Make your call before each decision.</p></section>
         <section><h3>How your score is computed</h3>
-          <table><tbody><tr><td>Missions completed</td><td class="mono">35</td></tr><tr><td>Sharia compliance: purification paid, no margin loan or short position at the end, all holdings in the DES</td><td class="mono">20</td></tr><tr><td>Reading macro events: 2 points per call made, 3 more if right (3 calls)</td><td class="mono">15</td></tr><tr><td>Performance against the ISSI: 12 points for matching it, plus or minus 2 per percentage point of difference (at most 6 with fewer than 3 trades)</td><td class="mono">20</td></tr><tr><td>Activity: finishing the session, at least 5 trades, at least 3 different stocks</td><td class="mono">10</td></tr></tbody></table>
+          <table><tbody><tr><td>Missions completed</td><td class="mono">35</td></tr><tr><td>Sharia compliance: purification paid, no margin loan or short position at the end, all holdings in the DES</td><td class="mono">20</td></tr><tr><td>Reading macro events: 2 points per call made, 3 more if right (3 calls)</td><td class="mono">15</td></tr><tr><td>Performance against the +50% target: 20 points at +50%, in proportion below it. Counts fully only with at least 3 stock trades, 3 sukuk trades, and 5 daily closes holding stocks and sukuk together; otherwise capped at 6</td><td class="mono">20</td></tr><tr><td>Activity: finishing the session, at least 5 trades, at least 3 different stocks</td><td class="mono">10</td></tr></tbody></table>
           <p>Grades: A 85, A− 80, B+ 75, B 70, B− 65, C+ 60, C 55, D 40. The score is formative feedback; your lecturer makes the final assessment.</p></section>
         <section><h3>Behaviour profile</h3>
           <p>Separate from the score, the report places you between <b>homo economicus</b> (maximises personal gain; leverage, interest, and short selling are just tools) and <b>homo islamicus</b> (pursues falah and maslahah within sharia limits). It starts at 100 and deducts for margin loans (riba), short sales, non-DES purchases, unpaid purification, speculation (very high turnover, buying into a UMA warning), and time spent in the Regular account. One margin trade for the comparison mission costs little; repeated use costs more.</p></section>
         <section><h3>Simplifications</h3>
-          <p>Fictional stocks, simulated prices. One session is 10 trading days; each day lasts two minutes at 1×, so the session takes 20 minutes. Queued orders fill when the last price reaches your limit. No dividend tax, no margin calls. Rules follow IDX practice taught in class; check the latest IDX regulations before real trading.</p></section>
+          <p>Fictional stocks, simulated prices. One session is a market month of 20 trading days; each day lasts 45 seconds at 1×, so the session takes 15 minutes. Queued orders fill when the last price reaches your limit. No dividend tax, no margin calls. Rules follow IDX practice taught in class; check the latest IDX regulations before real trading.</p></section>
       </div>
       <p class="foot">Lecturers: Dr. Yaser Taufik Syamlan, ME, CIFP · Lisa Listiana, PhD. Your progress is saved in this browser only. <button class="reset" id="btn-reset" type="button">Retake (new attempt)</button></p>
     </div>
@@ -623,9 +647,9 @@ function freshIpo(){const m=2.4+R()*1.4,w=[.07,.11,.16,.21,.25,.20];
   return {v2:1,screened:null,bb:null,final:null,inst:w.map(x=>Math.round(IPO.offer*m*x)),retailX:4+R()*10,lots:0,locked:0,allotted:0,oversub:0,refund:0,dist:false}}
 function stageIdx(){const d=S.day,i=S.ipo;if(i.legacy)return 7;if(d<=2)return i.screened==='ok'?1:0;if(d<=4)return 3;if(d===5)return 5;return 7}
 function ipoHeld(){const i=S.ipo;return i.locked+(i.allotted&&!i.dist?i.allotted*100*i.final:0)}
-const BUY_FEE=.0015, SELL_FEE=.0025, START_CASH=100e6, SHORT_FEE=.0003;
+const BUY_FEE=.0015, SELL_FEE=.0025, START_CASH=1e9, SHORT_FEE=.0003, SK_FEE=.001, TARGET=50, MIX_DAYS=5, MIN_EACH=3;
 const loanRate=()=>((S&&S.macro?S.macro.bi:4.75)+7.25)/100/250;
-const TICKS_PER_DAY=120, KEY='plki-bursa-syariah-v1', SESSION_DAYS=10;let TICK_MS=1000; // 10 days x 120 ticks x 1 s = 20 minutes at 1x
+const TICKS_PER_DAY=120, KEY='plki-bursa-syariah-v2', SESSION_DAYS=20;let TICK_MS=375; // one month: 20 days x 120 ticks x 0.375 s = 15 minutes at 1x
 const BY = Object.fromEntries(STOCKS.map(s=>[s.tk,s]));
 const issiPass = s => s.bizI && s.debt<=45 && s.nhi<=10;
 const globPass = s => s.bizG && s.debt<33.33 && s.nhi<5;
@@ -633,6 +657,122 @@ const purRatio = s => s.bizI ? Math.min(1,s.nhi/100) : 1;
 const inDES = s => issiPass(s);
 const ORIG = STOCKS.map(s=>({debt:s.debt,nhi:s.nhi}));
 const BETA = {SHJY:.8,TMBG:1.1,TLKS:.7,BSYR:1.1,RSIA:.7,AGRO:.9,PRPT:1.4,RKKN:.6,SEMN:1,DGTL:1.6,BKNV:1.2,BRWX:.5,HALA:1.2};
+// ---------------------------------------------------------------- sukuk board: same account, same clock. SBSN and corporate sukuk trade over the counter through dealers, so orders fill at any time of day.
+const SUKUK=[
+ {id:'PBS',tk:'PBS-041',name:'SBSN project-based, 10 years',akad:'Ijarah asset to be leased',T:10,rate:6.75,spr:0,bas:.003,sov:true,trade:true,note:'Sovereign, longest duration: it moves most when the BI Rate, the Fed, or foreign flows change.'},
+ {id:'SR',tk:'SR-027',name:'Sukuk Ritel, 3 years',akad:'Ijarah asset to be leased',T:3,rate:6.40,spr:.35,bas:.004,sov:true,trade:true,note:'Retail sovereign sukuk with a short duration: its price barely moves. A safe place to park cash and earn ujrah.'},
+ {id:'TOLN',tk:'TOLN-27',name:'Sukuk Ijarah PT Tol Nusantara, 5 years',akad:'Ijarah',T:5,rate:7.25,spr:1.0,bas:.006,trade:true,note:'Corporate, rated idAA. Asset based: if the company fails you rely on its credit, not on the toll road.'},
+ {id:'AGRS',tk:'AGRO-SM',name:'Sukuk Mudharabah Agro Sawit, 3 years',akad:'Mudharabah',T:3,rate:9.0,spr:2.3,bas:.01,mudh:true,trade:true,note:'Holders get 70% of the palm project\'s actual profit, so this sukuk moves with CPO news and with the AGRO share.'},
+ {id:'MFS',tk:'MFS-26',name:'Sukuk Murabahah Multi Finance, 2 years',akad:'Murabahah',T:2,rate:7.9,spr:0,bas:0,trade:false,note:'Debt based: you own a receivable. It cannot be sold before maturity, because selling debt above or below face value is riba (bay\' al-dayn).'},
+ {id:'KBTN',tk:'KBTN-27',name:'Obligasi PT Kota Beton 8,60%, 5 years',akad:'Loan with interest',T:5,rate:8.6,spr:1.8,bas:.006,conv:true,trade:true,note:'A conventional bond: its coupon is interest on a loan (riba). Open in the Regular account only, for comparison.'}];
+const SKB=Object.fromEntries(SUKUK.map(x=>[x.id,x]));
+const skT=()=>S.day-1+S.t/TICKS_PER_DAY;
+function skYield(x){const M=S.macro||{bi:4.75,fx:16250},T=Math.max(.2,x.T-skT()/250),pass=Math.max(.5,1-.05*T),k=x.sov?1:1.3;
+  let y=4.75+((M.bi||4.75)-4.75)*pass+.9+.12*Math.min(T,10)+x.spr+(((M.fx||16250)-16250)/16250*6+(S.skr||0))*k+((S.skn&&S.skn[x.id])||0);
+  if(x.mudh&&S.mk&&S.mk.AGRO)y-=Math.log(S.mk.AGRO.p/1120)*4;return y}
+function skPrice(x){if(!x.trade)return 100;const y=skYield(x)/200,c=x.rate/2,n=Math.max(1,Math.round((x.T-skT()/250)*2));let pv=0;for(let i=1;i<=n;i++)pv+=c/Math.pow(1+y,i);return pv+100/Math.pow(1+y,n)}
+function skAcc(x){return x.rate*(30+skT()*1.4)/365}
+function skVal(){let v=0;for(const id in S.suk||{}){const x=SKB[id],h=S.suk[id];v+=h.nom*(skPrice(x)+skAcc(x))/100}return v}
+function skMsg(t,k){const m=$('sk-msg');if(m){m.className='msg show '+k;m.innerHTML=t}}
+function skTrade(id,sd){const x=SKB[id];if(!S.suk)S.suk={};ensureStats();const X=S.stats;
+  if(S.over)return skMsg('The session is over. Start a new attempt from the report to trade again.','err');
+  const nom=Math.floor(Number(($('sk-n-'+id)||{}).value)||0)*1e6;if(nom<1e6)return skMsg('Enter a nominal of at least 1 (the box is in Rp million).','err');
+  if(x.conv&&S.mode==='sots'){X.blockedDes++;done('blocked');return skMsg(`<b>Blocked by SOTS.</b> ${x.tk} is a conventional bond: its coupon is interest on a loan (riba). A sharia account holds sukuk only.`,'fatwa')}
+  const p=skPrice(x),a=skAcc(x);
+  if(sd==='buy'){const px=x.trade?p*(1+x.bas/2):100,gross=nom*(px+a)/100,cost=gross*(1+SK_FEE);
+    if(cost>S.cash)return skMsg(`Not enough cash: you need ${idr(cost)}, you have ${idr(S.cash)}.`,'err');
+    S.cash-=cost;const h=S.suk[id]||(S.suk[id]={nom:0,cost:0});h.nom+=nom;h.cost+=nom*px/100;
+    X.trades++;X.skTrades++;X.fees+=gross*SK_FEE;X.buyValue+=nom*px/100;if(!X.tks.includes(x.tk))X.tks.push(x.tk);if(x.conv)X.convBond++;
+    jour('Buy sukuk',`${idr(nom)} nominal ${x.tk} at ${px.toFixed(2)}% plus accrued ${x.mudh?'profit':'ujrah'} ${a.toFixed(2)}%`,x.conv?'You lent money at interest: the coupon is riba.':`Bay' of an undivided share in the ${x.akad.toLowerCase()} asset, held for you by the SPV. From now on you earn ${x.mudh?'a share of actual profit':'ujrah (rent)'}.`,!!x.conv);
+    news(`Matched: bought ${idr(nom)} ${x.tk} at ${px.toFixed(2)}`);if(!x.conv)done('sukuk');save();render();
+    return skMsg(`Bought ${idr(nom)} nominal ${x.tk} at ${px.toFixed(2)}% plus ${a.toFixed(2)}% accrued. Paid ${idr(cost)}.`,'ok')}
+  if(!x.trade){done('dayn');jour('Blocked',`Tried to sell ${x.tk}`,"Bay' al-dayn: a murabahah sukuk is a receivable. Selling it above or below face value is riba, so it is held to maturity.");save();render();
+    return skMsg(`<b>Not tradable.</b> ${x.tk} is a murabahah sukuk: what you own is a receivable. Selling debt above or below its face value is riba (bay' al-dayn), so it is held to maturity. It still counts in your equity at par plus the accrued margin.`,'fatwa')}
+  const h=S.suk[id];if(!h||h.nom<nom)return skMsg(`You hold ${idr(h?h.nom:0)} nominal of ${x.tk}.`,'err');
+  const px=p*(1-x.bas/2),gross=nom*(px+a)/100,got=gross*(1-SK_FEE),basis=h.cost*nom/h.nom,pl=nom*px/100-basis;
+  S.cash+=got;h.cost-=basis;h.nom-=nom;if(h.nom<1)delete S.suk[id];X.trades++;X.skTrades++;X.realised+=pl;X.fees+=gross*SK_FEE;
+  jour('Sell sukuk',`${idr(nom)} ${x.tk} at ${px.toFixed(2)}% plus accrued ${a.toFixed(2)}% · P/L ${idr(pl)}`,x.conv?'Sale of an interest-bearing debt claim.':"Bay' of your share in the asset to another investor at the market price; the accrued part is your share of the rent so far.",!!x.conv);
+  news(`Matched: sold ${idr(nom)} ${x.tk} at ${px.toFixed(2)}`);save();render();
+  skMsg(`Sold ${idr(nom)} ${x.tk} at ${px.toFixed(2)}%. ${idr(got)} is in your cash now. P/L ${idr(pl)}.`,pl>=0?'ok':'err')}
+
+// ---------------------------------------------------------------- coach: one contextual tip at a time
+let tipI=0,tipAt=0;
+function coachTips(){const T=[],st=S.stats||{},eq=equity()+ipoHeld(),cashShare=S.cash/Math.max(1,eq),M=S.macro||{},rules=targetRules();
+  const pend=(M.cats||[]).find(c=>c.day===S.day&&c.s1&&!c.s2);
+  if(pend){const C=CATS[pend.i];T.push(`A rumour on ${C.tk} is live; the answer comes at ${hhmm(phase(pend.t2).mins)}. Buying now is a bet: two in three rumours are confirmed in this market, but a denial costs ${Math.abs(C.dn)}%. Size the position so a denial does not ruin your month.`)}
+  if(!rules[1].ok)T.push(`The +${TARGET}% target needs ${MIN_EACH} sukuk trades (${rules[1].v} so far). Use the Sukuk board just below the order ticket: SR-027 is a calm place to park cash, PBS-041 jumps when yields fall.`);
+  if(!rules[0].ok)T.push(`The target also needs ${MIN_EACH} stock trades (${rules[0].v}). Start with a DES stock you understand, then follow the rumours and disclosures.`);
+  if(!rules[2].ok&&(stockVal()===0||skVal()===0))T.push(`Hold stocks and sukuk at the same time at the daily close: ${rules[2].v} days so far, ${MIX_DAYS} needed.`);
+  if(cashShare>.5&&S.day>1)T.push(`${Math.round(cashShare*100)}% of your money is idle cash. Cash earns nothing; even SR-027 earns ujrah every day.`);
+  const nx=EVENTS.find(e=>!(M.st||{})[e.id]&&e.day===S.day&&e.t>S.t);if(nx)T.push(`Today: ${nx.title} at ${hhmm(phase(nx.t).mins)}. Prices react to the surprise against expectations, not to the news itself.`);
+  if(['bi2','sbsn','fed2'].some(id=>EVB[id]&&EVB[id].day-S.day>=0&&EVB[id].day-S.day<=2))T.push('A rate event is near. Long sukuk (PBS-041) gain most if yields fall and lose most if they rise; short sukuk (SR-027) barely move.');
+  const top=Object.entries(S.hold).filter(([,h])=>h.sh>0).map(([tk,h])=>[tk,h.sh*S.mk[tk].p/Math.max(1,eq)]).sort((a,b)=>b[1]-a[1])[0];
+  if(top&&top[1]>.5)T.push(`${Math.round(top[1]*100)}% of your equity sits in ${top[0]}. Big bets make the target reachable, and also make one denial very painful.`);
+  for(const s of STOCKS){const q=S.mk[s.tk];if(!q.listed)continue;const {ara}=limits(q.pc);if(q.p>=ara&&S.t>8){T.push(`${s.tk} is locked at ARA. Your buy order will queue and may not fill today; if the news is strong it often gaps up tomorrow.`);break}}
+  if(S.purDue>=1)T.push(`You owe ${idr(S.purDue)} in dividend purification. Pay it in the account panel: it is not your income.`);
+  T.push('Read the Market desk lines in the news bar: they explain why prices move (queues, ARA, foreign flows, yields).');
+  T.push('Rumours move prices before facts. Disclosures (confirmed or denied) move them again. The fastest readers win; the chasers lose.');
+  T.push('A murabahah sukuk (MFS-26) cannot be sold before maturity: selling debt above or below face value is riba. Buy it only with money you will not need.');
+  T.push('When stocks fall on a global shock, sukuk usually hold up. Switching part of your stock gains into sukuk locks in profit and keeps the target rules alive.');
+  return T}
+function renderCoach(){const el=$('coach');if(!el||!S)return;const n=Date.now();if(n-tipAt<9000&&el.dataset.on)return;tipAt=n;el.dataset.on=1;const T=coachTips();const t=T[tipI++%T.length];
+  el.innerHTML=`<span class="lbl">Coach tip</span><span class="txt">${t}</span><button type="button" id="tip-next" aria-label="Next tip">Next ›</button>`;$('tip-next').onclick=()=>{tipAt=0;renderCoach()}}
+let skBuilt=false;
+function renderSukuk(){const tb=$('sk-body');if(!tb)return;if(!S.suk)S.suk={};if(!S.skPc)S.skPc={};
+  if(!skBuilt){skBuilt=true;tb.innerHTML=SUKUK.map(x=>`<tr data-skrow="${x.id}"><td><b class="mono">${x.tk}</b> ${x.conv?'<span class="badge b-no">RIBA</span>':'<span class="badge b-des">SHARIA</span>'}${x.trade?'':'<span class="badge b-ipo">HOLD TO MATURITY</span>'}<div class="nm">${x.name} · <b>${x.akad}</b></div><div class="nm sknote">${x.note}</div></td>
+    <td class="n" id="skp-${x.id}"></td><td class="n" id="sky-${x.id}"></td><td class="n" id="skc-${x.id}"></td><td class="n" id="skh-${x.id}"></td><td class="n" id="skl-${x.id}"></td>
+    <td><div class="skt"><input type="number" id="sk-n-${x.id}" min="1" step="10" value="100" aria-label="Nominal ${x.tk} in Rp million"><button type="button" class="skb" data-skb="${x.id}">Buy</button><button type="button" class="sks" data-sks="${x.id}">Sell</button></div></td></tr>`).join('')}
+  for(const x of SUKUK){const p=skPrice(x),pc=S.skPc[x.id]||p,h=S.suk[x.id],c=pct(p,pc);
+    $('skp-'+x.id).textContent=x.trade?p.toFixed(2):'100.00 (par)';$('sky-'+x.id).textContent=x.trade?skYield(x).toFixed(2)+'%':x.rate.toFixed(2)+'% margin';
+    $('skc-'+x.id).innerHTML=x.trade?`<span class="${sgn(c)}">${fpct(c)}</span>`:'–';
+    $('skh-'+x.id).textContent=h?'Rp'+num(h.nom/1e6)+' jt':'–';
+    const pl=h?h.nom*(p+skAcc(x))/100-h.cost:0;$('skl-'+x.id).innerHTML=h?`<span class="${sgn(pl)}">${idr(pl)}</span>`:'–';
+    const row=document.querySelector(`[data-skrow="${x.id}"]`);if(row)row.hidden=!!x.conv&&S.mode==='sots'&&!h}
+  const v=skVal(),eq=equity()+ipoHeld();$('sk-sum').textContent=`Sukuk ${idr(v)} · ${eq>0?Math.round(v/eq*100):0}% of your equity · trades OTC at any time, cash at once`}
+// ---------------------------------------------------------------- target +50%: only counts when stocks and sukuk are traded and held together
+function targetRules(){ensureStats();const st=S.stats,stk=st.trades-st.skTrades;
+  return [{k:`${MIN_EACH} stock trades`,ok:stk>=MIN_EACH,v:Math.min(stk,MIN_EACH)+'/'+MIN_EACH},{k:`${MIN_EACH} sukuk trades`,ok:st.skTrades>=MIN_EACH,v:Math.min(st.skTrades,MIN_EACH)+'/'+MIN_EACH},{k:`stocks + sukuk held together at ${MIX_DAYS} daily closes`,ok:st.mixDays>=MIX_DAYS,v:Math.min(st.mixDays,MIX_DAYS)+'/'+MIX_DAYS}]}
+const qualified=()=>targetRules().every(r=>r.ok);
+// ---------------------------------------------------------------- catalysts: a rumour first, the company's answer later. Fast readers profit; chasers get burned.
+const CATS=[
+ {tk:'SHJY',tease:'SHJY is said to be close to a halal export contract with a Gulf retailer',yes:'SHJY confirms a Rp1,2 trillion export contract with a Gulf retailer',no:'SHJY denies the export rumour: talks are still at an early stage',up:[14,22],dn:-8,why:'New contracts raise expected cash flows: a fundamental reason to reprice. A denial removes the rumour premium.'},
+ {tk:'SHJY',tease:'Food regulator to speed up halal certification for exporters',yes:'Ministry cuts halal certification time to 14 days; SHJY plans three new export lines',no:'The certification reform is delayed to next year',up:[8,14],dn:-5,why:'Policy that lowers costs for a whole sector lifts its leaders first.'},
+ {tk:'TMBG',tease:'China signals higher coal imports this winter',yes:'TMBG raises its production target by 15% and signs new China offtake deals',no:'TMBG says new pits face permit delays',up:[12,20],dn:-9,why:'Commodity producers earn more when both volume and price rise. Permits are the bottleneck to watch.'},
+ {tk:'TMBG',tease:'TMBG board meets on a special dividend',yes:'TMBG declares a special dividend of Rp250 per share',no:'TMBG keeps cash for expansion; no special dividend',up:[9,15],dn:-6,why:'A special dividend returns cash to shareholders; the price rises before the cum date and drops ex-date.'},
+ {tk:'BSYR',tease:'Talk of a sharia bank merger names BSYR as the buyer',yes:'BSYR signs a conditional merger agreement; OJK review next',no:'BSYR: no merger plan at this time',up:[10,18],dn:-6,why:'Mergers promise scale and cheaper funding. The market prices the deal before regulators approve it.'},
+ {tk:'BSYR',tease:'BSYR to report a jump in third-quarter financing, analysts hear',yes:'BSYR posts financing growth of 24% and a lower NPF of 1,9%',no:'BSYR financing growth slows to 6%',up:[8,14],dn:-6,why:'Banks are valued on growth and asset quality. NPF (non-performing financing) is the sharia bank version of NPL.'},
+ {tk:'RSIA',tease:'BPJS Kesehatan is expected to raise hospital tariffs',yes:'Health ministry confirms higher INA-CBG tariffs from January',no:'Tariff increase postponed to next year',up:[10,16],dn:-6,why:'Regulated prices set hospital revenue. A tariff change is a direct earnings change.'},
+ {tk:'PRPT',tease:'Government considers extending VAT relief on new homes',yes:'Finance minister extends VAT relief on homes up to Rp5 billion',no:'VAT relief on homes will not be extended',up:[18,30],dn:-12,why:'Property demand is very sensitive to tax and financing costs. Small caps move fast in both directions.'},
+ {tk:'PRPT',tease:'PRPT in talks to sell a land bank to a foreign developer',yes:'PRPT sells 120 hectares at twice book value',no:'PRPT land sale collapses over price',up:[15,25],dn:-10,why:'Selling assets above book value reveals hidden value; it also cuts debt, which matters for the DES limit.'},
+ {tk:'DGTL',tease:'DGTL is said to be talking to a global tech fund',yes:'DGTL announces a strategic investment from a global tech fund at a 40% premium',no:'DGTL: talks ended without a deal',up:[25,35],dn:-15,why:'A deal at a premium resets the value anchor. Beware: DGTL is also where fake bids (najsy) appear.'},
+ {tk:'DGTL',tease:'DGTL to move its paylater fully to a sharia scheme',yes:'DGTL completes the switch to a sharia paylater; non-halal income falls sharply',no:'DGTL delays its sharia conversion',up:[15,25],dn:-10,why:'Becoming sharia compliant opens the stock to sharia funds: a new pool of buyers.'},
+ {tk:'AGRO',tease:'El Nino fades; analysts expect a bigger palm harvest',yes:'AGRO reports fresh fruit bunch output up 18% year on year',no:'AGRO output flat: replanting slowed the harvest',up:[12,20],dn:-8,why:'Palm output drives AGRO profit, and also the profit share of the AGRO-SM mudharabah sukuk.'},
+ {tk:'TLKS',tease:'TLKS weighs selling a stake in its tower unit',yes:'TLKS sells 30% of its tower unit at a rich valuation; special dividend expected',no:'TLKS decides to keep its towers',up:[9,14],dn:-5,why:'Large caps move less, but asset sales unlock value that the market had not priced.'},
+ {tk:'SEMN',tease:'Capital city construction to restart, ministry says',yes:'Government awards Rp40 trillion of capital city contracts; cement demand jumps',no:'Capital city budget cut in the revised state budget',up:[12,18],dn:-9,why:'Infrastructure spending drives cement demand. SEMN is outside the DES, so SOTS investors only watch.'},
+ {tk:'RSIA',tease:'RSIA eyes a hospital acquisition in Surabaya',yes:'RSIA completes the acquisition, adding 400 beds',no:'RSIA walks away: the price was too high',up:[9,15],dn:-5,why:'Acquisitions add revenue but also cost. The market rewards deals bought at a sensible price.'},
+ {tk:'HALA',tease:'HALA is said to win a cold-chain tender from a national retailer',yes:'HALA wins a 10-year halal logistics contract',no:'The tender is cancelled',up:[18,30],dn:-10,minDay:7,why:'A newly listed company has little track record, so each contract moves it strongly.'}];
+function planCats(){const out=[],used={};
+  for(let d=1;d<=SESSION_DAYS;d++){const n=R()<.6?2:1,slots=[10+Math.floor(R()*30),70+Math.floor(R()*18)];
+    for(let k=0;k<n;k++){let i=0,tries=0;
+      do{i=Math.floor(R()*CATS.length);tries++}while(tries<60&&((used[i]&&d-used[i]<8)||(CATS[i].minDay&&d<CATS[i].minDay)||out.some(c=>c.day===d&&CATS[c.i].tk===CATS[i].tk)));
+      used[i]=d;out.push({i,day:d,t1:slots[k],t2:Math.min(112,slots[k]+16+Math.floor(R()*16)),yes:R()<.66,mag:R()})}}
+  return out}
+function catTick(){const M=S.macro;if(!M)return;if(!M.cats)M.cats=planCats();
+  for(const c of M.cats){if(c.day!==S.day)continue;const C=CATS[c.i];if(!S.mk[C.tk]||!S.mk[C.tk].listed)continue;
+    if(S.t===c.t1&&!c.s1){c.s1=1;shock(C.tk,3,.6);const st={head:'Rumour: '+C.tease,body:`Unconfirmed. The company is expected to respond around ${hhmm(phase(c.t2).mins)}. Fast traders are already buying.`,why:'A rumour moves the price before the facts. Buying it is a bet on the confirmation: is this information, or gharar?',imp:{[C.tk]:3}};
+      news(`<b>Rumour:</b> ${C.tease}. Answer expected at ${hhmm(phase(c.t2).mins)}.`);showFlash({kind:'Rumour',day:S.day,t:S.t},st,'')}
+    if(S.t===c.t2&&!c.s2){c.s2=1;const p=c.yes?Math.round(C.up[0]+(C.up[1]-C.up[0])*c.mag):C.dn;shock(C.tk,p,.4);
+      const st={head:(c.yes?'Confirmed: ':'Denied: ')+(c.yes?C.yes:C.no),body:c.yes?`${C.tk} reprices by about ${p}% over the next hours${p>=20?'; expect it to test the ARA limit and carry on tomorrow':''}. Buyers who acted on the rumour now hold the gain.`:'The rumour premium disappears. Those who chased the rumour rush for the exit at the same time.',why:C.why,imp:{[C.tk]:p}};
+      news(`<b>${c.yes?'Disclosure':'Denial'}:</b> ${c.yes?C.yes:C.no}.`);jour('News',st.head,C.why);showFlash({kind:c.yes?'Company disclosure':'Company denial',day:S.day,t:S.t},st,'')}}}
+// ---------------------------------------------------------------- market desk: explains what is moving and why (market mechanism, not tips)
+function deskNews(){const M=S.macro;if(!M)return;const L=STOCKS.filter(s=>S.mk[s.tk].listed),ch=L.map(s=>[s,pct(S.mk[s.tk].p,S.mk[s.tk].pc)]).sort((a,b)=>b[1]-a[1]),k=(Math.floor(S.t/24)+S.day)%6;
+  if(k===0){const [s,c]=ch[0],q=S.mk[s.tk],{ara}=limits(q.pc);news(`<b>Market desk:</b> ${s.tk} leads gainers at ${fpct(c)}. ${q.p>=ara?`It is locked at ARA ${num(ara)}: buyers queue at the limit and almost nobody sells, so most bids wait until tomorrow.`:`Buy orders lift the offer one tick (Rp${tickOf(q.p)}) at a time. Today's ARA is ${num(ara)}, ${fpct(pct(ara,q.p))} away.`}`)}
+  if(k===1){const [s,c]=ch[ch.length-1],q=S.mk[s.tk],{arb}=limits(q.pc);news(`<b>Market desk:</b> ${s.tk} is the top loser at ${fpct(c)}. Sellers hit the bid; ${q.p<=arb?`it sits at ARB ${num(arb)}, where sell orders pile up with no buyers.`:`today's floor (ARB) is ${num(arb)}.`} A paper loss becomes real only when you sell: has the value changed, or only the mood?`)}
+  if(k===2){const f=Math.round(M.flow);news(`<b>Market desk:</b> foreign investors are net ${f>=0?'buyers':'sellers'} of Rp${num(Math.abs(f))} bn today. ${f>=0?'Their buying supports big caps such as TLKS and BSYR and firms the rupiah.':'Their selling weighs on big caps, weakens the rupiah, and pushes SBSN yields up.'} USD/IDR ${num(M.fx)}.`)}
+  if(k===3){const x=SKB.PBS,p=skPrice(x),pc=(S.skPc||{}).PBS||p;news(`<b>Sukuk desk:</b> PBS-041 at ${p.toFixed(2)} (${fpct(pct(p,pc))}), yield ${skYield(x).toFixed(2).replace('.',',')}%. Ujrah is fixed, so price and yield move in opposite directions; SR-027, with only three years left, barely moves.`)}
+  if(k===4){let tv=0;for(const s of L)tv+=S.mk[s.tk].vol*100*S.mk[s.tk].p;const top=L.slice().sort((a,b)=>S.mk[b.tk].vol*S.mk[b.tk].p-S.mk[a.tk].vol*S.mk[a.tk].p)[0];news(`<b>Market desk:</b> turnover so far today Rp${(tv/1e9).toFixed(1).replace('.',',')} bn; most traded: ${top.tk}. A move on heavy volume means many investors agree; a move on thin volume reverses easily.`)}
+  if(k===5){const x=SKB.AGRS,a=pct(S.mk.AGRO.p,S.mk.AGRO.pc);news(`<b>Sukuk desk:</b> AGRO-SM, the mudharabah sukuk of Agro Sawit, trades at ${skPrice(x).toFixed(2)}. Its holders share the palm project's real profit, so it follows the AGRO share (${fpct(a)} today), unlike ijarah sukuk with a fixed rent.`)}}
+
 
 // ---------------------------------------------------------------- IDX mechanics
 const tickOf = p => p<200?1:p<500?2:p<2000?5:p<5000?10:25;
@@ -664,7 +804,7 @@ function gauss(){let u=0,v=0;while(!u)u=R();while(!v)v=R();return Math.sqrt(-2*M
 function fresh(){
   const m={};STOCKS.forEach(s=>{m[s.tk]={p:s.p,pc:s.p,open:null,hi:s.p,lo:s.p,vol:0,fair:s.p,hist:[s.p],listed:!s.ipo}});
   return {day:1,t:0,cash:START_CASH,recv:[],hold:{},orders:[],loan:0,purDue:0,purDone:0,mode:'sots',margin:false,
-    mk:m,news:[],journal:[],missions:{},ipo:freshIpo(),macro:freshMacro(),stats:freshStats(),eqHist:[],seq:1,sel:'SHJY',quiz:false};
+    mk:m,news:[],journal:[],missions:{},ipo:freshIpo(),macro:freshMacro(),stats:freshStats(),eqHist:[],seq:1,sel:'SHJY',quiz:false,suk:{},skPc:{},skn:{},skr:0};
 }
 let S=null,USER=null;
 const UKEY=KEY+'-users';
@@ -696,7 +836,7 @@ function loanLocked(){return S.orders.filter(o=>o.side==='buy').reduce((a,o)=>a+
 function lockedSell(tk){return S.orders.filter(o=>o.side==='sell'&&o.tk===tk).reduce((a,o)=>a+o.lots*100,0)}
 function stockVal(){let v=0;for(const tk in S.hold)v+=S.hold[tk].sh*S.mk[tk].p;return v}
 function recvSum(){return S.recv.reduce((a,r)=>a+r.amt,0)}
-function equity(){return S.cash+locked()+recvSum()+stockVal()-S.loan}
+function equity(){return S.cash+locked()+recvSum()+stockVal()+skVal()-S.loan}
 function marginCap(){return S.mode==='reg'&&S.margin? Math.max(0,equity()-S.loan-loanLocked()):0}
 function addHold(tk,sh,price){
   const h=S.hold[tk]||{sh:0,avg:0};const ns=h.sh+sh;
@@ -723,12 +863,12 @@ function fill(o,price){
     const net=val*(1-SELL_FEE);const before=S.hold[o.tk]?.sh||0;
     const pl=before>0?(price-S.hold[o.tk].avg)*Math.min(sh,before):0;
     addHold(o.tk,-sh,price);
-    S.recv.push({amt:net,due:S.day+2,tk:o.tk});
-    jour('Sell',`${o.lots} lot ${o.tk} at ${idr(price)} · net ${idr(net)} settles on Day ${S.day+2} (T+2)${before>0?' · realised P/L '+idr(pl):''}`,
+    {let amt=net;if(S.loan>0){const pay=Math.min(S.loan,amt);S.loan-=pay;amt-=pay}S.cash+=amt}
+    jour('Sell',`${o.lots} lot ${o.tk} at ${idr(price)} · net ${idr(net)} is in your cash at once (the real IDX settles at T+2)${before>0?' · realised P/L '+idr(pl):''}`,
       before<sh?"Short sale: selling shares you do not own (bay' ma laysa 'indak), prohibited by Fatwa 40/2003":"Wakalah: your broker sells for you · Bay' al-musawamah: ownership passes to the buyer",before<sh);
     news(`Matched: sold ${o.lots} lot ${o.tk} at ${num(price)}`);
     ensureStats();S.stats.trades++;S.stats.fees+=val*SELL_FEE;S.stats.realised+=pl;if(before<sh)S.stats.shortTrades++;
-    done('sell');
+    done('sell');done('settle');
     if(S.macro&&S.macro.desOut.includes(o.tk)&&S.macro.st.des&&S.macro.st.des.done) done('des');
   }
   S.mk[o.tk].vol+=o.lots;
@@ -780,7 +920,7 @@ function place(e){
     const o={id:S.seq++,side,tk,price,lots,locked:0,loanPart:0};
     S.orders.push(o);
     const qt=quotes(tk);
-    if(ph.open&&price<=qt.bid){fill(o,qt.bid);if(sh<=Math.max(0,have))msg(`Sold ${lots} lot ${tk} at ${num(qt.bid)}. Money settles at T+2.`,'ok')}
+    if(ph.open&&price<=qt.bid){fill(o,qt.bid);if(sh<=Math.max(0,have))msg(`Sold ${lots} lot ${tk} at ${num(qt.bid)}. The money is in your cash now.`,'ok')}
     else if(sh<=Math.max(0,have)) msg(ph.open?`Order queued at ${num(price)}. It fills if the price rises to your offer.`:`Order queued during ${ph.name.toLowerCase()}.`,'ok');
   }
   save();render();
@@ -789,12 +929,13 @@ function cancel(id){const o=S.orders.find(x=>x.id===id);if(!o)return;S.cash+=o.l
 
 // ---------------------------------------------------------------- market engine
 function stepPrices(){
+  if(!S.skn)S.skn={};for(const x of SUKUK)S.skn[x.id]=(S.skn[x.id]||0)*.985+gauss()*.004;
   const M=S.macro,mf=gauss()*.0022+(M?M.mood/40:0);if(M){M.mood*=.97;M.flow+=gauss()*4+M.mood*400;M.fx=Math.round(M.fx+(M.fxT-M.fx)*.05+gauss()*3)}
   for(const s of STOCKS){const q=S.mk[s.tk];if(!q.listed)continue;
     const {ara,arb}=limits(q.pc);
-    let r=gauss()*s.vol/Math.sqrt(60)+.06*Math.log(q.fair/q.p)/60+mf*(BETA[s.tk]||1);
+    let r=gauss()*s.vol*1.35/Math.sqrt(60)+.06*Math.log(q.fair/q.p)/60+mf*(BETA[s.tk]||1);
     if(q.momN>0){r+=q.mom;q.momN--}
-    if(R()<.0025){const j=(R()<.5?-1:1)*(.03+R()*.05);r+=j;q.fair*=Math.exp(j*.8);
+    if(R()<.004){const j=(R()<.5?-1:1)*(.03+R()*.06);r+=j;q.fair*=Math.exp(j*.8);
       news(j>0?`${s.tk}: strong buying after positive news (${s.sector}).`:`${s.tk}: selling pressure after weak quarterly numbers.`)}
     if(s.tk==='DGTL'&&R()<.003){r+=.08;news('DGTL: IDX flags Unusual Market Activity (UMA). Large bids appear and vanish. Is someone placing fake bids (najsy)?');S.uma={day:S.day,t:S.t}}
     let np=snap(q.p*Math.exp(r));np=Math.min(ara,Math.max(arb,np));
@@ -844,8 +985,10 @@ function endOfDay(){
     if(I.allotted){addHold('HALA',I.allotted*100,I.final);jour('IPO distribution',`${num(I.allotted)} lot HALA credited to your KSEI sub-account`,'You now own part of HALA as a musyarakah partner; trading starts at listing')}
     news('HALA shares distributed to investors\' KSEI sub-accounts. Listing tomorrow.')}
   for(const s of STOCKS){const q=S.mk[s.tk];if(s.dps&&s.rec===S.day)continue;if(q.listed)q.pc=q.p}
-  ensureStats();S.eqHist=S.eqHist.filter(h=>h.d!==S.day);S.eqHist.push({d:S.day,eq:equity()+ipoHeld()+S.purDone,ix:issiIdx()});
-  if(S.day>=SESSION_DAYS){S.over=true;S.t=TICKS_PER_DAY-1;news('The 20-minute session is complete. The market is closed. See your report card.');save();clearInterval(timer);setTimeout(showEnd,50);return}
+  ensureStats();if(!S.skPc)S.skPc={};for(const x of SUKUK)S.skPc[x.id]=skPrice(x);if(stockVal()>0&&skVal()>0){S.stats.mixDays++;if(S.stats.mixDays===MIX_DAYS)done('mix')}
+  {const r=pct(equity()+ipoHeld()+S.purDone,START_CASH);if(!S.hitT&&r>=TARGET&&qualified()){S.hitT=S.day;news(`<b>Target reached:</b> your return is ${fpct(r)} with stocks and sukuk together. Keep it to the close.`)}}
+  S.eqHist=S.eqHist.filter(h=>h.d!==S.day);S.eqHist.push({d:S.day,eq:equity()+ipoHeld()+S.purDone,ix:issiIdx()});
+  if(S.day>=SESSION_DAYS){S.over=true;S.t=TICKS_PER_DAY-1;news('One month of trading is complete. The market is closed. See your report card.');save();clearInterval(timer);setTimeout(showEnd,50);return}
   S.day++;S.t=0;
   if(S.day===3&&!S.ipo.legacy)news(`OJK declares HALA's registration statement effective. Public offering opens today at Rp${S.ipo.final} through e-IPO.`);
   if(S.day>=IPO.listDay&&!S.mk.HALA.listed){const q=S.mk.HALA,fp=S.ipo.final||250;q.listed=true;q.pc=fp;q.p=fp;q.fair=fp*(1.05+Math.min(.35,(S.room?S.ipo.retailX:(S.ipo.oversub||5))/40));news(`HALA lists on the IDX today at the IPO price of Rp${fp}. Watch the first-day move.`);done('list')}
@@ -861,7 +1004,7 @@ function tick(){
   macroTick();
   if(S.t===8||S.t===68){if(S.t===8)openMarket();else matchAll(false)}
   const ph=phase(S.t);
-  if(ph.open){stepPrices();matchAll(false)}
+  if(ph.open){stepPrices();matchAll(false);if(S.t%24===12)deskNews()}
   if(S.t===TICKS_PER_DAY-1) matchAll(false);
   for(const tk in S.mk){const q=S.mk[tk];q.hist.push(q.p)}
   if(S.t>=TICKS_PER_DAY){endOfDay()}
@@ -878,12 +1021,17 @@ const EVENTS=[
  {id:'cpo',day:6,t:40,kind:'Commodity',title:'Government revises the CPO export levy'},
  {id:'fx',day:7,t:20,kind:'Global',title:'Rupiah moves sharply against the US dollar'},
  {id:'mscieff',day:8,t:115,kind:'Index',title:'MSCI rebalancing effective at today\'s close'},
- {id:'des',day:9,t:30,kind:'Sharia',title:'OJK publishes the periodic Daftar Efek Syariah review',call:[['stay','PRPT stays in DES'],['out','PRPT leaves DES']],warn:[9,8]}
+ {id:'des',day:9,t:30,kind:'Sharia',title:'OJK publishes the periodic Daftar Efek Syariah review',call:[['stay','PRPT stays in DES'],['out','PRPT leaves DES']],warn:[9,8]},
+ {id:'gdp',day:11,t:40,kind:'Data',title:'BPS releases third-quarter GDP growth'},
+ {id:'sbsn',day:13,t:50,kind:'Sukuk',title:'Government SBSN auction results'},
+ {id:'bi2',day:16,t:86,kind:'Policy',title:'RDG Bank Indonesia: December BI Rate decision'},
+ {id:'fed2',day:18,t:9,kind:'Global',title:'US Federal Reserve December meeting, overnight'},
+ {id:'wd',day:20,t:20,kind:'Index',title:'Year-end window dressing by fund managers'}
 ];
 const EVB=Object.fromEntries(EVENTS.map(e=>[e.id,e]));
 function freshMacro(){const pick=(a,w)=>{let r=R(),k=0;for(;k<w.length-1;k++){if(r<w[k])break;r-=w[k]}return a[k]};
   const prptOut=R()<.55,dgtlIn=prptOut?R()<.5:true;
-  return {v:1,bi:4.75,fx:16250,fxT:16250,cpi:2.7,coal:118,cpo:4120,flow:0,mood:0,k:1,st:{},calls:{},score:0,adj:{},desIn:[],desOut:[],
+  return {v:2,cats:planCats(),bi:4.75,fx:16250,fxT:16250,cpi:2.7,coal:118,cpo:4120,flow:0,mood:0,k:1,st:{},calls:{},score:0,adj:{},desIn:[],desOut:[],
     plan:{cpiLow:R()<.5,fedHawk:R()<.5,coalUp:R()<.55,msciIn:pick(['BSYR','AGRO','SHJY','none'],[.38,.27,.25,.10]),msciOut:R()<.7,cpoCut:R()<.5,prptOut,dgtlIn}}}
 function applyAdj(){STOCKS.forEach((s,i)=>{s.debt=ORIG[i].debt;s.nhi=ORIG[i].nhi;Object.assign(s,(S&&S.macro&&S.macro.adj[s.tk])||{})})}
 function issiRaw(){let v=0;for(const s of STOCKS){if(s.ipo||!inDES(s))continue;v+=S.mk[s.tk].p*s.sh}return v}
@@ -905,10 +1053,11 @@ function fire(e){const M=S.macro,P=M.plan,st=M.st[e.id]={done:true,imp:{}};let h
     head=`BI Rate ${out==='cut'?'cut to':out==='hike'?'raised to':'held at'} ${M.bi.toFixed(2).replace('.',',')}%`;
     const k=-sur;market(1.6*k);hit('PRPT',7*k);hit('DGTL',6*k);hit('SEMN',3.5*k);hit('BSYR',3*k);hit('BKNV',1.2*k);hit('SHJY',1*k);M.fxT+=Math.round(sur*180);
     body=Math.abs(sur)<.35?'Most of this was expected, so the move is small: the news was already priced in.':sur<0?'More dovish than the market expected. Lower funding costs lift property, cement, and tech.':'More hawkish than expected. Higher funding costs hit rate-sensitive stocks.';
+    if(S.suk&&S.suk.PBS)done('skrate');
     why=`Margin loans in the Regular account now cost ${(M.bi+7.25).toFixed(2).replace('.',',')}% a year (riba). SOTS investors have no loan, but valuations still move because the discount rate changed.`;call=out}
   if(e.id==='fed'){const h=P.fedHawk;head=h?'The Fed signals higher for longer':'The Fed hints at cuts next year';
-    if(h){market(-1.2);hit('DGTL',-3);hit('BKNV',-1.5);hit('TMBG',1);M.fxT+=160;M.flow-=350;body='Foreign investors pull money from emerging markets. The rupiah weakens and the market opens lower.'}
-    else{market(1);hit('DGTL',2.5);hit('BSYR',1.5);M.fxT-=120;M.flow+=280;body='Risk appetite returns. Foreign money flows into Indonesian stocks and the rupiah firms.'}
+    if(h){market(-1.2);hit('DGTL',-3);hit('BKNV',-1.5);hit('TMBG',1);M.fxT+=160;M.flow-=350;S.skr+=.2;body='Foreign investors pull money from emerging markets. The rupiah weakens and the market opens lower.'}
+    else{market(1);hit('DGTL',2.5);hit('BSYR',1.5);M.fxT-=120;M.flow+=280;S.skr-=.12;body='Risk appetite returns. Foreign money flows into Indonesian stocks and the rupiah firms.'}
     why='Global rates drive foreign flows. Foreign investors own a large share of IDX free float, so their buying or selling moves the whole index.'}
   if(e.id==='coal'){const u=P.coalUp;M.coal=u?131:104;head=`HBA coal price ${u?'up':'down'} to US$${M.coal} per ton`;hit('TMBG',u?7:-6);M.fxT+=u?-40:40;
     body=u?'Coal exporters earn more dollars per ton. TMBG jumps.':'Lower coal prices squeeze exporter margins. TMBG slides.';
@@ -937,6 +1086,20 @@ function fire(e){const M=S.macro,P=M.plan,st=M.st[e.id]={done:true,imp:{}};let h
     head=`DES review: PRPT ${out?'leaves':'stays in'} the DES${P.dgtlIn?', DGTL enters':''}`;
     body=(out?'PRPT\'s interest-bearing debt rose to 47% of assets, above the 45% limit. SOTS investors can no longer buy it; holders should exit. ':'PRPT cut its debt to 42% of assets and stays. ')+(P.dgtlIn?'DGTL moved its paylater to a sharia scheme: non-halal income fell to 8%, so sharia funds can now buy it.':'');
     why='OJK reviews the DES every May and November from the latest financial statements. Membership can change; screening is not a one-time label.';call=st.out;renderScreen()}
+  if(e.id==='gdp'){const g=R()<.55;head=`GDP grows ${g?'5,3':'4,7'}% year on year, consensus 5,0%`;if(g){market(1.2);hit('BSYR',3);hit('SEMN',3);hit('PRPT',4);S.skr+=.05}else{market(-1.2);hit('BSYR',-2.5);hit('PRPT',-4);hit('RSIA',1);S.skr-=.08}
+    body=g?'Stronger growth lifts banks, cement, and property. Slightly higher yields as investors move from safety to risk.':'Weaker growth hits cyclical stocks. Defensive hospitals hold up, and sukuk gain as investors seek safety.';
+    why='GDP is the broadest measure of the economy. Cyclical sectors react most; sukuk often rise when growth disappoints (flight to quality).'}
+  if(e.id==='sbsn'){const st2=R()<.6;S.skr+=st2?-.25:.3;head=st2?'SBSN auction 3,4x oversubscribed: Rp41 trillion of bids for Rp12 trillion':'Weak SBSN auction: Rp14 trillion of bids for Rp12 trillion';
+    body=st2?'The government could accept low yields. Yields across the curve fall, so existing sukuk prices rise: PBS-041 most.':'The government had to accept higher yields to raise the money. Existing sukuk prices fall, PBS-041 most.';
+    why='In an SBSN auction the government accepts the lowest yield bids first (multiple price). Strong demand means lower yields; the secondary market reprices at once.'}
+  if(e.id==='bi2'){const r=R(),out=r<.4?'cut':r<.85?'hold':'hike',dir={cut:-1,hold:0,hike:1}[out],sur=dir-(-.25);M.bi=+(M.bi+dir*.25).toFixed(2);const k=-sur;
+    head=`BI Rate ${out==='cut'?'cut to':out==='hike'?'raised to':'held at'} ${M.bi.toFixed(2).replace('.',',')}%`;market(1.4*k);hit('PRPT',6*k);hit('DGTL',5*k);hit('BSYR',2.5*k);M.fxT+=Math.round(sur*160);
+    body=out==='cut'?'A cut lowers funding costs: property and growth stocks rally, and sukuk prices jump as yields fall.':out==='hike'?'A surprise hike: rate-sensitive stocks fall and sukuk prices drop as yields rise.':'A hold, against a market that leaned toward a cut: a mild disappointment for stocks and sukuk.';
+    why='Sukuk are priced off the same yield curve as government bonds. A BI Rate move shifts the short end most; long sukuk move most in price because of duration.';if(S.suk&&S.suk.PBS)done('skrate')}
+  if(e.id==='fed2'){const h=R()<.45;head=h?'The Fed holds and signals fewer cuts':'The Fed cuts and signals more to come';if(h){market(-1);hit('DGTL',-3);M.fxT+=140;M.flow-=300;S.skr+=.15}else{market(1.1);hit('DGTL',3);hit('BSYR',2);M.fxT-=120;M.flow+=260;S.skr-=.12}
+    body=h?'Foreign money leaves emerging markets: stocks and SBSN both weaken.':'Foreign money returns: stocks rally and SBSN yields fall.';why='Global rates set the opportunity cost for foreign investors, who hold a large share of SBSN and IDX free float.'}
+  if(e.id==='wd'){market(1);hit('BSYR',3);hit('TLKS',3);hit('SHJY',2);head='Fund managers dress up year-end portfolios';
+    body='Funds buy the year\'s winners and big caps before the books close, so large caps get a late lift.';why='Window dressing is about how a fund looks on the report date, not about company value. It often fades in January.'}
   st.head=head;st.body=body;st.why=why;
   let callTxt='';if(call!==null&&M.calls[e.id]){const ok=M.calls[e.id]===call;st.ok=ok;if(ok)M.score++;callTxt=ok?'Your call was right.':'Your call missed this time.';if(e.id==='bi')done('macro')}
   else if(e.call&&!M.calls[e.id])callTxt='You made no call on this one.';
@@ -946,14 +1109,14 @@ let CTL=null,CH=null,catching=false,myId='',lastPub=0,lastSave=0,BOARD=null;
 const gIdx=()=>(S.day-1)*TICKS_PER_DAY+S.t;
 function classEvents(late){if(!CTL||!S.room)return;if(!S.evDone)S.evDone=[];const g=gIdx();
   for(const ev of CTL.events||[]){if(S.evDone.includes(ev.id))continue;if(ev.tick===g||(late&&ev.tick<g))applyIssue(ev)}}
-function applyIssue(ev){const M=S.macro;S.evDone.push(ev.id);const imp={};
+function applyIssue(ev){const M=S.macro;S.evDone.push(ev.id);const imp={};if(ev.sk)S.skr=(S.skr||0)+ev.sk;
   if(ev.imp)for(const tk in ev.imp){if(!S.mk[tk])continue;shock(tk,ev.imp[tk]);imp[tk]=ev.imp[tk]}
   if(ev.mkt)market(ev.mkt);if(ev.bi)M.bi=+(M.bi+ev.bi).toFixed(2);if(ev.fx)M.fxT+=ev.fx;if(ev.flow)M.flow+=ev.flow;
   const lab=ev.kind==='note'?'Message from your lecturer':'Lecturer issue';
   news(`<b>${lab}:</b> ${esc(ev.title)}${ev.body?'. '+esc(ev.body):''}`);
   if(ev.kind!=='note')jour('Issue',`${ev.title}${ev.body?'. '+ev.body:''}`,ev.why||'Issue set by your lecturer');
   showFlash({kind:lab,day:S.day,t:S.t},{head:esc(ev.title),body:esc(ev.body||''),why:esc(ev.why||(ev.kind==='note'?'':'Ask yourself: is this information, rumour, or noise? Does it change the company\'s value or only its price today?')),imp},'')}
-function macroTick(){classEvents(false);const M=S.macro;if(!M)return;
+function macroTick(){classEvents(false);const M=S.macro;if(!M)return;catTick();
   for(const e of EVENTS){if(M.st[e.id])continue;
     if(e.warn&&S.day===e.warn[0]&&S.t===e.warn[1]){news(`<b>Coming up:</b> ${e.title}. Make your call in the economic calendar.`);if(!M.calls[e.id])showFlash(e,null,'')}
     if(S.day===e.day&&S.t===e.t)fire(e)}}
@@ -977,7 +1140,9 @@ function renderMacro(){const M=S.macro;if(!M)return;
   const nx=EVENTS.find(e=>!M.st[e.id]&&(e.day>S.day||(e.day===S.day&&e.t>S.t)));
   const fl=(k,v)=>{const c=lastMacro[k]!==undefined&&lastMacro[k]!==v?(v>lastMacro[k]?'fl-up':'fl-down'):'';lastMacro[k]=v;return c};
   const flow=Math.round(M.flow);
-  $('macro').innerHTML=`<div class="m"><span>BI Rate</span><b class="${fl('bi',M.bi)}">${M.bi.toFixed(2).replace('.',',')}%</b><small class="est">RDG BI Day 2</small></div>
+  const tr=pct(equity()+ipoHeld()+S.purDone,START_CASH),rules=targetRules(),okN=rules.filter(r=>r.ok).length;
+  $('macro').innerHTML=`<div class="m tgt ${tr>=TARGET&&okN===3?'hit':''}"><span>Target +${TARGET}% · rules ${okN}/3</span><b class="${sgn(tr)}">${fpct(tr)}</b><div class="tbar"><i style="width:${Math.max(0,Math.min(100,tr/TARGET*100))}%"></i></div><small>${rules.map(r=>`<span class="${r.ok?'up':''}">${r.ok?'✓':'○'} ${r.v} ${r.k.replace(/^\d+ /,'')}</span>`).join(' · ')}</small></div>
+    <div class="m"><span>BI Rate</span><b class="${fl('bi',M.bi)}">${M.bi.toFixed(2).replace('.',',')}%</b><small class="est">RDG BI Day 2</small></div>
     <div class="m"><span>USD/IDR</span><b class="${fl('fx',M.fx)}">${num(M.fx)}</b><small class="${sgn(16250-M.fx)}">${M.fx>16250?'rupiah weaker':M.fx<16250?'rupiah stronger':'unchanged'}</small></div>
     <div class="m"><span>Inflation</span><b>${String(M.cpi).replace('.',',')}%</b><small class="est">year on year</small></div>
     <div class="m"><span>Coal HBA</span><b>US$${M.coal}</b><small class="est">per ton</small></div>
@@ -993,6 +1158,7 @@ function renderMacro(){const M=S.macro;if(!M)return;
   $('loan-rate').textContent=(M.bi+7.25).toFixed(2).replace('.',',')+'%';
 }
 function setCall(id,v){const M=S.macro;if(!M||M.st[id])return;M.calls[id]=v;const e=EVB[id];news(`Your call on "${e.title}": ${e.call.find(c=>c[0]===v)[1]}.`);save();render()}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-skb],[data-sks]');if(b)skTrade(b.dataset.skb||b.dataset.sks,b.dataset.skb?'buy':'sell')});
 ['pointerdown','click'].forEach(ev=>document.addEventListener(ev,e=>{if(ev==='pointerdown'&&e.target.closest('#next-ev')){$('cal').scrollIntoView({behavior:'smooth',block:'center'});return}
   const b=e.target.closest('[data-call]');if(b){if(ev==='click'&&e.detail!==0)return;setCall(b.dataset.call,b.dataset.v);
     if(b.closest('#flash'))b.closest('.opts').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));return}
@@ -1000,7 +1166,7 @@ function setCall(id,v){const M=S.macro;if(!M||M.st[id])return;M.calls[id]=v;cons
   if(e.target.closest('[data-fclose]')){$('flash').hidden=true;return}
   const t=e.target.closest('[data-ftk]');if(t){$('flash').hidden=true;select(t.dataset.ftk);$('ticket').scrollIntoView({behavior:'smooth',block:'center'});return}
   if(e.target.closest('#next-ev')&&e.detail===0){$('cal').scrollIntoView({behavior:'smooth',block:'center'})}}));
-function ensureMacro(){if(S.macro&&S.macro.v)return;S.macro=freshMacro();
+function ensureMacro(){if(S.macro&&S.macro.v===2)return;S.macro=freshMacro();
   for(const e of EVENTS)if(e.day<S.day||(e.day===S.day&&e.t<=S.t))S.macro.st[e.id]={done:true,skip:true,imp:{},head:e.title}}
 
 // ---------------------------------------------------------------- missions
@@ -1014,7 +1180,11 @@ const MISSIONS=[
  {id:'bb',tag:'Primary market · step 2',title:'Bid in book building',body:'Submit an indicative bid within the Rp230 to Rp260 range on Day 1 or 2. See how demand sets the final price.'},
  {id:'ipo',tag:'Primary market · step 4 to 5',title:'Get an IPO allotment',body:'Subscribe in the public offering on Day 3 or 4, then read your allotment and refund at the end of Day 4.'},
  {id:'list',tag:'Primary to secondary',title:'Watch HALA list',body:'On Day 6 HALA starts trading. Compare its price with the IPO price.'},
- {id:'settle',tag:'Market mechanics',title:'See T+2 settlement',body:'Sell shares and keep trading until the money moves from receivable to cash.'},
+ {id:'settle',tag:'Market mechanics',title:'Sell and reuse your cash',body:'Sell shares. In this game the money is in your cash at once so you can trade again; on the real IDX it settles at T+2, two trading days later.'},
+ {id:'sukuk',tag:'Sukuk · secondary market',title:'Buy a sukuk',body:'On the Sukuk board, buy any sharia series. You pay the clean price plus the accrued ujrah; the akad journal shows what you now own.'},
+ {id:'dayn',tag:'Sukuk · bay\' al-dayn',title:'Try to sell a murabahah sukuk',body:'Buy MFS-26, then try to sell it. Why does the system refuse?'},
+ {id:'skrate',tag:'Sukuk · BI Rate',title:'Hold PBS-041 through a BI Rate decision',body:'Hold the 10-year sukuk when BI announces (Day 2 or Day 16) and watch its price react.'},
+ {id:'mix',tag:'Target +50%',title:'Hold stocks and sukuk together',body:'Close five trading days holding both stocks and sukuk. This is one of the conditions for the +50% target.'},
  {id:'margin',tag:'Contrast',title:'See what conventional allows',body:'Switch to a Regular account, choose Margin as the order type, and buy beyond your cash. Watch the daily interest in the journal.'},
  {id:'quiz',tag:'Screening',title:'Pass the screening check',body:'In the Screening lab, find every stock that passes ISSI but fails the global screen.'},
  {id:'macro',tag:'Macro · BI Rate',title:'Make your BI Rate call',body:'Before the RDG BI announcement on Day 2, call cut, hold, or hike in the economic calendar. Then see why the market reacts to the surprise, not the decision.'},
@@ -1070,14 +1240,14 @@ function render(){
   // account
   const eq=equity();
   $('acct-type').textContent=S.mode==='sots'?'SOTS · sharia':'Regular';
-  $('a-cash').textContent=idr(S.cash);$('a-recv').textContent=idr(recvSum());$('a-lock').textContent=idr(locked()+ipoHeld());$('a-stock').textContent=idr(stockVal());
+  $('a-cash').textContent=idr(S.cash);$('a-suk').textContent=idr(skVal());$('a-lock').textContent=idr(locked()+ipoHeld());$('a-stock').textContent=idr(stockVal());
   const showLoan=S.loan>0.5;$('a-loan-l').hidden=!showLoan;$('a-loan').hidden=!showLoan;$('a-loan').textContent=idr(-S.loan);
   $('a-tot').textContent=idr(eq+ipoHeld());const r=pct(eq+ipoHeld()+S.purDone,START_CASH);$('a-ret').innerHTML=`<span class="${sgn(r)}">${fpct(r)}</span>`;
   const hs=Object.entries(S.hold);
   $('holdings').innerHTML=hs.length?hs.map(([tk,h])=>{const p=S.mk[tk].p,pl=(p-h.avg)*h.sh;return `<tr><td>${tk}${h.sh<0?' <span class="badge b-no">SHORT</span>':''}</td><td>${num(h.sh/100)}</td><td>${num(h.avg)}</td><td>${num(p)}</td><td class="${sgn(pl)}">${idr(pl)}</td></tr>`}).join(''):'<tr><td colspan="5" class="empty">No holdings yet. Pick a stock and place a buy order.</td></tr>';
   $('p-due').textContent=idr(S.purDue);$('p-done').textContent=idr(S.purDone);$('btn-purify').disabled=S.purDue<1||S.cash<S.purDue;
   $('orders').innerHTML=S.orders.length?S.orders.map(o=>`<tr><td><span class="${o.side==='buy'?'up':'down'}">${o.side==='buy'?'Buy':'Sell'}</span> ${o.tk}</td><td>${num(o.price)}</td><td>${num(o.lots)}</td><td><button class="cancel" data-cancel="${o.id}">Cancel</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">No open orders.</td></tr>';
-  renderIPO();renderMacro();renderTape();renderAttempts();
+  renderIPO();renderMacro();renderTape();renderAttempts();renderSukuk();renderCoach();
   $('news').innerHTML=S.news.map(n=>`<li><time>${n.at}</time>${n.text}</li>`).join('');
   const nsig=S.news.length?S.news[0].at+S.news[0].text:'';
   if(nsig!==newsSig){newsSig=nsig;const items=S.news.slice(0,8);const el=$('newsrun');
@@ -1245,7 +1415,7 @@ function restart(){if(S&&S.room)return;clearInterval(timer);timer=setInterval(()
 window.addEventListener('resize',drawChart);
 
 // ---------------------------------------------------------------- score, behaviour, PDF report
-function freshStats(){return {trades:0,fees:0,realised:0,blockedDes:0,blockedShort:0,tks:[],tempt:0,interest:0,marginTrades:0,shortTrades:0,nonDesBuys:0,buyValue:0,chase:0,ticks:0,regTicks:0}}
+function freshStats(){return {skTrades:0,convBond:0,mixDays:0,trades:0,fees:0,realised:0,blockedDes:0,blockedShort:0,tks:[],tempt:0,interest:0,marginTrades:0,shortTrades:0,nonDesBuys:0,buyValue:0,chase:0,ticks:0,regTicks:0}}
 function issiIdx(){let ii=0;for(const s of STOCKS){if(s.ipo||!inDES(s))continue;ii+=S.mk[s.tk].p*s.sh}return ii/base.issi*215*(S.macro?S.macro.k:1)}
 function ensureStats(){if(!S.eqHist)S.eqHist=[];
   if(!S.stats){S.stats=freshStats();S.stats.est=true;S.stats.trades=S.journal.filter(j=>j.type==='Buy'||j.type==='Sell').length;S.stats.tks=Object.keys(S.hold);
@@ -1262,15 +1432,15 @@ function grade(){const st=S.stats,M=S.macro||{calls:{},st:{}};
   parts.push({k:'Sharia compliance',max:20,got:purP+riskP+desP,note:`Purification ${purTot>0?Math.round(100*S.purDone/purTot)+'% paid':'none due'}; ${riskP?'no margin loan or short at the end':'margin loan or short still open'}; ${desP?'all holdings in DES':'holds non-DES '+nonDes.join(', ')}`});
   let mp=0,made=0,right=0;EVENTS.filter(e=>e.call).forEach(e=>{if(M.calls[e.id]){mp+=2;made++;if(M.st[e.id]&&M.st[e.id].ok){mp+=3;right++}}});
   parts.push({k:'Reading macro events',max:15,got:mp,note:`${made} of 3 calls made, ${right} right`});
-  let perf=Math.max(0,Math.min(20,12+alpha*2));if(st.trades<3)perf=Math.min(perf,6);
-  parts.push({k:'Performance vs ISSI',max:20,got:perf,note:`Return ${fpct(ret)} against ISSI ${fpct(ixRet)}${st.trades<3?'; under 3 trades, capped at 6':''}`});
+  const ok=qualified();let perf=Math.max(0,Math.min(20,20*ret/TARGET));if(!ok)perf=Math.min(perf,6);
+  parts.push({k:'Performance vs the +50% target',max:20,got:perf,note:`Return ${fpct(ret)} of the +${TARGET}% target (ISSI ${fpct(ixRet)})${ok?'; stocks and sukuk rules met':'; target rules not met (stocks + sukuk), capped at 6'}`});
   const fin=S.over&&!S.endedEarly?1:Math.min(1,(S.day-1+S.t/TICKS_PER_DAY)/SESSION_DAYS);
   parts.push({k:'Activity and diversification',max:10,got:4*fin+3*Math.min(1,st.trades/5)+3*Math.min(1,st.tks.length/3),note:`${S.endedEarly?'Finished early on day '+S.day:S.over?'Session finished':'Day '+S.day+' of '+SESSION_DAYS}; ${st.trades} trades; ${st.tks.length} different stocks`});
   const total=Math.round(parts.reduce((a,x)=>a+x.got,0));
   const letter=[[85,'A'],[80,'A-'],[75,'B+'],[70,'B'],[65,'B-'],[60,'C+'],[55,'C'],[40,'D'],[0,'E']].find(x=>total>=x[0])[1];
-  return {parts,total,letter,eq,ret,ixRet,alpha,nM,made,right,nonDes,purTot}}
+  return {parts,total,letter,eq,ret,ixRet,alpha,nM,made,right,nonDes,purTot,ok}}
 function behaviour(){const st=S.stats,ind=[];
-  const purTot=S.purDone+S.purDue,regShare=st.ticks?st.regTicks/st.ticks:(S.mode==='reg'?1:0),turn=st.buyValue/START_CASH;
+  const purTot=S.purDone+S.purDue,regShare=st.ticks?st.regTicks/st.ticks:(S.mode==='reg'?1:0),turn=st.buyValue/START_CASH/2;
   const nonDesEnd=Object.keys(S.hold).filter(tk=>S.hold[tk].sh>0&&!inDES(BY[tk]));
   const I=(k,rule,ev,pen,max)=>ind.push({k,rule,ev,pen:Math.round(Math.max(0,Math.min(max,pen))),max});
   I('Riba: margin loans','Interest on debt is prohibited (QS 2:275; DSN-MUI Fatwa 80/2011).',st.marginTrades?`${st.marginTrades} margin buy${st.marginTrades>1?'s':''}; interest paid ${idr(st.interest)}.`:'No margin loan used.',(st.marginTrades?6:0)+Math.max(0,st.marginTrades-1)*8+Math.min(8,st.interest/25000),25);
@@ -1278,6 +1448,7 @@ function behaviour(){const st=S.stats,ind=[];
   I('Non-sharia stocks','Buy only stocks in the Daftar Efek Syariah.',(st.nonDesBuys?`${st.nonDesBuys} purchase${st.nonDesBuys>1?'s':''} of non-DES stocks.`:'Only DES stocks bought.')+(nonDesEnd.length?` Still holding ${nonDesEnd.join(', ')} outside the DES.`:''),st.nonDesBuys*5+(nonDesEnd.length?6:0),20);
   I('Purification (tathir)','Give away the non-halal share of income.',purTot>0?`${Math.round(100*S.purDone/purTot)}% of ${idr(purTot)} purified.`:'No purification due yet.',purTot>0?15*S.purDue/purTot:0,15);
   I('Speculation (maysir)','Invest on value; do not gamble on noise or rumour.',`Turnover ${turn.toFixed(1).replace('.',',')}x your capital.${st.chase?` Bought DGTL right after a UMA/najsy warning ${st.chase}x.`:''}`,Math.max(0,(turn-4)*2.5)+st.chase*5,15);
+  I('Conventional bonds','Lending at interest is riba, even when it pays more.',st.convBond?`${st.convBond} purchase${st.convBond>1?'s':''} of the conventional bond KBTN-27.`:'No conventional bond bought.',st.convBond*8,16);
   I('Account choice','Choose the sharia (SOTS) account.',`${Math.round(regShare*100)}% of market time in the Regular account.`,Math.max(0,regShare-.15)/.85*10,10);
   const score=Math.max(0,100-ind.reduce((a,x)=>a+x.pen,0));
   const lab=score>=80?'Homo Islamicus':score>=60?'Leaning Homo Islamicus':score>=40?'Between the two':score>=20?'Leaning Homo Economicus':'Homo Economicus';
@@ -1288,8 +1459,10 @@ function behaviour(){const st=S.stats,ind=[];
     :'You acted as a pure profit maximiser: leverage, short selling, and non-sharia stocks whenever they promised a return. Compare your result with a SOTS-only strategy.';
   return {ind,score,lab,txt}}
 function feedback(g,b){const pos=[],imp=[],st=S.stats;
-  if(g.alpha>=0)pos.push(`Your return beat the ISSI benchmark by ${g.alpha.toFixed(2).replace('.',',')} percentage points.`);
-  else imp.push(`Your return trailed the ISSI by ${(-g.alpha).toFixed(2).replace('.',',')} percentage points. Find the trade that cost you most and ask whether it followed a plan or a headline.`);
+  if(g.ret>=TARGET&&g.ok)pos.push(`You reached the +${TARGET}% target (${fpct(g.ret)}) while trading stocks and sukuk together.`);
+  else if(g.ret>=TARGET)imp.push(`Your return of ${fpct(g.ret)} passed +${TARGET}%, but it does not count: ${targetRules().filter(r=>!r.ok).map(r=>r.k).join(', ')} still missing.`);
+  else imp.push(`Your return was ${fpct(g.ret)} against the +${TARGET}% target. Find the rumour or disclosure you missed, and the trade that cost you most.`);
+  if(!S.stats.skTrades)imp.push('You never traded a sukuk. Sukuk earn ujrah every day and protect you when stocks fall; the target needs both.');
   if(g.nM>=12)pos.push(`You completed ${g.nM} of ${MISSIONS.length} missions.`);
   else imp.push(`Missions still open: ${MISSIONS.filter(m=>!S.missions[m.id]).slice(0,4).map(m=>m.title).join('; ')}.`);
   if(g.purTot>0&&S.purDue<1)pos.push(`You purified all non-halal dividend income (${idr(S.purDone)}).`);
@@ -1328,7 +1501,7 @@ function pdfReport(){const J=window.jspdf&&window.jspdf.jsPDF;
   font('normal',10,[255,255,255]);doc.text('Student performance report  |  Islamic Capital Market',X,19);
   font('normal',8,[199,210,226]);doc.text('Learn Islamic Fintech with Tazkia  |  learnislamicfintech.tazkia.ac.id',X,25);
   doc.text(T('Generated '+new Date().toLocaleString('id-ID')),W-X,25,{align:'right'});
-  y=40;const id=[['Name',USER.name],['NIM',USER.nim],['Class',USER.cls||'-'],['Registered',S.regAt||'-'],['Attempt',`${S.attempt||1} of ${attemptRows().length} on this device`],['Status',S.endedEarly?`Finished early on day ${S.day} of ${SESSION_DAYS}`:S.over?'Session complete (10 of 10 days)':`In progress: day ${S.day} of ${SESSION_DAYS} (provisional)`],['Account at the end',S.mode==='sots'?'SOTS (sharia)':'Regular']];
+  y=40;const id=[['Name',USER.name],['NIM',USER.nim],['Class',USER.cls||'-'],['Registered',S.regAt||'-'],['Attempt',`${S.attempt||1} of ${attemptRows().length} on this device`],['Status',S.endedEarly?`Finished early on day ${S.day} of ${SESSION_DAYS}`:S.over?'Session complete (20 of 20 days)':`In progress: day ${S.day} of ${SESSION_DAYS} (provisional)`],['Account at the end',S.mode==='sots'?'SOTS (sharia)':'Regular']];
   id.forEach(([k,v])=>{font('normal',8.8,MUT);doc.text(k,X,y);font('bold',9.8);doc.text(T(v),X+33,y,{maxWidth:84});y+=6});
   // score + behaviour boxes
   const bx=W-X-56;card(bx,35,56,35);
@@ -1356,7 +1529,7 @@ function pdfReport(){const J=window.jspdf&&window.jspdf.jsPDF;
     font('normal',8.8,MUT);doc.text(T(k),cx,y);font('bold',9.3,/Return|Difference/.test(k)?sgnC(k==='Difference vs ISSI'?g.alpha:g.ret):INK);doc.text(T(v),cx+colW,y,{align:'right'});if(i%2===1)y+=6.2});
 
   y+=6;need(24);card(X,y-4,CW,22);font('bold',8.5,NAVY);doc.text('How to read this report',X+4,y+1.5);
-  font('normal',8,MUT);doc.text(doc.splitTextToSize('Score (0-100): missions 35, sharia compliance 20, macro calls 15, performance against the ISSI 20, activity 10. Grades: A 85+, A- 80, B+ 75, B 70, B- 65, C+ 60, C 55, D 40, E below 40. The behaviour profile is a separate lens on your choices and does not change the score.',CW-8),X+4,y+6.5);y+=22;
+  font('normal',8,MUT);doc.text(doc.splitTextToSize('Score (0-100): missions 35, sharia compliance 20, macro calls 15, performance against the +50% target (needs 3 stock trades, 3 sukuk trades, and 5 days holding both) 20, activity 10. Grades: A 85+, A- 80, B+ 75, B 70, B- 65, C+ 60, C 55, D 40, E below 40. The behaviour profile is a separate lens on your choices and does not change the score.',CW-8),X+4,y+6.5);y+=22;
   // ============ PAGE 2: chart, holdings, macro calls, missions
   page();
   const pts=[{d:0,r:0,i:0}].concat((S.eqHist||[]).map(h=>({d:h.d,r:pct(h.eq,START_CASH),i:pct(h.ix,215)})));
@@ -1372,6 +1545,10 @@ function pdfReport(){const J=window.jspdf&&window.jspdf.jsPDF;
     if(pts.length>1){ln('i',GOLD,.8);ln('r',NAVY,1.1)}else{font('normal',9,MUT);doc.text('The chart fills in after your first daily close.',cx+cw/2,cy+ch/2,{align:'center'})}
     doc.setFillColor(...NAVY);doc.rect(cx+2,cy-.5,6,1.4,'F');font('bold',7.8,NAVY);doc.text('You',cx+9.5,cy+.9);doc.setFillColor(...GOLD);doc.rect(cx+20,cy-.5,6,1.4,'F');font('bold',7.8,GOLD);doc.text('ISSI',cx+27.5,cy+.9);
     y=cy+ch+16}
+  h2('Target +'+TARGET+'% and the stocks + sukuk rules',`Return ${fpct(g.ret)}. The target counts only when all three rules are met.`);
+  targetRules().forEach(r=>bullet(`${r.ok?'Met':'Not met'}: ${r.k} (${r.v})`,r.ok?UP:DN));y+=2;
+  h2('Sukuk at the end');
+  {const ks=Object.keys(S.suk||{});if(!ks.length){font('normal',9.3,MUT);doc.text('No sukuk held.',X,y);y+=7}else ks.forEach(id=>{const x=SKB[id],h=S.suk[id],v=h.nom*(skPrice(x)+skAcc(x))/100;bullet(`${x.tk} (${x.akad}): nominal ${idr(h.nom)}, value ${idr(v)}, P/L ${idr(v-h.cost)}`,x.conv?DN:HAL)});y+=2}
   h2('Holdings at the end');
   const hs=Object.entries(S.hold);
   if(!hs.length){font('normal',9.3,MUT);doc.text('No stocks held.',X,y);y+=7}else{
@@ -1440,7 +1617,7 @@ function logAttempt(status){if(!USER||!S)return;if(!S.attempt)S.attempt=nextAtte
 const endStatus=()=>S.room?'class finished':S.endedEarly?'finished early':'complete';
 // stored attempts plus the current one (shown as "in progress" until it ends)
 function attemptRows(){const list=attempts();if(S&&S.attempt&&!list.some(x=>x.n===S.attempt&&sameSeries(x)))list.push(attemptRow(S.over?endStatus():'in progress'));return list}
-const modeName=a=>a.mode==='class'?'class '+(a.room||''):a.mode==='free'?'no time limit':'20 minutes';
+const modeName=a=>a.mode==='class'?'class '+(a.room||''):a.mode==='free'?'no time limit':'15 minutes';
 let attSig='';
 function renderAttempts(){const rows=attemptRows(),sig=JSON.stringify(rows.map(r=>[r.n,r.mode,r.status,r.sc]))+S.attempt;if(sig===attSig)return;attSig=sig;
   const done=rows.filter(r=>r.status!=='in progress'),best=done.length?Math.max(...done.map(r=>r.sc)):null;
@@ -1453,11 +1630,11 @@ let finArmed=false;$('btn-finish').onclick=()=>{if(!S||S.over||S.room)return;
 function showEnd(){logAttempt(endStatus());attSig='';publishStatus(true);render();$('end-report').innerHTML=$('report').innerHTML;$('endwrap').hidden=false}
 $('end-review').onclick=()=>{$('endwrap').hidden=true;document.getElementById('tab-journal').click();$('p-journal').scrollIntoView({behavior:'smooth'})};
 $('end-new').onclick=()=>{if(S.room)return;logAttempt(endStatus());try{localStorage.removeItem(stateKey(USER))}catch(e){}S=fresh();S.attempt=nextAttempt();attSig='';S.free=USER.mode==='free';S.regAt=new Date().toLocaleString('id-ID');applyAdj();renderScreen();$('endwrap').hidden=true;ipoSig='';
-  news(`Attempt ${S.attempt} started. `+(S.free?'You have Rp100.000.000 in a SOTS account. Play at your own pace.':'You have 20 minutes and Rp100.000.000 in a SOTS account.'));setMode('sots');setSide('buy');select(S.sel);save();restart()};
+  news(`Attempt ${S.attempt} started. `+(S.free?'You have Rp1.000.000.000 in a SOTS account. Play at your own pace.':'You have one market month (15 minutes) and Rp1.000.000.000. Target: +50% with stocks and sukuk together.'));setMode('sots');setSide('buy');select(S.sel);save();restart()};
 function stateKey(u){return keyOf(u.nim)+(u.mode==='free'?'-free':u.mode==='class'?'-k-'+u.room:'')}
 let regMode='timed';
 function setRegMode(m){regMode=m;document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===m));$('code-wrap').hidden=m!=='class';
-  $('r-go').textContent=m==='class'?'Join the class':'Start with Rp100.000.000';if(m==='class')setTimeout(()=>$('r-code').focus(),0)}
+  $('r-go').textContent=m==='class'?'Join the class':'Start with Rp1.000.000.000';if(m==='class')setTimeout(()=>$('r-code').focus(),0)}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>setRegMode(b.dataset.mode));
 function applyModeUI(){const cls=!!S.room;
   document.querySelectorAll('.ctrl [data-speed],#btn-pause,#btn-skip,#btn-finish').forEach(b=>b.hidden=cls);$('sp4').hidden=!S.free;
@@ -1470,8 +1647,8 @@ function renderBoard(){if(!S||!S.room||!BOARD)return;const rows=BOARD.rows||[],i
   const li=(r,k)=>`<li class="${r.id===myId?'me':''}"><span class="k">${k+1}</span><span class="n">${esc(r.n)}</span><span class="r ${sgn(r.r)}">${fpct(r.r)}</span></li>`;
   let h=rows.slice(0,8).map(li).join('');if(i>=8)h+='<li class="gap">…</li>'+li(rows[i],i);
   $('lb').innerHTML=h||'<li class="gap">No players yet.</li>';$('lb-me').textContent=i>=0?`You: #${i+1} of ${rows.length}`:`${rows.length} players`}
-function publishStatus(force){if(!CH||!S||!S.room||!myId)return;const n=Date.now();if(!force&&n-lastPub<8000)return;lastPub=n;ensureStats();const g=grade(),b=behaviour();
-  CH.setStatus(myId,{n:USER.name,nim:USER.nim,cls:USER.cls||'',eq:Math.round(g.eq),r:+g.ret.toFixed(2),sc:g.total,gr:g.letter,bs:b.score,bl:b.lab,ms:g.nM,tr:S.stats.trades,d:Math.min(S.day,SESSION_DAYS),t:S.t,ac:S.mode,over:!!S.over,ts:CH.now()})}
+function publishStatus(force){if(!CH||!S||!S.room||!myId)return;const n=Date.now();if(!force&&n-lastPub<4000)return;lastPub=n;ensureStats();const g=grade(),b=behaviour();
+  CH.setStatus(myId,{n:USER.name,nim:USER.nim,cls:USER.cls||'',eq:Math.round(g.eq),r:+g.ret.toFixed(2),sc:g.total,gr:g.letter,bs:b.score,bl:b.lab,ms:g.nM,tr:S.stats.trades,d:Math.min(S.day,SESSION_DAYS),t:S.t,ac:S.mode,over:!!S.over,sk:Math.round(skVal()/Math.max(1,g.eq)*100),st:S.stats.trades-S.stats.skTrades,skt:S.stats.skTrades,q:qualified()?1:0,ts:CH.now()})}
 function classStep(){if(!S||!S.room||!CTL)return;const target=BSKelas.tickAt(CTL,BSKelas.now());let g=gIdx(),n=0;
   catching=target-g>4;while(g<target&&!S.over&&n<2500){tick();g=gIdx();n++}catching=false;
   classEvents(true);
@@ -1483,17 +1660,17 @@ async function joinClass(u){const m=$('r-msg');m.className='msg show ok';m.textC
   let first=true;
   try{CH=await BSKelas.join(u.room,{role:'student',
       onCtl:o=>{const was=CTL;CTL=o;if(first){first=false;enterClass(u)}else if(was&&was.state!==o.state){news(o.state==='run'?(was.state==='lobby'?'Your lecturer has started the class. Trade!':'Your lecturer resumed the market.'):o.state==='pause'?'Your lecturer paused the market.':'Your lecturer has ended the class.');render()}
-        TICK_MS=o.tickMs||1000;if(S&&S.room){if(S.mode==='reg'&&o.allowReg===false)setMode('sots');renderClass()}},
+        TICK_MS=o.tickMs||375;if(S&&S.room){if(S.mode==='reg'&&o.allowReg===false)setMode('sots');renderClass()}},
       onBoard:o=>{BOARD=o;renderBoard()},
       onConn:on=>{renderClass(on);if(on)publishStatus(true)}})}
   catch(e){CH=null;m.className='msg show err';m.textContent=e.message==='notfound'?`No open class with code ${u.room}. Check the code with your lecturer, or ask whether the class has been opened.`:'Cannot reach the class server. Your network may block it; try mobile data or another Wi-Fi.';$('r-go').disabled=false;return}
   myId=(await BSKelas.sha('nim|'+u.nim)).slice(0,16)}
 function enterClass(u){$('r-go').disabled=false;let st=null;try{st=JSON.parse(localStorage.getItem(stateKey(u))||'null')}catch(e){}
-  TICK_MS=CTL.tickMs||1000;
+  TICK_MS=CTL.tickMs||375;
   if(st&&st.seed===CTL.seed&&st.mk){S=st}else{S={rng:CTL.seed};R=seeded;const n=fresh();n.rng=S.rng;n.seed=CTL.seed;n.room=u.room;S=n}
   R=seeded;S.room=u.room;finishLogin(u);clearInterval(timer);timer=setInterval(classStep,250);classStep();publishStatus(true)}
 function login(u){
-  USER=u;clearInterval(timer);if(CH){try{CH.close()}catch(e){}CH=null;CTL=null;BOARD=null}R=Math.random;TICK_MS=1000;
+  USER=u;clearInterval(timer);if(CH){try{CH.close()}catch(e){}CH=null;CTL=null;BOARD=null}R=Math.random;TICK_MS=375;
   if(u.mode==='class'){$('regwrap').hidden=false;joinClass(u);return}
   let st=null;try{st=JSON.parse(localStorage.getItem(stateKey(u))||'null')}catch(e){}
   S=(st&&st.mk&&st.mk.HALA)?st:fresh();S.free=u.mode==='free';finishLogin(u);restart();if(S.over)showEnd()}
@@ -1501,7 +1678,7 @@ function finishLogin(u){if(!S.ipo||!S.ipo.v2){const old=S.ipo||{};S.ipo=freshIpo
   const list=users().filter(x=>!(x.nim===u.nim&&(x.mode||'timed')===(u.mode||'timed')&&(x.room||'')===(u.room||'')));list.unshift(u);try{localStorage.setItem(UKEY,JSON.stringify(list.slice(0,40)))}catch(e){}
   try{localStorage.setItem(KEY+'-last',u.nim)}catch(e){}
   $('who-name').textContent=u.name;$('who-nim').textContent=u.nim;$('regwrap').hidden=true;
-  if(!S.news.length) news(`Welcome, ${esc(u.name)}. You start with Rp100.000.000 in a SOTS account. The HALA IPO starts today: read the prospectus in the IPO process tab. Watch the economic calendar: BPS inflation is out at 10:55, and Bank Indonesia decides the BI Rate tomorrow.`);
+  if(!S.news.length) news(`Welcome, ${esc(u.name)}. You start with Rp1.000.000.000 in a SOTS account. Your target is +50% in one month, and it counts only if you trade and hold stocks and sukuk together (see the Sukuk board just below the order ticket). The HALA IPO starts today: read the prospectus in the IPO process tab. Watch the economic calendar: BPS inflation is out at 10:55, and Bank Indonesia decides the BI Rate tomorrow.`);
   if(!S.attempt)S.attempt=nextAttempt();attSig='';
   ipoSig='';paused=false;$('btn-pause').setAttribute('aria-pressed','false');$('btn-pause').textContent='Pause';
   setMode(S.mode);otype=S.margin&&S.mode==='reg'?'margin':'cash';document.querySelectorAll('[data-ot]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ot===otype));$('use-margin').checked=!!S.margin;setSide('buy');select(S.sel);save();
@@ -1509,7 +1686,7 @@ function finishLogin(u){if(!S.ipo||!S.ipo.v2){const old=S.ipo||{};S.ipo=freshIpo
 }
 function showReg(){clearInterval(timer);save();if(CH){try{CH.close()}catch(e){}CH=null;CTL=null}$('flash').hidden=true;$('endwrap').hidden=true;
   const list=users();
-  $('known').innerHTML=list.length?'<p>Or continue on this device as:</p>'+list.map((u,i)=>`<button type="button" data-nim="${esc(u.nim)}" data-i="${i}"><span>${esc(u.name)}</span><span>${esc(u.nim)} · ${u.mode==='class'?'class '+esc(u.room):u.mode==='free'?'no time limit':'20 minutes'}</span></button>`).join(''):'';
+  $('known').innerHTML=list.length?'<p>Or continue on this device as:</p>'+list.map((u,i)=>`<button type="button" data-nim="${esc(u.nim)}" data-i="${i}"><span>${esc(u.name)}</span><span>${esc(u.nim)} · ${u.mode==='class'?'class '+esc(u.room):u.mode==='free'?'no time limit':'15 minutes'}</span></button>`).join(''):'';
   const qk=new URLSearchParams(location.search).get('kelas');if(qk){setRegMode('class');$('r-code').value=qk.toUpperCase().slice(0,8)}
   $('r-name').value='';$('r-nim').value='';$('r-msg').className='msg';$('regwrap').hidden=false;$('r-name').focus();
 }
@@ -1529,6 +1706,8 @@ $('btn-switch').onclick=showReg;
 (function(){let last=null;try{last=localStorage.getItem(KEY+'-last')}catch(e){}
   const u=last&&users().find(x=>x.nim===last);if(u&&u.mode!=='class'&&!new URLSearchParams(location.search).get('kelas'))login(u);else showReg()})();
 
+// read-only hook for automated QA
+window.__bs={S:()=>S,grade:()=>grade(),rules:()=>targetRules(),sk:()=>skVal(),eq:()=>equity()};
 })();
 </script>
 
