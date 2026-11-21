@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="../../assets/logo-tazkia.png">
+<title>Amanah Social Fund Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"></noscript>
+<style>
+/* Three desks (amil, nazhir, hajj fund manager), six years, one score. Same visual language as the Bursa simulators. */
+:root{
+  --bg:#eef1f6; --surface:#ffffff; --surface2:#f6f8fb; --ink:#14233a; --muted:#5d6b80; --line:#d9e0ea;
+  --navy:#10243f; --gold:#c9960a; --gold-soft:#fbf1d0; --up:#0f8a4f; --down:#c4362b; --up-soft:#e2f4ea; --down-soft:#fbe6e3;
+  --halal:#0f6e6a; --halal-soft:#dff1ef; --warn:#a15c00; --warn-soft:#fdf0db; --blue:#1b3a63; --blue-soft:#e6ecf4;
+  --display:"Archivo","Segoe UI",system-ui,sans-serif; --body:"Source Sans 3","Segoe UI",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0b1422; --surface:#122036; --surface2:#172843; --ink:#e7edf6; --muted:#9aa9be; --line:#25385a; --navy:#0a1730; --gold:#f2c200; --gold-soft:#3a3010;
+  --up:#3cc684; --down:#ff6b5e; --up-soft:#103426; --down-soft:#3d1a18; --halal:#4fc7bf; --halal-soft:#0f302e; --warn:#ffb54a; --warn-soft:#3a2a10; --blue:#8fb3e6; --blue-soft:#16283f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1422; --surface:#122036; --surface2:#172843; --ink:#e7edf6; --muted:#9aa9be; --line:#25385a; --navy:#0a1730; --gold:#f2c200; --gold-soft:#3a3010;
+  --up:#3cc684; --down:#ff6b5e; --up-soft:#103426; --down-soft:#3d1a18; --halal:#4fc7bf; --halal-soft:#0f302e; --warn:#ffb54a; --warn-soft:#3a2a10; --blue:#8fb3e6; --blue-soft:#16283f; color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;margin:0}
+.wrap{max-width:1360px;margin:0 auto;padding:0 16px 32px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
+button,input{font:inherit;color:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.up{color:var(--up)}.down{color:var(--down)}
+.top{background:var(--navy);color:#fff;margin-inline:-16px;padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;position:sticky;top:0;z-index:5}
+.brand h1{font-size:1.15rem;font-weight:800}.brand small{display:block;color:#c7d2e2;font-size:.78rem}.brand a{color:#f2c200}
+.yr{display:flex;gap:6px}.yr i{width:26px;height:8px;border-radius:4px;background:#2a3d5c}.yr i.done{background:#3cc684}.yr i.now{background:#f2c200}
+.clock{font-family:var(--mono);font-size:1.25rem;font-weight:600;padding:2px 10px;border-radius:6px;background:#203654}.clock.hot{background:#c4362b;animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.6}}
+.kpis{display:flex;gap:16px;flex-wrap:wrap;margin-left:auto}
+.kpis div{display:flex;flex-direction:column;font-size:.72rem;color:#c7d2e2;text-transform:uppercase;letter-spacing:.05em}
+.kpis b{font-family:var(--mono);font-size:1rem;color:#fff;letter-spacing:0;text-transform:none}
+.who{font-size:.85rem;background:#203654;border:1px solid #344c70;border-radius:6px;padding:4px 10px}
+.coach{display:flex;align-items:center;gap:10px;margin:12px 0 0;padding:8px 12px;border-radius:8px;background:var(--halal-soft);border:1px solid var(--halal);font-size:.92rem}
+.coach .lbl{flex:none;background:var(--halal);color:#fff;font-weight:800;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:4px}
+.coach .txt{flex:1;min-width:0}.coach button{flex:none;border:1px solid var(--halal);background:transparent;color:var(--halal);border-radius:6px;padding:3px 10px;font-weight:700}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;margin-top:14px;align-items:start}
+@media (max-width:1050px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;min-width:0}
+.panel>header{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.panel>header h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;font-family:var(--body)}
+.pad{padding:14px}
+.desks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-bottom:1px solid var(--line)}
+.desks button{border:0;border-bottom:3px solid transparent;background:transparent;padding:12px 10px;text-align:left;display:flex;flex-direction:column;gap:2px}
+.desks button b{font-family:var(--display);font-size:1rem}.desks button span{font-size:.78rem;color:var(--muted)}
+.desks button[aria-selected="true"]{border-bottom-color:var(--gold);background:var(--gold-soft)}
+.desks button .st{font-size:.72rem;font-weight:700}.st.ok{color:var(--up)}.st.bad{color:var(--down)}
+.deskbody{padding:14px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px}
+@media (max-width:760px){.deskbody{grid-template-columns:minmax(0,1fr)}.desks{grid-template-columns:minmax(0,1fr)}}
+.lead{margin:0 0 10px;color:var(--muted);font-size:.92rem}
+.sl{display:grid;grid-template-columns:minmax(0,1fr) 64px;gap:2px 10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}
+.sl label{font-weight:700;font-size:.92rem}.sl small{grid-column:1/-1;color:var(--muted);font-size:.8rem}
+.sl input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--halal)}
+.sl output{font-family:var(--mono);font-weight:600;text-align:right}
+.sl.risky input{accent-color:var(--warn)}
+.chk{display:flex;gap:8px;align-items:flex-start;padding:8px 0;font-size:.9rem}.chk input{margin-top:4px}
+.sum{display:flex;justify-content:space-between;font-family:var(--mono);font-weight:600;padding:8px 10px;border-radius:6px;background:var(--surface2);margin-top:8px}
+.sum.bad{background:var(--down-soft);color:var(--down)}
+.rules{border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--surface2);font-size:.88rem}
+.rules h3{font-size:.95rem;margin-bottom:6px}.rules ul{margin:0;padding-left:18px}.rules li{margin-bottom:4px}
+.warn{font-size:.85rem;border-radius:6px;padding:7px 10px;margin-top:8px}.warn.err{background:var(--down-soft);color:var(--down)}.warn.ok{background:var(--up-soft);color:var(--up)}.warn.fat{background:var(--warn-soft);color:var(--warn)}
+.proj{border:1px dashed var(--gold);border-radius:8px;padding:10px;background:var(--gold-soft);font-size:.88rem;margin-top:10px}
+.proj b{font-family:var(--mono)}
+.go{border:0;border-radius:8px;padding:12px;font-weight:800;color:#fff;background:var(--navy);font-size:1rem;width:100%}
+.go.gold{background:var(--gold);color:#10243f}
+.kv{display:grid;grid-template-columns:1fr auto;gap:5px 10px;font-size:.9rem}.kv span{color:var(--muted)}.kv b{font-family:var(--mono);text-align:right}
+.score{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.score div{background:var(--surface2);border-radius:8px;padding:8px 10px}.score span{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}.score b{font-family:var(--mono);font-size:1.1rem}
+canvas{width:100%;height:150px;display:block}
+.log{list-style:none;margin:0;padding:0;font-size:.86rem;max-height:260px;overflow:auto}.log li{padding:6px 0;border-bottom:1px solid var(--line)}.log li b{color:var(--blue)}
+.overlay{position:fixed;inset:0;z-index:30;background:rgba(6,14,30,.74);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow:auto}
+.card{width:100%;max-width:720px;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card .hd{background:var(--navy);color:#fff;padding:16px 20px}.card .hd small{color:var(--gold);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:.72rem}.card .hd h2{font-size:1.35rem;margin-top:4px}
+.card .bd{padding:16px 20px;display:flex;flex-direction:column;gap:12px}.card .bd p{margin:0}
+.ev{border-left:4px solid var(--gold);background:var(--gold-soft);padding:10px 12px;border-radius:6px}
+.res{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}@media (max-width:640px){.res{grid-template-columns:minmax(0,1fr)}}
+.res div{border:1px solid var(--line);border-radius:8px;padding:10px;font-size:.86rem}.res h3{font-size:.92rem;margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:8px}.opts button{text-align:left;border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:10px 12px}
+.opts button.right{border-color:var(--up);background:var(--up-soft)}.opts button.wrong{border-color:var(--down);background:var(--down-soft)}
+.why{font-size:.9rem;color:var(--muted);border-left:3px solid var(--gold);padding-left:10px}
+.field{display:flex;flex-direction:column;gap:4px}.field label{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+.field input{border:1px solid var(--line);border-radius:6px;padding:9px 10px;background:var(--surface)}
+.att table{width:100%;border-collapse:collapse;font-size:.85rem}.att td,.att th{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left}
+.foot{margin-top:14px;font-size:.8rem;color:var(--muted)}
+.reset{border:1px solid var(--down);color:var(--down);background:transparent;border-radius:6px;padding:4px 10px;font-size:.8rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>Amanah · Social Fund Simulator</h1><small><a href="./">← About</a> · zakat, waqf, and the hajj fund · six years</small></div>
+    <div class="yr" id="yr" aria-label="Years"></div>
+    <span class="mono" id="yrlab">Year 2027</span>
+    <span class="clock" id="clock" title="Time left to decide this year">2:30</span>
+    <div class="kpis">
+      <div>Zakat trust<b id="k-trust">–</b></div>
+      <div>Waqf principal<b id="k-waqf">–</b></div>
+      <div>Hajj fund<b id="k-hajj">–</b></div>
+      <div>Amanah<b id="k-am">–</b></div>
+    </div>
+    <span class="who" id="who"></span>
+  </header>
+  <div class="coach" id="coach"></div>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="desks" role="tablist">
+        <button type="button" role="tab" data-desk="z" aria-selected="true"><b>Amil zakat</b><span>BAZNAS-style collector</span><span class="st" id="st-z"></span></button>
+        <button type="button" role="tab" data-desk="w" aria-selected="false"><b>Nazhir waqf</b><span>cash waqf manager</span><span class="st" id="st-w"></span></button>
+        <button type="button" role="tab" data-desk="h" aria-selected="false"><b>Hajj fund</b><span>BPKH-style investor</span><span class="st" id="st-h"></span></button>
+      </div>
+      <div id="desk"></div>
+      <div class="pad" style="border-top:1px solid var(--line)"><button type="button" class="go gold" id="b-close">Close the year and see what happens ▸</button><div class="warn err" id="close-msg" hidden></div></div>
+    </section>
+    <aside style="display:flex;flex-direction:column;gap:14px;min-width:0">
+      <section class="panel"><header><h2>Your score so far</h2><span class="mono" id="sc-tot">–</span></header>
+        <div class="pad"><div class="score" id="score"></div><canvas id="chart" width="600" height="150" aria-label="Fund history"></canvas><p class="lead" style="margin:6px 0 0;font-size:.8rem">Bars: hajj fund (blue), waqf principal (green), households lifted out of the programme (gold), by year.</p></div></section>
+      <section class="panel"><header><h2>Journal</h2></header><div class="pad"><ul class="log" id="log"></ul></div></section>
+    </aside>
+  </div>
+  <p class="foot">Educational simulation by Learn Islamic Fintech with Tazkia. Numbers are stylised and rounded; rules follow UU 23/2011 (zakat), UU 41/2004 (waqf), and UU 34/2014 (hajj fund). Not investment or fatwa advice. <button class="reset" id="b-reset" type="button">New attempt</button></p>
+</div>
+
+<div class="overlay" id="reg" hidden>
+  <div class="card" style="max-width:480px"><div class="hd"><small>Amanah simulator</small><h2>Take the oath of office</h2></div>
+    <div class="bd"><p>You will run three funds for six years: zakat as amil, cash waqf as nazhir, and hajj savings as fund manager. Each year you have 2½ minutes to decide. Then the year plays out.</p>
+      <form id="r-form" style="display:flex;flex-direction:column;gap:10px"><div class="field"><label for="r-name">Name</label><input id="r-name" required maxlength="60" autocomplete="name"></div><div class="field"><label for="r-nim">Student ID (NIM)</label><input id="r-nim" required maxlength="30"></div><button class="go" type="submit">I accept the amanah</button></form>
+      <div id="r-known"></div></div></div>
+</div>
+<div class="overlay" id="yearend" hidden><div class="card"><div class="hd"><small id="ye-k">Year closed</small><h2 id="ye-t"></h2></div><div class="bd" id="ye-b"></div></div></div>
+<div class="overlay" id="endwrap" hidden><div class="card" style="max-width:780px"><div class="hd"><small>Six years in office</small><h2>Your amanah report</h2></div><div class="bd"><div id="end-r"></div><div class="att" id="att"></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="go" style="width:auto;padding:10px 18px" type="button" id="e-pdf">Download PDF report</button><button class="reset" type="button" id="e-new">New attempt</button></div></div></div></div>
+
+<script src="../saham/lib/jspdf-2.5.1.umd.min.js" defer></script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const YEARS=6,DECIDE_S=150,KEY='ifl-amanah',ATT='ifl-amanah-att';
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const bn=v=>'Rp'+(Math.round(v*10)/10).toLocaleString('id-ID')+' bn',tn=v=>'Rp'+(Math.round(v*10)/10).toLocaleString('id-ID')+' tn';
+const f1=v=>(Math.round(v*10)/10).toLocaleString('id-ID');
+let R=Math.random;
+// ---------------- decisions (percent sliders) and the rules that bind them
+const ZK=[['cons','Consumptive aid (fakir, miskin)','Cash, food, rent: keeps households above the poverty line this year'],
+          ['prod','Productive zakat (micro-business capital)','Capital for mustahik businesses; pays off in later years if they survive'],
+          ['coach','Coaching, education, scholarships','Raises the survival rate of productive zakat and builds human capital'],
+          ['emg','Health and emergency relief','Hospital bills, disasters; idle if nothing happens'],
+          ['amil','Amil share (operations)','Salaries, systems, audit. Fiqh cap: one eighth (12.5%)']];
+const WK=[['cwls','CWLS (SBSN, sovereign)','Ujrah about 5.9%; principal returns at maturity; almost no risk'],
+          ['dep','Sharia deposit','About 4.5%; very safe; pays mudharabah profit share'],
+          ['csk','Corporate sukuk','About 7.5%; an issuer can default'],
+          ['hosp','Waqf hospital project','Pays about 11% once built (one year); a bad year can lose money']];
+const HK=[['plc','Placement in sharia banks','About 4.5%; liquid. Legal cap: 30% of the fund'],
+          ['sbsn','SBSN and SDHI sukuk','About 6.6%; half counts as liquid'],
+          ['corp','Corporate sukuk','About 7.6%; default risk'],
+          ['dir','Direct investment (hotels in Makkah)','About 9%; moves with the rupiah and Saudi demand'],
+          ['gold','Gold','No yield; a hedge when the rupiah falls']];
+function freshDec(){return {z:{cons:45,prod:20,coach:8,emg:10,amil:10,inv:false,audit:true},w:{cwls:50,dep:30,csk:20,hosp:0,fee:8,spend:false},h:{plc:25,sbsn:55,corp:10,dir:5,gold:5,sub:40}}}
+function fresh(){return {v:1,y:1,left:DECIDE_S,dec:freshDec(),z:{trust:70,carry:0,firms:[],grad:0,hh:[],helped:0},w:{P:50,inP:50,ben:0,hosp:0,hospBuilt:false,loss:0},h:{H:180,cost:90,sub:[],N:[],H0:180},
+  viol:[],am:30,quiz:{},log:[],hist:[],ev:[],att:null,over:false,seed:Math.floor(Math.random()*1e9)}}
+let S=null,USER=null,desk='z',timer=null;
+// ---------------- events (one each year, plus two fixed tests)
+const EVENTS=[
+ {id:'flood',t:'Floods across three provinces',b:'Thousands of mustahik households lose homes and income. Emergency needs this year: Rp18 bn.',fx:s=>{s.e.need=18}},
+ {id:'boom',t:'Economy grows 5.6%, the fastest in a decade',b:'Muzakki earn more: zakat collection jumps. Interest in waqf rises too.',fx:s=>{s.e.zak=1.15;s.e.wq=1.3}},
+ {id:'rupiah',t:'Rupiah falls 12% against the riyal',b:'Hajj costs in rupiah jump. Assets held in Saudi Arabia (hotels) and gold gain in rupiah terms.',fx:s=>{s.e.cost=1.12;s.e.dir=.08;s.e.gold=.14}},
+ {id:'saudi',t:'Saudi Arabia raises masyair service fees',b:'The cost of tents and transport in Arafah, Muzdalifah, and Mina rises; BPIH per pilgrim goes up about 8%.',fx:s=>{s.e.cost=1.08}},
+ {id:'rates',t:'BI cuts rates three times',b:'Deposit and new sukuk yields fall about one point; existing sukuk prices rise.',fx:s=>{s.e.rate=-1;s.e.gainSk=.04}},
+ {id:'default',t:'A corporate sukuk issuer defaults',b:'One of the biggest corporate sukuk in your portfolios stops paying. Recovery: about 70%.',fx:s=>{s.e.csk=-.3}},
+ {id:'scandal',t:'Fraud at another zakat agency goes viral',b:'Donors everywhere ask: where does my zakat go? Agencies that publish audited reports lose far less trust.',fx:s=>{s.e.scandal=1}},
+ {id:'gold',t:'Gold hits a record',b:'Investors run to safety; gold rises about 20% this year.',fx:s=>{s.e.gold=.2}}];
+const FIXED={2:'temptation',4:'default'};
+// ---------------- questions (one per year)
+const QS=[
+ {q:'Suppose an amil takes 14% of zakat collected. What is the problem?',o:[['It is above the one-eighth (12.5%) share for amil',1],['Amil may take nothing at all',0],['Amil must take exactly 10%',0]],w:'The amil are one of the eight asnaf, traditionally capped at one eighth of zakat collected.'},
+ {q:'Why may a nazhir invest cash waqf but an amil should not invest zakat?',o:[['Zakat belongs to the asnaf now; waqf principal is held so its benefit flows forever',1],['Because zakat is too small to invest',0],['Because only BWI may invest',0]],w:'Zakat is a right to be delivered; waqf is a trust whose principal must be preserved and made productive.'},
+ {q:'What is the maximum fee a nazhir may take in Indonesia?',o:[['10% of the net return of the waqf',1],['10% of the principal each year',0],['No limit, if the wakif agrees',0]],w:'UU 41/2004 allows the nazhir up to 10% of the net results of managing and developing the waqf.'},
+ {q:'Suppose BPKH places 35% of the hajj fund in sharia bank deposits. Which rule is broken?',o:[['UU 34/2014 caps bank placements at 30% after the first three years',1],['None: deposits are the safest choice',0],['Deposits are not allowed at all',0]],w:'The cap pushes BPKH to invest, mostly in SBSN, while keeping enough liquidity for two years of hajj costs.'},
+ {q:'Nilai manfaat this year is Rp10 tn, but subsidies to departing pilgrims cost Rp13 tn. What happens?',o:[['Rp3 tn comes from the savings of pilgrims still waiting',1],['The government pays the gap automatically',0],['Nothing: subsidies are free',0]],w:'This is the inter-generational transfer at the heart of the hajj fund debate.'},
+ {q:'Why can a temporary cash waqf be placed in CWLS?',o:[['The principal returns at maturity and only the ujrah is given away',1],['Because CWLS has no risk at all, so any waqf may be spent',0],['Because zakat and waqf are the same',0]],w:'In CWLS the wakif\'s principal comes back (waqf muaqqat), while the SBSN ujrah funds social programmes.'},
+ {q:'Suppose productive zakat failed for 40% of businesses last year. What helps most?',o:[['Coaching and market access alongside the capital',1],['Giving bigger loans with interest',0],['Stopping all productive zakat',0]],w:'Evidence from zakat and microfinance programmes: capital without coaching often fails.'},
+ {q:'A company owned by a regional official offers your waqf 15% a year. What is the main concern?',o:[['Conflict of interest and risk to the principal: a breach of amanah',1],['15% is riba in every case',0],['Waqf may never earn more than 10%',0]],w:'The nazhir must protect the principal and avoid conflicts of interest; a high promised return is a warning sign.'}];
+// ---------------- desk rendering
+function slider(group,[k,lab,hint],v,max,risky){return `<div class="sl ${risky?'risky':''}"><label for="s-${group}-${k}">${lab}</label><output id="o-${group}-${k}">${v}%</output><input type="range" id="s-${group}-${k}" data-g="${group}" data-k="${k}" min="0" max="${max}" step="1" value="${v}"><small>${hint}</small></div>`}
+function deskHTML(){const D=S.dec;
+ if(desk==='z'){const Z=zakIn();return `<div class="deskbody"><div><p class="lead">This year you expect to collect about <b>${bn(Z)}</b>${S.z.carry?` plus ${bn(S.z.carry)} carried over`:''}. Split it. Whatever you do not allocate is carried to next year.</p>
+   ${ZK.map(x=>slider('z',x,D.z[x[0]],100,x[0]==='amil')).join('')}
+   <label class="chk"><input type="checkbox" id="c-inv" ${D.z.inv?'checked':''}> <span>Invest the undistributed zakat in sukuk to grow it for the poor</span></label>
+   <label class="chk"><input type="checkbox" id="c-aud" ${D.z.audit?'checked':''}> <span>Publish an audited report (costs 0.5 points of the amil share, builds trust)</span></label>
+   <div class="sum" id="sum-z"></div></div>
+   <div><div class="rules"><h3>Rules of the amil</h3><ul><li>Zakat goes to the eight asnaf (QS 9:60), within the year where possible</li><li>Amil share: at most one eighth (12.5%)</li><li>Zakat is a right of the poor, not capital to grow</li><li>Trust drives next year's collection</li></ul></div><div id="warn-z"></div><div class="proj" id="proj-z"></div></div></div>`}
+ if(desk==='w'){const inflow=wqIn();return `<div class="deskbody"><div><p class="lead">Cash waqf principal: <b>${bn(S.w.P)}</b>, with about <b>${bn(inflow)}</b> of new waqf expected this year. Choose where the principal sits. Unallocated money stays as cash and earns nothing.</p>
+   ${WK.map(x=>slider('w',x,D.w[x[0]],100,x[0]==='csk'||x[0]==='hosp')).join('')}
+   ${slider('w',['fee','Nazhir fee (share of net return)','Pays your team. Legal maximum: 10% of net return'],D.w.fee,20,true)}
+   <label class="chk"><input type="checkbox" id="c-spend" ${D.w.spend?'checked':''}> <span>Spend 10% of the principal directly on beneficiaries this year</span></label>
+   <div class="sum" id="sum-w"></div></div>
+   <div><div class="rules"><h3>Rules of the nazhir</h3><ul><li>The principal is held; only the return is given away</li><li>Fee: at most 10% of net return (UU 41/2004)</li><li>Productive is good; speculative or conflicted is not</li><li>The hospital earns nothing in its building year</li></ul></div><div id="warn-w"></div><div class="proj" id="proj-w"></div></div></div>`}
+ const c=bpih();return `<div class="deskbody"><div><p class="lead">Hajj fund: <b>${tn(S.h.H)}</b>. About 220,000 pilgrims leave this year; the real cost is about <b>Rp${f1(c)} million</b> each. Choose the portfolio and the share of the cost paid from nilai manfaat.</p>
+   ${HK.map(x=>slider('h',x,D.h[x[0]],100,x[0]==='corp'||x[0]==='dir'||x[0]==='gold')).join('')}
+   ${slider('h',['sub','Subsidy: share of each pilgrim\'s cost paid from nilai manfaat','The rest is paid by the pilgrim. Higher is popular; too high eats the savings of those still waiting'],D.h.sub,70,true)}
+   <div class="sum" id="sum-h"></div></div>
+   <div><div class="rules"><h3>Rules of the hajj fund</h3><ul><li>Bank placements: at most 30% (UU 34/2014)</li><li>Liquidity: at least two years of hajj costs (placements + half of SBSN)</li><li>Akad: wakalah; investments must be sharia</li><li>Nilai manfaat belongs to all pilgrims, including those waiting</li></ul></div><div id="warn-h"></div><div class="proj" id="proj-h"></div></div></div>`}
+function renderDesk(){$('desk').innerHTML=deskHTML();document.querySelectorAll('[data-desk]').forEach(b=>b.setAttribute('aria-selected',b.dataset.desk===desk));live()}
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.g){S.dec[t.dataset.g][t.dataset.k]=+t.value;$('o-'+t.dataset.g+'-'+t.dataset.k).textContent=t.value+'%';live();save()}});
+document.addEventListener('change',e=>{const id=e.target.id;if(id==='c-inv')S.dec.z.inv=e.target.checked;if(id==='c-aud')S.dec.z.audit=e.target.checked;if(id==='c-spend')S.dec.w.spend=e.target.checked;if(/^c-/.test(id)){live();save()}});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-desk]');if(b){desk=b.dataset.desk;renderDesk()}});
+// ---------------- model pieces
+const zakIn=()=>110*Math.pow(1.04,S.y-1)*(.55+S.z.trust/150)+S.z.grad*.004;
+const wqIn=()=>5*(.6+S.z.trust/250)*(1+Math.min(1.2,S.w.ben/40));
+const bpih=()=>S.h.cost;
+const sumOf=(o,ks)=>ks.reduce((a,k)=>a+o[k],0);
+function checks(){const D=S.dec,c={z:[],w:[],h:[]};
+ const zs=sumOf(D.z,ZK.map(x=>x[0]));if(zs>100)c.z.push(['err',`Allocated ${zs}%: reduce to 100% or less.`]);
+ if(D.z.amil>12.5)c.z.push(['fat','Amil share above one eighth (12.5%): a breach of the asnaf rule.']);else if(D.z.amil<6)c.z.push(['fat','Below 6% the agency is understaffed: leakage and weak reporting.']);
+ if(D.z.inv)c.z.push(['fat','Investing zakat delays the rights of the asnaf: a breach of amanah.']);
+ if(100-zs>20)c.z.push(['fat',`${100-zs}% left undistributed: the poor wait for their right.`]);
+ const ws=sumOf(D.w,WK.map(x=>x[0]));if(ws>100)c.w.push(['err',`Allocated ${ws}%: reduce to 100% or less.`]);
+ if(D.w.fee>10)c.w.push(['fat','Nazhir fee above 10% of net return: breaks UU 41/2004.']);
+ if(D.w.spend)c.w.push(['fat','Spending principal breaks the waqf: only the benefit may be given away.']);
+ const hs=sumOf(D.h,HK.map(x=>x[0]));if(hs>100)c.h.push(['err',`Allocated ${hs}%: reduce to 100% or less.`]);
+ if(D.h.plc>30)c.h.push(['fat','Bank placements above 30%: breaks UU 34/2014.']);
+ const liq=(D.h.plc+D.h.sbsn*.5+(100-hs))/100*S.h.H,need=2*.22*bpih();if(liq<need)c.h.push(['fat',`Liquidity ${tn(liq)} is below two years of hajj costs (${tn(need)}).`]);
+ return c}
+function proj(){const D=S.dec,Z=zakIn()+S.z.carry,am=Math.min(D.z.amil,100);const hh=Z*D.z.cons/100*1000/6;
+ const w=S.w.P*(D.w.cwls*.059+D.w.dep*.045+D.w.csk*.075+(S.w.hospBuilt?D.w.hosp*.11:0))/100,ben=w*(1-D.w.fee/100);
+ const r=(D.h.plc*.045+D.h.sbsn*.066+D.h.corp*.076+D.h.dir*.09)/100,N=S.h.H*r,sub=.22*bpih()*D.h.sub/100;
+ return {hh,ben,N,sub,Z}}
+function live(){const c=checks(),p=proj(),D=S.dec;
+ const put=(k,html)=>{const el=$('warn-'+k);if(el)el.innerHTML=html};
+ for(const k of ['z','w','h']){put(k,c[k].length?c[k].map(([t,m])=>`<div class="warn ${t}">${m}</div>`).join(''):'<div class="warn ok">Within the rules.</div>');
+   const st=$('st-'+k);st.textContent=c[k].length?'⚠ '+c[k].length+' issue'+(c[k].length>1?'s':''):'✓ within the rules';st.className='st '+(c[k].length?'bad':'ok')}
+ const zs=sumOf(D.z,ZK.map(x=>x[0])),ws=sumOf(D.w,WK.map(x=>x[0])),hs=sumOf(D.h,HK.map(x=>x[0]));
+ if($('sum-z')){$('sum-z').textContent=`Allocated ${zs}% · carried over ${Math.max(0,100-zs)}%`;$('sum-z').className='sum'+(zs>100?' bad':'')}
+ if($('sum-w')){$('sum-w').textContent=`Invested ${ws}% · idle cash ${Math.max(0,100-ws)}%`;$('sum-w').className='sum'+(ws>100?' bad':'')}
+ if($('sum-h')){$('sum-h').textContent=`Invested ${hs}% · idle ${Math.max(0,100-hs)}%`;$('sum-h').className='sum'+(hs>100?' bad':'')}
+ if($('proj-z'))$('proj-z').innerHTML=`Projection: about <b>${f1(p.hh)}</b> households supported, <b>${f1(Z_firms(p))}</b> new micro-businesses funded.`;
+ if($('proj-w'))$('proj-w').innerHTML=`Projection: return <b>${bn(p.ben/(1-D.w.fee/100||1))}</b>, benefit to beneficiaries <b>${bn(p.ben)}</b> after your fee.${!S.w.hospBuilt&&D.w.hosp?' The hospital earns nothing this year (building).':''}`;
+ if($('proj-h'))$('proj-h').innerHTML=`Projection: nilai manfaat <b>${tn(p.N)}</b>, subsidy cost <b>${tn(p.sub)}</b> → <b class="${p.N>=p.sub?'up':'down'}">${p.N>=p.sub?'covered by returns':'draws '+tn(p.sub-p.N)+' from waiting pilgrims'}</b>. Each pilgrim pays about Rp${f1(bpih()*(1-D.h.sub/100))} million.`;
+ $('b-close').disabled=c.z.concat(c.w,c.h).some(x=>x[0]==='err')||S.over;
+ renderCoach()}
+const Z_firms=p=>(zakIn()+S.z.carry)*S.dec.z.prod/100*1000/15;
+// ---------------- coach tips
+let tipI=0,tipAt=0;
+function tips(){const D=S.dec,c=checks(),p=proj(),T=[];
+ c.z.concat(c.w,c.h).filter(x=>x[0]==='fat').forEach(x=>T.push(x[1]));
+ if(D.z.prod>0&&D.z.coach<8)T.push('Productive zakat without coaching fails often. Put at least 8 to 10% into coaching and education.');
+ if(D.z.emg<8)T.push('Disasters happen. A small health and emergency allocation protects mustahik when floods come.');
+ if(!D.z.audit)T.push('Publishing an audited report protects trust if a scandal hits another agency. Trust drives next year\'s zakat.');
+ if(p.N<p.sub)T.push('Your hajj subsidy costs more than the fund earns. Lower the subsidy or raise returns, or you are spending the savings of those still waiting.');
+ if(D.h.sbsn<40)T.push('SBSN is the backbone of the hajj fund: safe, sharia, and partly liquid.');
+ if(!S.w.hospBuilt&&S.y<=3)T.push('The waqf hospital earns nothing in its building year, then about 11%. Patient capital suits waqf.');
+ if(D.w.csk+D.h.corp>35)T.push('Corporate sukuk pay more but can default. Spread the risk.');
+ T.push('Close the year before the clock runs out. If time ends, your current choices are used.');
+ T.push('Each desk shows a projection: use it to test a choice before you commit.');
+ return T}
+function renderCoach(){const n=Date.now();if(n-tipAt<8000&&$('coach').dataset.on)return;tipAt=n;$('coach').dataset.on=1;const T=tips();
+ $('coach').innerHTML=`<span class="lbl">Coach tip</span><span class="txt">${T[tipI++%T.length]}</span><button type="button" id="tip-n">Next ›</button>`;$('tip-n').onclick=()=>{tipAt=0;renderCoach()}}
+// ---------------- year end
+function viol(k,pts,txt){S.viol.push({y:S.y,k,pts,txt});S.am=Math.max(0,S.am-pts);log(`<b>Amanah −${pts}:</b> ${txt}`)}
+function log(t){S.log.unshift(`Y${2026+S.y}: ${t}`);S.log=S.log.slice(0,80)}
+function closeYear(){if(S.over)return;const c=checks();if(c.z.concat(c.w,c.h).some(x=>x[0]==='err')){$('close-msg').hidden=false;$('close-msg').textContent='Fix the allocations above 100% first.';return}
+ clearInterval(timer);const D=S.dec,e={need:0,zak:1,wq:1,cost:1,dir:0,gold:0,rate:0,gainSk:0,csk:0,scandal:0};
+ const pool=EVENTS.filter(x=>!S.ev.includes(x.id)&&!Object.values(FIXED).includes(x.id));const evId=FIXED[S.y]||(pool.length?pool:EVENTS)[Math.floor(R()*(pool.length||EVENTS.length))].id;let evT,evB;
+ if(evId==='temptation'){evT='A tempting offer for your waqf';evB='A company owned by a regional official asks to borrow Rp10 bn of waqf money at 15% a year.'}
+ else{const E=EVENTS.find(x=>x.id===evId);E.fx({e});evT=E.t;evB=E.b}
+ const out={};
+ // ---- zakat
+ const Z=zakIn()*e.zak+S.z.carry,zs=sumOf(D.z,ZK.map(x=>x[0]));let amilP=D.z.amil-(D.z.audit?.5:0);
+ const leak=D.z.amil<6?.1:0,use=k=>Z*D.z[k]/100*(1-leak);
+ const hh=use('cons')*1000/6,firms=use('prod')*1000/15,surv=Math.min(.9,.45+(D.z.coach>=8?.25:D.z.coach/40)-(evId==='flood'?.08:0)),sch=use('coach')*1000/10;
+ let unmet=0;if(e.need){const emg=use('emg');unmet=Math.max(0,e.need-emg);if(unmet>0)log(`<b>Flood:</b> ${bn(unmet)} of emergency needs went unmet.`)}
+ S.z.firms.push({n:firms,surv});let grads=0;if(S.z.firms.length>1){const f=S.z.firms[S.z.firms.length-2];grads=f.n*f.surv*.6}S.z.grad+=grads;
+ S.z.helped+=hh;S.z.hh.push(hh);S.z.carry=Z*Math.max(0,100-zs)/100*(D.z.inv?1.03:1);
+ let dT=0;if(D.z.amil>12.5){viol('amil',4,`amil share ${D.z.amil}% above one eighth.`);dT-=5}if(D.z.amil<6)dT-=3;if(D.z.inv){viol('zinv',6,'zakat invested instead of delivered to the asnaf.');dT-=4}
+ if(100-zs>20){viol('carry',2,`${100-zs}% of zakat held back.`);dT-=2}if(D.z.audit)dT+=3;if(e.scandal)dT+=D.z.audit?-2:-12;if(unmet>0)dT-=Math.min(8,unmet/2);dT+=Math.min(4,grads/300);
+ S.z.trust=Math.max(20,Math.min(100,S.z.trust+dT));
+ out.z=`Collected ${bn(Z)}. Supported ${f1(hh)} households, funded ${f1(firms)} micro-businesses (survival ${Math.round(surv*100)}%), ${f1(sch)} scholarships. ${grads?f1(grads)+' earlier businesses graduated: mustahik became muzakki.':''} Trust ${dT>=0?'+':''}${f1(dT)} → ${f1(S.z.trust)}.`;
+ // ---- waqf
+ const P=S.w.P;let ret=0;const ws=sumOf(D.w,WK.map(x=>x[0]));
+ ret+=P*D.w.cwls/100*.059;ret+=P*D.w.dep/100*(.045+e.rate/100);ret+=P*D.w.csk/100*(.075+e.gainSk);let lossW=0;
+ if(e.csk&&D.w.csk){lossW+=P*D.w.csk/100*.3;log(`<b>Default:</b> the waqf lost ${bn(P*D.w.csk/100*.3)} on corporate sukuk.`)}
+ if(D.w.hosp){if(S.w.hospBuilt){const r=evId==='flood'?.03:evId==='boom'?.13:.11;ret+=P*D.w.hosp/100*r}else{S.w.hospBuilt=true;log('<b>Waqf hospital:</b> construction year, no return yet.')}}
+ if(evId==='temptation'){out.temptation=true}
+ if(D.w.fee>10)viol('fee',3,`nazhir fee ${D.w.fee}% of net return.`);
+ let spent=0;if(D.w.spend){spent=P*.1;viol('spend',8,'waqf principal spent on beneficiaries.')}
+ const fee=Math.max(0,ret)*D.w.fee/100,ben=Math.max(0,ret)-fee;S.w.ben+=ben;const inflow=wqIn()*e.wq;
+ S.w.P=P-lossW-spent+inflow;S.w.inP+=inflow;S.w.loss+=lossW;
+ out.w=`Return ${bn(ret)}; your fee ${bn(fee)}; ${bn(ben)} delivered to beneficiaries${spent?` plus ${bn(spent)} of principal (not allowed)`:''}. New waqf ${bn(inflow)}. Principal now ${bn(S.w.P)}.`;
+ // ---- hajj
+ const H=S.h.H;S.h.cost*=e.cost;const hs=sumOf(D.h,HK.map(x=>x[0]));
+ let N=H*(D.h.plc*(.045+e.rate/100)+D.h.sbsn*(.066+e.gainSk*.5)+D.h.corp*(.076)+D.h.dir*(.09+e.dir))/100+H*D.h.gold/100*e.gold;
+ if(e.csk&&D.h.corp){const l=H*D.h.corp/100*.3;N-=l;log(`<b>Default:</b> the hajj fund lost ${tn(l)} on corporate sukuk.`)}
+ const sub=.22*S.h.cost*D.h.sub/100,net=N-sub;S.h.N.push(N);S.h.sub.push(sub);
+ if(D.h.plc>30)viol('plc',4,`bank placements ${D.h.plc}% (cap 30%).`);
+ const liq=(D.h.plc+D.h.sbsn*.5+(100-hs))/100*H,need=2*.22*S.h.cost;if(liq<need)viol('liq',3,'liquidity below two years of hajj costs.');
+ S.h.H=H+10-5.5+N-sub;
+ out.h=`Nilai manfaat ${tn(N)}; subsidy ${tn(sub)} (${D.h.sub}% of a cost of Rp${f1(S.h.cost)} million) → ${net>=0?tn(net)+' credited to waiting pilgrims\' virtual accounts':'<b class="down">'+tn(-net)+' taken from the savings of those still waiting</b>'}. Fund now ${tn(S.h.H)}.`;
+ S.hist.push({y:S.y,H:S.h.H,P:S.w.P,hh,grads,net,ev:evT});S.ev.push(evId);
+ log(`${evT}.`);S.pending=S.y;
+ showYearEnd(evT,evB,out,evId);save()}
+function showYearEnd(evT,evB,out,evId){const q=QS[(S.y-1+(S.seed%QS.length))%QS.length],qi=QS.indexOf(q);
+ $('ye-k').textContent=`Year ${2026+S.y} closed`;$('ye-t').textContent=evT;
+ let html=`<div class="ev"><b>What happened:</b> ${evB}</div>`;
+ if(out.temptation)html+=`<div class="ev" style="border-color:var(--down);background:var(--down-soft)"><b>Your decision as nazhir:</b> accept the Rp10 bn loan at 15%?<div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="go" style="width:auto;padding:8px 14px" id="t-no">Refuse: conflict of interest</button><button type="button" class="go" style="width:auto;padding:8px 14px;background:var(--down)" id="t-yes">Accept the 15%</button></div><p id="t-res" style="margin-top:6px"></p></div>`;
+ html+=`<div class="res"><div><h3>Amil zakat</h3>${out.z}</div><div><h3>Nazhir waqf</h3>${out.w}</div><div><h3>Hajj fund</h3>${out.h}</div></div>
+  <p><b>Quick question:</b> ${q.q}</p><div class="opts" id="q-o"></div><p class="why" id="q-w" hidden></p>
+  <button type="button" class="go gold" id="ye-go" hidden>${S.y>=YEARS?'See your final report':'Start year '+(2027+S.y)+' ▸'}</button>`;
+ $('ye-b').innerHTML=html;$('yearend').hidden=false;
+ let tDone=!out.temptation;const ready=()=>{if(tDone&&S.quiz[S.y]!==undefined)$('ye-go').hidden=false};
+ if(out.temptation){$('t-no').onclick=()=>{tDone=true;S.tempt='refused';log('<b>Temptation:</b> you refused the conflicted loan. Amanah kept.');$('t-res').innerHTML='<span class="up">Refused. A nazhir protects the principal and avoids conflicts of interest.</span>';$('t-no').disabled=$('t-yes').disabled=true;save();ready()};
+   $('t-yes').onclick=()=>{tDone=true;S.tempt='accepted';viol('tempt',6,'accepted a conflicted loan of waqf money.');const bad=R()<.5;if(bad){S.w.P-=10;S.w.loss+=10;log('<b>Loan default:</b> the official\'s company failed to repay Rp10 bn of waqf.')}else{S.w.ben+=1.5;log('<b>Loan repaid</b> with 15% this time. The breach of amanah remains.')}
+     $('t-res').innerHTML=bad?'<span class="down">The company defaulted: the waqf lost Rp10 bn of principal.</span>':'<span class="down">It paid this time, but you broke the trust: conflict of interest with waqf money.</span>';$('t-no').disabled=$('t-yes').disabled=true;save();ready()}}
+ const opts=q.o.slice().sort(()=>R()-.5);opts.forEach(([t,ok])=>{const b=document.createElement('button');b.type='button';b.textContent=t;b.onclick=()=>{if(S.quiz[S.y]!==undefined)return;S.quiz[S.y]={qi,ok};
+   [...$('q-o').children].forEach((x,i)=>{x.disabled=true;if(opts[i][1])x.className='right';else if(x===b)x.className='wrong'});$('q-w').textContent=(ok?'Correct. ':'Not quite. ')+q.w;$('q-w').hidden=false;save();ready()};$('q-o').appendChild(b)});
+ $('ye-go').onclick=()=>{$('yearend').hidden=true;S.pending=null;if(S.y>=YEARS){S.over=true;logAttempt();save();showEnd();return}S.y++;S.left=DECIDE_S;save();renderAll();startClock()}}
+// ---------------- score
+function grade(){const hs=S.hist,n=Math.max(1,hs.length);
+ const quizOk=Object.values(S.quiz).filter(x=>x.ok).length,quiz=15*quizOk/YEARS;
+ const avgHH=S.z.hh.reduce((a,b)=>a+b,0)/n,impZ=Math.min(12,12*avgHH/8000)+Math.min(6,6*S.z.grad/1500);
+ const impW=Math.min(6,6*S.w.ben/(2.5*n));const aff=S.h.sub.length?S.dec.h.sub:40;const impH=aff>=30&&aff<=50?6:aff>=20&&aff<=60?3:1;
+ const impact=Math.min(30,impZ+impW+impH);
+ const covered=S.h.N.filter((N,i)=>N>=S.h.sub[i]).length;const realH=S.h.H/S.h.H0;
+ const sust=Math.min(25,9*covered/n+(realH>=1.12?6:realH>=1.04?4:realH>=1?2:0)+(S.w.P>=S.w.inP-1?5:S.w.P>=S.w.inP*.9?2:0)+(S.z.trust>=75?5:S.z.trust>=60?3:0));
+ const am=S.am;const total=Math.round(am+impact+sust+quiz);
+ const letter=[[85,'A'],[80,'A-'],[75,'B+'],[70,'B'],[65,'B-'],[60,'C+'],[55,'C'],[40,'D'],[0,'E']].find(x=>total>=x[0])[1];
+ return {am,impact,sust,quiz,quizOk,total,letter,covered,realH}}
+function feedback(g){const f=[];
+ if(g.am<30)f.push('Amanah breaches cost you points: '+[...new Set(S.viol.map(v=>v.txt))].slice(0,4).join('; ')+'. In social finance, the rules are the product.');
+ else f.push('You kept every rule for six years. That is what donors, wakif, and pilgrims pay for.');
+ if(g.covered<S.h.N.length)f.push(`In ${S.h.N.length-g.covered} year(s) the hajj subsidy exceeded nilai manfaat: pilgrims still waiting paid for those leaving. Compare with Tabung Haji in 2018.`);
+ if(S.z.grad<800)f.push('Few mustahik graduated to muzakki. Productive zakat needs coaching and patience.');
+ if(S.w.P<S.w.inP-1)f.push('Your waqf principal ended below what wakif gave. Productive should not mean risky.');
+ if(S.z.trust<60)f.push('Zakat trust fell. Transparency (audited reports) is cheap insurance against other agencies\' scandals.');
+ if(g.quizOk<4)f.push('Review the questions you missed in the journal and the Week 12 slides.');return f}
+function attempts(){try{return JSON.parse(localStorage.getItem(ATT)||'[]')}catch(e){return []}}
+function logAttempt(){const g=grade(),l=attempts().filter(a=>!(a.nim===USER.nim&&a.n===S.att));l.push({nim:USER.nim,n:S.att,sc:g.total,gr:g.letter,at:new Date().toLocaleString('id-ID')});try{localStorage.setItem(ATT,JSON.stringify(l))}catch(e){}}
+function reportHTML(){const g=grade();return `<div class="score"><div><span>Total</span><b>${g.total} / 100 · ${g.letter}</b></div><div><span>Amanah (rules kept)</span><b>${f1(g.am)} / 30</b></div><div><span>Impact (maslahah)</span><b>${f1(g.impact)} / 30</b></div><div><span>Sustainability</span><b>${f1(g.sust)} / 25</b></div><div><span>Questions</span><b>${g.quizOk}/${YEARS} · ${f1(g.quiz)} / 15</b></div><div><span>Hajj fund</span><b>${tn(S.h.H)} (${g.realH>=1?'+':''}${f1((g.realH-1)*100)}%)</b></div><div><span>Waqf principal</span><b>${bn(S.w.P)}</b></div><div><span>Mustahik → muzakki</span><b>${f1(S.z.grad)}</b></div></div>
+ <ul style="margin:0;padding-left:18px">${feedback(g).map(x=>'<li>'+x+'</li>').join('')}</ul>`}
+function showEnd(){$('end-r').innerHTML=reportHTML();const l=attempts().filter(a=>a.nim===USER.nim);$('att').innerHTML=l.length?`<table><thead><tr><th>Attempt</th><th>Score</th><th>Finished</th></tr></thead><tbody>${l.map(a=>`<tr><td>${a.n}</td><td class="mono">${a.sc} ${a.gr}</td><td>${a.at}</td></tr>`).join('')}</tbody></table>`:'';$('endwrap').hidden=false;renderAll()}
+function pdf(){const J=window.jspdf&&window.jspdf.jsPDF;if(!J)return;const d=new J({unit:'mm',format:'a4'}),g=grade();let y=20;
+ const T=t=>String(t).replace(/<[^>]+>/g,'').replace(/[−–—]/g,'-').replace(/→/g,'->').replace(/[^\x00-\xFF]/g,'');
+ const line=(t,sz=10,b=false,c=[20,35,58])=>{d.setFont('helvetica',b?'bold':'normal');d.setFontSize(sz);d.setTextColor(...c);for(const l of d.splitTextToSize(T(t),180)){if(y>282){d.addPage();y=18}d.text(l,15,y);y+=sz*.48}y+=1.5};
+ d.setFillColor(16,36,63);d.rect(0,0,210,12,'F');d.setTextColor(242,194,0);d.setFontSize(9);d.text('LEARN ISLAMIC FINTECH WITH TAZKIA  |  AMANAH SOCIAL FUND SIMULATOR',15,8);
+ line('Amanah report',18,true);line(`${USER.name} | NIM ${USER.nim} | attempt ${S.att} | ${new Date().toLocaleString('id-ID')}`,10,false,[93,107,128]);y+=2;
+ line(`Score ${g.total}/100 (${g.letter})   Amanah ${f1(g.am)}/30   Impact ${f1(g.impact)}/30   Sustainability ${f1(g.sust)}/25   Questions ${f1(g.quiz)}/15`,11,true);y+=2;
+ line(`Hajj fund ${tn(S.h.H)} (start ${tn(S.h.H0)}); waqf principal ${bn(S.w.P)} (contributed ${bn(S.w.inP)}); benefits delivered ${bn(S.w.ben)}; zakat trust ${f1(S.z.trust)}; graduates ${f1(S.z.grad)}.`,10);y+=2;
+ line('Feedback',12,true);feedback(g).forEach(x=>line('- '+x,10));y+=2;
+ line('Year by year',12,true);S.hist.forEach(h=>line(`${2026+h.y}: ${h.ev}. Households ${f1(h.hh)}, graduates ${f1(h.grads)}, hajj net ${tn(h.net)}, fund ${tn(h.H)}, waqf ${bn(h.P)}.`,9.5));y+=2;
+ line('Breaches of amanah',12,true);if(!S.viol.length)line('None.',10);S.viol.forEach(v=>line(`${2026+v.y}: -${v.pts} ${v.txt}`,9.5,false,[196,54,43]));y+=2;
+ line('Journal',12,true);S.log.slice(0,40).forEach(x=>line(x,8.5));
+ d.save(`Amanah - ${USER.nim} - attempt ${S.att}.pdf`)}
+// ---------------- render, clock, storage
+function renderAll(){if(!S)return;const g=grade();
+ $('yr').innerHTML=Array.from({length:YEARS},(_,i)=>`<i class="${i+1<S.y||S.over?'done':i+1===S.y?'now':''}"></i>`).join('');$('yrlab').textContent=S.over?'Term complete':'Year '+(2026+S.y)+' · '+S.y+' of '+YEARS;
+ $('k-trust').textContent=f1(S.z.trust);$('k-waqf').textContent=bn(S.w.P);$('k-hajj').textContent=tn(S.h.H);$('k-am').textContent=f1(S.am)+'/30';$('who').textContent=USER.name+' · '+USER.nim;
+ $('sc-tot').textContent=g.total+' / 100';$('score').innerHTML=`<div><span>Amanah</span><b>${f1(g.am)}/30</b></div><div><span>Impact</span><b>${f1(g.impact)}/30</b></div><div><span>Sustainability</span><b>${f1(g.sust)}/25</b></div><div><span>Questions</span><b>${g.quizOk}/${YEARS}</b></div>`;
+ $('log').innerHTML=S.log.map(x=>`<li>${x}</li>`).join('')||'<li>Your decisions and their results appear here.</li>';
+ renderDesk();drawChart();$('clock').textContent=fmtT(S.left)}
+function drawChart(){const c=$('chart'),x=c.getContext('2d'),W=c.width=c.clientWidth*devicePixelRatio,H=c.height=150*devicePixelRatio;x.clearRect(0,0,W,H);const hs=S.hist;
+ if(!hs.length){x.fillStyle=getComputedStyle(document.body).color;x.globalAlpha=.6;x.font=`${12*devicePixelRatio}px sans-serif`;x.fillText('Bars appear after the first year.',10,30*devicePixelRatio);x.globalAlpha=1;return}
+ const gw=W/YEARS,bw=gw/4,mx={H:Math.max(...hs.map(h=>h.H),S.h.H0),P:Math.max(...hs.map(h=>h.P),60),hh:Math.max(...hs.map(h=>h.hh),1)};
+ hs.forEach((h,i)=>{[['H','#1b6fd1'],['P','#0f8a4f'],['hh','#c9960a']].forEach(([k,col],j)=>{const v=h[k]/mx[k],bh=v*(H-18*devicePixelRatio);x.fillStyle=col;x.fillRect(i*gw+bw*.5+j*bw,H-bh-14*devicePixelRatio,bw*.9,bh)});
+   x.fillStyle='#7a8597';x.font=`${10*devicePixelRatio}px monospace`;x.fillText(String(2026+h.y),i*gw+bw*.5,H-2*devicePixelRatio)})}
+const fmtT=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+function startClock(){clearInterval(timer);timer=setInterval(()=>{if(!S||S.over||!$('yearend').hidden)return;S.left--;$('clock').textContent=fmtT(Math.max(0,S.left));$('clock').className='clock'+(S.left<=20?' hot':'');if(S.left%5===0)save();if(S.left<=0){const D=S.dec;
+   for(const [g,ks] of [['z',ZK],['w',WK],['h',HK]]){let s=sumOf(D[g],ks.map(x=>x[0]));if(s>100){ks.forEach(([k])=>D[g][k]=Math.floor(D[g][k]*100/s))}}log('<b>Time up:</b> your current choices were used.');closeYear()}},1000)}
+function save(){if(USER&&S)try{localStorage.setItem(KEY+'-'+USER.nim,JSON.stringify(S))}catch(e){}}
+function users(){try{return JSON.parse(localStorage.getItem(KEY+'-users')||'[]')}catch(e){return []}}
+function login(u){USER=u;const l=users().filter(x=>x.nim!==u.nim);l.unshift(u);try{localStorage.setItem(KEY+'-users',JSON.stringify(l.slice(0,8)))}catch(e){}
+ let st=null;try{st=JSON.parse(localStorage.getItem(KEY+'-'+u.nim)||'null')}catch(e){}
+ S=st&&st.v===1?st:fresh();if(S.pending&&S.pending===S.y){S.pending=null;if(S.y>=YEARS){S.over=true}else{S.y++;S.left=DECIDE_S}}if(!S.att)S.att=attempts().filter(a=>a.nim===u.nim).reduce((m,a)=>Math.max(m,a.n),0)+1;
+ if(!S.log.length)log('You took office. Three funds, six years. Read the coach tips and the rules on each desk.');
+ $('reg').hidden=true;save();renderAll();if(S.over)showEnd();else startClock()}
+$('r-form').onsubmit=e=>{e.preventDefault();const name=$('r-name').value.trim(),nim=$('r-nim').value.trim().replace(/\s+/g,'');if(name.length<2||!nim)return;login({name,nim})};
+$('b-close').onclick=closeYear;$('e-pdf').onclick=pdf;
+const newAttempt=()=>{if(!USER)return;S=fresh();S.att=attempts().filter(a=>a.nim===USER.nim).reduce((m,a)=>Math.max(m,a.n),0)+1;log('New attempt started.');$('endwrap').hidden=true;save();renderAll();startClock()};
+$('e-new').onclick=newAttempt;let armed=false;$('b-reset').onclick=()=>{if(!armed){armed=true;$('b-reset').textContent='Click again to restart';setTimeout(()=>{armed=false;$('b-reset').textContent='New attempt'},3000);return}armed=false;$('b-reset').textContent='New attempt';newAttempt()};
+(function(){const l=users();$('r-known').innerHTML=l.length?'<p style="font-size:.85rem;color:var(--muted)">Continue as</p>'+l.map((u,i)=>`<button type="button" class="go" style="background:var(--surface2);color:var(--ink);border:1px solid var(--line);margin-top:6px;text-align:left" data-u="${i}">${esc(u.name)} · ${esc(u.nim)}</button>`).join(''):'';
+ $('r-known').onclick=e=>{const b=e.target.closest('[data-u]');if(b)login(l[+b.dataset.u])};$('reg').hidden=false;$('r-name').focus()})();
+window.addEventListener('resize',()=>S&&drawChart());
+window.__am={S:()=>S,grade:()=>grade(),close:()=>closeYear()};
+})();
+</script>
+</body>
+</html>
