@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Liga Crowdfunding Syariah</title>
+<link rel="icon" href="../../assets/logo-tazkia.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../komite/komite.css?v=3">
+<link rel="stylesheet" href="liga.css?v=1">
+<script src="../saham/lib/mqtt-5.10.1.min.js"></script>
+<script src="data.js?v=1"></script>
+<script src="kelas.js?v=1"></script>
+<script src="rr.js?v=1"></script>
+</head>
+<body>
+<div class="top"><a class="chip" href="index.html">☰ Menu</a><div class="t">Liga <span>Crowdfunding Syariah</span></div><span class="chip" id="hdrNama"></span><span class="chip" id="conn" style="display:none"></span><button class="chip" id="snd" type="button" style="cursor:pointer">🔊</button></div>
+<div class="wrap" id="app"></div>
+<canvas class="confetti" id="cf"></canvas>
+
+<script>
+'use strict';
+const D = window.LIGA, $ = s => document.querySelector(s), app = $('#app');
+const qs = new URLSearchParams(location.search), UJI = qs.has('uji');
+const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const LET = 'ABCDEFGH';
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('liga.' + k); return v ? JSON.parse(v) : d } catch (e) { return d } },
+  set(k, v) { try { localStorage.setItem('liga.' + k, JSON.stringify(v)) } catch (e) { } },
+};
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d } catch (e) { return d } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch (e) { } };
+const PID = store.get('pid', null) || (() => { const p = 'u' + Math.random().toString(36).slice(2, 10); store.set('pid', p); return p })();
+let ST = store.get('state', null), CH = null, CTL = null, muted = store.get('mute', false), view = '';
+
+/* ---------- utilitas ---------- */
+function rng(seed) { let h = 2166136261; for (const c of seed) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296 } }
+function shuffle(n, r) { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1));[a[i], a[j]] = [a[j], a[i]] } return a }
+const total = () => ST ? ST.sc.reduce((s, v) => s + (v || 0), 0) : 0;
+function save() { store.set('state', ST); hdr(); kirim() }
+function hdr() { $('#hdrNama').textContent = ST ? ST.nama : 'Belum masuk' }
+let AC = null;
+function bunyi(jenis) {
+  if (muted) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const seq = { ok: [[660, .09], [880, .14]], bad: [[220, .18], [180, .22]], menang: [[523, .12], [659, .12], [784, .12], [1046, .3]], kalah: [[392, .18], [330, .18], [262, .35]], mulai: [[440, .08], [660, .12]] }[jenis] || [];
+    let t = AC.currentTime;
+    seq.forEach(([f, d]) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = jenis === 'bad' || jenis === 'kalah' ? 'sawtooth' : 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d + .02); t += d * .9 });
+  } catch (e) { }
+}
+$('#snd').onclick = () => { muted = !muted; store.set('mute', muted); $('#snd').textContent = muted ? '🔇' : '🔊' };
+$('#snd').textContent = muted ? '🔇' : '🔊';
+function konfeti() {
+  const c = $('#cf'), x = c.getContext('2d'); c.width = innerWidth; c.height = innerHeight;
+  const P = Array.from({ length: 160 }, () => ({ x: Math.random() * c.width, y: -20 - Math.random() * c.height * .5, vx: (Math.random() - .5) * 3, vy: 2 + Math.random() * 4, s: 6 + Math.random() * 8, r: Math.random() * 6, c: ['#f2b632', '#4aa3ff', '#ff4d5e', '#2fd08a', '#a98bff'][Math.floor(Math.random() * 5)] }));
+  let f = 0; (function step() { x.clearRect(0, 0, c.width, c.height); P.forEach(p => { p.x += p.vx; p.y += p.vy; p.r += .1; x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.fillStyle = p.c; x.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); x.restore() }); if (++f < 220) requestAnimationFrame(step); else x.clearRect(0, 0, c.width, c.height) })();
+}
+function toast(t, ms) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), ms || 5000) }
+
+/* ---------- kelas ---------- */
+let kirimT = null;
+function kirim() {
+  if (!CH || !ST) return; clearTimeout(kirimT);
+  kirimT = setTimeout(() => CH.setStatus(PID, { nama: ST.nama, nim: ST.nim, tahap: ST.tahap, sc: ST.sc, total: total(), sel: ST.tahap >= 3, t: Date.now(), t0: ST.t0, tt: ST.tt || [] }).catch(() => { }), 300);
+}
+function setConn(on, label) { const c = $('#conn'); c.style.display = ''; c.className = 'chip ' + (on ? 'on' : 'off'); c.textContent = label || (on ? '● Kelas ' + ST.kode : '○ Menyambung ulang') }
+async function sambung(kode) {
+  setConn(false, '○ Mencari kelas ' + kode + ' ...');
+  try {
+    CH = await KomiteKelas.join(kode, {
+      role: 'player',
+      onCtl: o => { const lama = CTL; CTL = o; if (o.pesan && (!lama || lama.pesan !== o.pesan)) toast('📣 ' + o.pesan, 8000); LG.onCtl(); if (view === 'tunggu') tungguInfo() },
+      onPair: (k, o) => LG.onPair(k, o),
+      onConn: on => setConn(on),
+    });
+    setConn(true); kirim();
+  } catch (e) { CH = null; setConn(false, e.message === 'notfound' ? '✕ Kelas ' + kode + ' tidak ditemukan' : '✕ Tidak tersambung'); toast('Kelas tidak ditemukan. Anda tetap bisa menyelesaikan tiga tahap; skor tidak tampil di papan pengajar.', 7000) }
+}
+
+/* ---------- langkah 1: kode kelas ---------- */
+let kodePilih = KomiteKelas.cleanCode(qs.get('kelas') || '') || (ST ? ST.kode : null);
+function layarKode() {
+  view = 'kode';
+  app.innerHTML = `
+  <div class="card hero" style="text-align:center;padding:40px 24px">
+    <div class="kicker">Keuangan Digital Syariah · Tazkia</div>
+    <h1>Liga Crowdfunding Syariah</h1>
+    <p style="font-size:1.15rem;color:#dbe6f6;margin:0 auto 22px;max-width:640px">Tiga tahap berurutan: Donation Based, Reward Based, lalu Agregator. Setelah itu semua peserta bertanding round robin, dan dua teratas bertemu di final. Masukkan kode kelas dari layar pengajar.</p>
+    <input id="kodeBesar" maxlength="8" autocomplete="off" autocapitalize="characters" placeholder="KODE KELAS" value="${esc(store.get('kode', ''))}"
+      style="max-width:420px;text-align:center;text-transform:uppercase;font-family:'JetBrains Mono',monospace;letter-spacing:.3em;font-size:2.4rem;padding:18px;border:3px solid var(--gold)">
+    <div style="margin-top:18px"><button class="btn gold" id="masuk" type="button" style="min-width:260px;font-size:1.25rem">Masuk ▶</button></div>
+    <p style="margin-top:22px"><a href="#" id="sendiri" style="color:#c9d8ee">Tidak ada kode? Kerjakan tiga tahap sendiri</a></p>
+  </div>`;
+  const k = $('#kodeBesar'); k.focus();
+  const masuk = () => { const v = KomiteKelas.cleanCode(k.value); if (v.length < 4) { toast('Kode kelas terdiri dari 5 huruf/angka. Lihat layar pengajar.'); k.focus(); return } kodePilih = v; store.set('kode', v); render() };
+  $('#masuk').onclick = masuk; k.onkeydown = e => { if (e.key === 'Enter') masuk() };
+  $('#sendiri').onclick = e => { e.preventDefault(); kodePilih = ''; store.set('kode', ''); render() };
+}
+
+/* ---------- langkah 2: identitas ---------- */
+function layarNama() {
+  view = 'nama';
+  app.innerHTML = `
+  <div class="card hero"><div class="kicker">${kodePilih ? `Kelas <b style="font-family:'JetBrains Mono',monospace;color:var(--gold2);letter-spacing:.15em">${esc(kodePilih)}</b> · <a href="#" id="ganti">ganti</a>` : 'Tanpa kelas · <a href="#" id="ganti">masukkan kode</a>'}</div>
+    <h1>Siapa yang bermain?</h1>
+    <div class="steps" style="margin-top:12px">${D.TAHAP.map((t, i) => `<div class="step"><span class="ic">${t.ikon}</span><div><b>Tahap ${i + 1}</b><small>${esc(t.pendek)} · ${esc(t.org)}</small></div></div>`).join('')}<div class="step"><span class="ic">🏆</span><div><b>Round robin</b><small>dua teratas ke final</small></div></div></div>
+    <div class="grid2"><div><label for="nama">Nama lengkap</label><input id="nama" maxlength="40" value="${esc(store.get('nama', ''))}" autocomplete="name"></div>
+      <div><label for="nim">NIM</label><input id="nim" maxlength="20" inputmode="numeric" value="${esc(store.get('nim', ''))}"></div></div>
+    <p class="muted" style="margin:12px 0 0">Ketiga tahap wajib diselesaikan berurutan. Halaman ini mencatat nilai setiap tahap secara otomatis saat laporan akhir simulasi muncul, lalu membuka tahap berikutnya.</p>
+    <div class="row" style="margin-top:16px"><button class="btn gold" id="go" type="button" style="min-width:260px;font-size:1.2rem">Mulai Tahap 1 ▶</button></div></div>`;
+  $('#ganti').onclick = e => { e.preventDefault(); kodePilih = null; history.replaceState(null, '', location.pathname + (UJI ? '?uji' : '')); render() };
+  $('#go').onclick = () => {
+    const nama = $('#nama').value.trim(), nim = $('#nim').value.trim();
+    if (nama.length < 3) { toast('Isi nama lengkap.'); $('#nama').focus(); return }
+    if (nim.length < 3) { toast('Isi NIM (minimal 3 karakter).'); $('#nim').focus(); return }
+    store.set('nama', nama); store.set('nim', nim);
+    ST = { nama, nim, kode: kodePilih || '', tahap: 0, base: [null, null, null], sc: [null, null, null], tt: [], t0: Date.now() };
+    save(); if (kodePilih && !CH) sambung(kodePilih); render();
+  };
+}
+
+/* ---------- langkah 3: tiga tahap berurutan ---------- */
+const attOf = t => lsGet(t.att, []);
+function siapkanTahap(i) {
+  // dicatat sekali per tahap: percobaan yang dihitung adalah yang selesai SETELAH tahap ini dibuka
+  if (ST.base[i] != null) return;
+  const t = D.TAHAP[i];
+  ST.base[i] = attOf(t).reduce((m, a) => Math.max(m, a.n || 0), 0);
+  if (t.st) try { localStorage.removeItem(t.st) } catch (e) { }
+  if (t.id) lsSet(t.id, { nama: ST.nama, nim: ST.nim, kelas: ST.kode ? 'Kelas ' + ST.kode : '' });
+  ST.tt[i] = Date.now(); save();
+}
+function steps() {
+  return `<div class="steps">${D.TAHAP.map((t, i) => `<div class="step ${ST.sc[i] != null ? 'done' : i === ST.tahap ? 'on' : 'lock'}"><span class="ic">${ST.sc[i] != null ? '✅' : i === ST.tahap ? t.ikon : '🔒'}</span><div><b>Tahap ${i + 1} · ${esc(t.pendek)}</b><small>${ST.sc[i] != null ? 'Nilai ' + ST.sc[i] : i === ST.tahap ? 'sedang dikerjakan' : 'terkunci'}</small></div></div>`).join('')}
+    <div class="step ${ST.tahap >= 3 ? 'on' : 'lock'}"><span class="ic">${ST.tahap >= 3 ? '🏆' : '🔒'}</span><div><b>Round robin</b><small>${ST.tahap >= 3 ? 'Total ' + total() : 'setelah tiga tahap'}</small></div></div></div>`;
+}
+function layarTahap() {
+  const i = ST.tahap, t = D.TAHAP[i], key = 'tahap' + i;
+  if (view === key) return;
+  view = key; siapkanTahap(i);
+  app.classList.add('wide');
+  const src = t.src + (UJI && t.k === 'dbcf' ? '#uji' : '');
+  app.innerHTML = steps() + `
+    <div class="stagebar"><p><span class="srcchip" style="background:${t.warna}">${t.ikon} Tahap ${i + 1} dari 3</span> <b>${esc(t.nama)}</b> · selesaikan 12 bulan sampai <b>nilai akhir</b> muncul. Nilai tercatat otomatis.</p>
+      <button class="btn ghost sm" id="muat" type="button">↺ Muat ulang tahap ini</button></div>
+    <iframe class="simframe" id="sim" src="${src}" title="${esc(t.nama)}"></iframe>`;
+  let armed = 0;
+  $('#muat').onclick = () => { if (Date.now() - armed > 3000) { armed = Date.now(); $('#muat').textContent = 'Klik lagi: kembali ke awal tahap'; setTimeout(() => { if ($('#muat')) $('#muat').textContent = '↺ Muat ulang tahap ini' }, 3000); return } $('#sim').src = src };
+}
+function cekTahap() {
+  if (!ST || ST.tahap >= 3 || !view.startsWith('tahap')) return;
+  const i = ST.tahap, t = D.TAHAP[i];
+  const a = attOf(t).filter(x => (x.n || 0) > ST.base[i] && typeof x.sc === 'number');
+  if (!a.length) return;
+  ST.sc[i] = a[0].sc; ST.tahap = i + 1; save(); bunyi('menang');
+  const akhir = ST.tahap >= 3;
+  const o = document.createElement('div'); o.className = 'ovl';
+  o.innerHTML = `<div class="card hero winner"><div class="kicker">Tahap ${i + 1} selesai · ${esc(t.nama)}</div><div class="big">${ST.sc[i]}</div><p style="color:#dbe6f6">${akhir ? 'Ketiga tahap tuntas. Total nilai Anda <b>' + total() + '</b>. Bersiap untuk round robin.' : 'Tahap ' + (i + 2) + ' (' + esc(D.TAHAP[i + 1].nama) + ') sudah terbuka.'}</p>
+    <p class="muted" style="margin:0 0 12px">Laporan dan PDF tahap ini tetap bisa diunduh nanti dari halaman simulasinya.</p>
+    <button class="btn gold" id="lanjutTahap" type="button" style="min-width:240px">${akhir ? 'Ke ruang tunggu round robin ▶' : 'Lanjut ke Tahap ' + (i + 2) + ' ▶'}</button><p class="muted" id="hitungT" style="margin:8px 0 0"></p></div>`;
+  document.body.appendChild(o);
+  let s = 8; const go = () => { clearInterval(h); o.remove(); render(); scrollTo(0, 0) };
+  const h = setInterval(() => { s--; const e = $('#hitungT'); if (e) e.textContent = 'Lanjut otomatis dalam ' + s + ' detik'; if (s <= 0) go() }, 1000);
+  $('#lanjutTahap').onclick = go;
+}
+setInterval(cekTahap, 1200);
+
+/* ---------- ruang tunggu ---------- */
+function layarTunggu() {
+  view = 'tunggu'; app.classList.remove('wide');
+  app.innerHTML = steps() + `<div class="card hero winner"><div class="em">🎯</div><div class="kicker">Tiga tahap tuntas</div><h1>Total nilai Anda ${total()}</h1>
+    <div class="sc3">${D.TAHAP.map((t, i) => `<div><small>${t.ikon} ${esc(t.pendek)}</small><b>${ST.sc[i]}</b></div>`).join('')}</div>
+    <div id="infoT"></div></div>
+    <div class="card"><h3>Cara round robin berjalan</h3><ol style="margin:0;padding-left:1.2em;color:#dbe6f6">
+      <li>Begitu semua peserta tuntas, sistem membagi peserta ke grup berisi 3 sampai 4 orang secara seimbang berdasarkan total nilai tiga tahap.</li>
+      <li>Setiap orang bertemu semua lawan di grupnya. Satu laga berisi beberapa soal dari ketiga simulasi; jawaban tepat bernilai ${D.POIN} poin ditambah bonus kecepatan sampai ${D.BONUS}.</li>
+      <li>Menang 3 poin, seri 1, kalah 0. Dua peserta teratas di klasemen gabungan bertemu di final.</li></ol></div>`;
+  tungguInfo();
+}
+function tungguInfo() {
+  const e = $('#infoT'); if (!e) return;
+  if (!ST.kode) { e.innerHTML = '<p style="color:#dbe6f6">Anda bermain tanpa kelas, jadi tidak ada round robin. Masukkan kode kelas lewat menu bila ingin ikut liga.</p>'; return }
+  const inf = CTL && CTL.info, T = CTL && CTL.tur;
+  e.innerHTML = T && T.st === 'run' && !(T.P && T.P[PID]) ? '<p style="color:var(--amber)">Round robin sudah berjalan sebelum Anda selesai. Ikuti klasemen di layar pengajar.</p>'
+    : `<div class="wait" style="padding:6px 0 0"><div class="spin"></div><p style="color:#dbe6f6;margin:8px 0 0">${inf ? `<b>${inf.sel} dari ${inf.n}</b> peserta sudah tuntas tiga tahap.` : 'Menunggu data kelas ...'} Round robin dimulai otomatis setelah semua tuntas.</p></div>`;
+}
+
+/* ---------- round robin dan final di layar peserta ---------- */
+const LG = (function () {
+  const LIVE = {};
+  let tm = null, tick = null, lastView = '', diumumkan = '';
+  const T = () => CTL && CTL.tur;
+  const aktif = () => { const t = T(); return !!(ST && ST.tahap >= 3 && t && t.P && t.P[PID] && (t.st === 'run' || t.st === 'done')) };
+  function posisi() {
+    const t = T(); if (!aktif()) return null;
+    if (t.st === 'done') return { k: 'done' };
+    const R = t.R[t.cur], m = R && R.M.find(x => x.a === PID || x.b === PID);
+    if (!m) return { k: 'nonton' };
+    if (!m.b) return { k: 'bye', m };
+    if (m.w) return { k: 'hasil', m };
+    return { k: 'main', m };
+  }
+  function viewKey() { const t = T(), p = posisi(); return t && p ? [t.id, t.st, t.cur, p.k, p.m ? p.m.id + (p.m.w || '') : ''].join('|') : '' }
+  function onCtl() {
+    if (!aktif()) { if (lastView) { lastView = ''; render() } else if (view === 'tunggu') tungguInfo(); return }
+    const t = T(); if (diumumkan !== t.id && t.st === 'run') { diumumkan = t.id; bunyi('mulai'); toast('🏆 Round robin dimulai! Grup sudah dibagi.', 6000) }
+    const v = viewKey(); if (v !== lastView) { lastView = v; render() } else live();
+  }
+  function onPair(k, o) { if (o) LIVE[k] = o; else delete LIVE[k]; if (aktif()) live() }
+  const lawan = m => m.a === PID ? m.b : m.a;
+  const kunciSaya = m => RR.kunci(T(), m, PID);
+  function kirimLaga(m) {
+    if (!CH || !tm) return;
+    const o = { i: tm.ans.length, n: T().n, skor: tm.skor, detik: tm.ans.reduce((s, a) => s + a.detik, 0), done: tm.ans.length >= T().n, t: Date.now() };
+    LIVE[kunciSaya(m)] = o; CH.setPair(kunciSaya(m), o).catch(() => { });
+  }
+  function muat(m) { const key = T().id + '|' + m.id; tm = store.get('tm', null); if (!tm || tm.key !== key) { tm = { key, ans: [], skor: 0, phase: 'q', tq: Date.now() }; store.set('tm', tm); kirimLaga(m) } }
+  function simpan(m) { store.set('tm', tm); kirimLaga(m) }
+  function bilah(m) {
+    const t = T(), op = lawan(m), lo = LIVE[RR.kunci(t, m, op)] || {};
+    return `<div class="matchbar"><div><div class="nm">🙋 ${esc(t.P[PID].nm)}</div><div class="sc" style="color:var(--blue)">${tm ? tm.skor : 0}</div></div>
+      <div class="vs">⚔️<small>${esc(RR.namaRonde(t, t.cur))}</small></div>
+      <div class="r"><div class="nm">${esc(t.P[op].nm)}</div><div class="sc" style="color:var(--gold)" id="opS">${lo.skor || 0}</div><small class="muted" id="opP">${lo.done ? 'selesai' : lo.i != null ? 'soal ' + Math.min(lo.i + 1, t.n) + ' dari ' + t.n : 'belum mulai'}</small></div></div>`;
+  }
+  function live() {
+    const p = posisi(); if (!p) return; const t = T();
+    if (p.m && p.m.b && $('#opS')) { const lo = LIVE[RR.kunci(t, p.m, lawan(p.m))] || {}; $('#opS').textContent = lo.skor || 0; $('#opP').textContent = lo.done ? 'selesai' : lo.i != null ? 'soal ' + Math.min(lo.i + 1, t.n) + ' dari ' + t.n : 'belum mulai' }
+    const L = $('#lagaL'); if (L) L.innerHTML = RR.laga(t, LIVE, PID);
+  }
+  const papan = () => { const t = T(); return `<div class="card"><h3>${esc(RR.namaRonde(t, t.cur))}</h3><div id="lagaL">${RR.laga(t, LIVE, PID)}</div></div>` + RR.tabel(t, PID) };
+  function render() {
+    clearInterval(tick); view = 'liga'; app.classList.remove('wide');
+    const t = T(), p = posisi(); lastView = viewKey();
+    if (p.k === 'done') {
+      const K = RR.klasemen(t), F = t.R[t.R.length - 1].M[0], juara = t.juara === PID, runner = F && (F.a === PID || F.b === PID) && !juara;
+      const ketiga = K.filter(x => x.pid !== F.a && x.pid !== F.b)[0];
+      app.innerHTML = `<div class="card hero winner"><div class="em">${juara ? '🏆' : runner ? '🥈' : ketiga && ketiga.pid === PID ? '🥉' : '🎖️'}</div><div class="kicker">Liga selesai · Final ${F.sa} lawan ${F.sb}</div>
+        <h1>${juara ? 'Anda juara Liga Crowdfunding!' : 'Juara: ' + esc(t.P[t.juara].nm)}</h1>
+        <p style="color:#dbe6f6;font-size:1.15rem">${juara ? 'Selamat! Anda melewati round robin dan menang di final.' : runner ? 'Runner-up. Tinggal satu langkah lagi.' : 'Terima kasih sudah bertanding. Pelajari lagi pembahasan di tiga simulasi.'}</p></div>` + RR.tabel(t, PID);
+      if (juara) { bunyi('menang'); konfeti() }
+      return;
+    }
+    if (p.k === 'nonton') { app.innerHTML = `<div class="card hero"><div class="kicker">${esc(RR.namaRonde(t, t.cur))}</div><h2>${t.R[t.cur].f === 'final' ? 'Final sedang berlangsung' : 'Anda tidak bertanding di laga ini'}</h2><p style="color:#dbe6f6">Skor final tampil langsung di bawah.</p></div>` + papan(); return }
+    if (p.k === 'bye') { app.innerHTML = `<div class="card hero"><div class="kicker">${esc(RR.namaRonde(t, t.cur))}</div><h2>Anda istirahat di laga ini</h2><p style="color:#dbe6f6">Grup Anda berisi jumlah pemain ganjil, jadi setiap orang mendapat satu giliran istirahat. Laga berikutnya mulai otomatis.</p></div>` + papan(); return }
+    if (p.k === 'hasil') {
+      const m = p.m, sMe = m.a === PID ? m.sa : m.sb, sOp = m.a === PID ? m.sb : m.sa, seri = m.w === 'seri', menang = m.w === PID, fin = t.R[t.cur].f === 'final';
+      app.innerHTML = `<div class="card hero winner"><div class="em">${seri ? '🤝' : menang ? '🎉' : '🛡️'}</div><div class="kicker">${esc(RR.namaRonde(t, t.cur))} · ${sMe} lawan ${sOp}</div>
+        <h1>${seri ? 'Seri, masing-masing 1 poin' : menang ? (fin ? 'Anda juara!' : 'Menang, +3 poin') : (fin ? 'Runner-up' : 'Kalah di laga ini')}</h1>
+        <p style="color:#dbe6f6">${m.why ? esc(m.why) + '. ' : ''}${fin ? '' : 'Laga berikutnya mulai otomatis setelah semua laga di putaran ini selesai.'}</p></div>` + papan();
+      bunyi(seri ? 'ok' : menang ? 'menang' : 'kalah'); if (menang) konfeti();
+      return;
+    }
+    muat(p.m);
+    if (tm.ans.length >= t.n) { app.innerHTML = bilah(p.m) + `<div class="card wait"><div class="spin"></div><h2>Jawaban Anda sudah terkunci</h2><p class="muted">Menunggu lawan menyelesaikan laga. Skor lebih tinggi menang; skor sama berarti seri${t.R[t.cur].f === 'final' ? ', kecuali di final: yang lebih cepat menang' : ''}.</p></div>` + papan(); return }
+    const q = D.BANK[t.R[t.cur].qs[tm.ans.length]], ord = shuffle(q.o.length, rng(tm.key + ':' + tm.ans.length));
+    if (tm.phase === 'rev') return bahas(p.m, q, ord);
+    soal(p.m, q, ord);
+  }
+  function chip(q) { const s = D.TAHAP[q.s]; return `<span class="bk" style="background:${s.warna};color:#06101f">${s.ikon} ${esc(s.pendek)} · ${q.k === 'kuis' ? 'Kuis akad' : 'Keputusan'}</span>` }
+  function soal(m, q, ord) {
+    const t = T();
+    app.innerHTML = bilah(m) + `<div class="card" style="border-top:6px solid ${D.TAHAP[q.s].warna}">
+      <div class="qhead">${chip(q)}<span class="no">Soal ${tm.ans.length + 1} dari ${t.n}</span>
+      <div class="timer" id="tmr"><svg width="64" height="64"><circle cx="32" cy="32" r="27" stroke="#25406b" stroke-width="6" fill="none"/><circle id="tmc" cx="32" cy="32" r="27" stroke="#f2b632" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="169.6"/></svg><b id="tmb">${D.DETIK}</b></div></div>
+      <div class="muted" style="font-weight:700;margin-bottom:4px">${esc(q.judul)}</div>${q.ctx ? `<div class="ctx">${q.ctx}</div>` : ''}<div class="q">${q.q}</div>
+      <p class="muted" style="margin:0 0 10px">Klik satu jawaban: langsung terkunci.</p>
+      <div class="opts">${ord.map((oi, k) => `<button type="button" class="opt" data-o="${oi}"><span class="L">${LET[k]}</span><span>${q.o[oi]}</span></button>`).join('')}</div></div>`;
+    const kunci = pick => {
+      clearInterval(tick); if (tm.phase !== 'q') return;
+      const detik = Math.min(D.DETIK, Math.round((Date.now() - tm.tq) / 1000)), ok = pick === q.a, pts = ok ? D.POIN + Math.round(D.BONUS * Math.max(0, 1 - detik / D.DETIK)) : 0;
+      tm.ans.push({ pick, ok, pts, detik }); tm.skor += pts; tm.phase = 'rev'; simpan(m); bunyi(ok ? 'ok' : 'bad'); render();
+    };
+    app.querySelectorAll('.opt').forEach(el => el.onclick = () => { el.classList.add('sel'); kunci(+el.dataset.o) });
+    const step = () => { const s = Math.max(0, D.DETIK - (Date.now() - tm.tq) / 1000), el = $('#tmb'); if (!el) { clearInterval(tick); return } el.textContent = Math.ceil(s); $('#tmc').style.strokeDashoffset = 169.6 * (1 - s / D.DETIK); $('#tmc').style.stroke = s < 8 ? '#ff4d5e' : s < 18 ? '#ffa53b' : '#f2b632'; $('#tmr').classList.toggle('low', s < 8); if (s <= 0) kunci(null) };
+    step(); tick = setInterval(step, 250);
+  }
+  function bahas(m, q, ord) {
+    const t = T(), a = tm.ans[tm.ans.length - 1], last = tm.ans.length >= t.n;
+    app.innerHTML = bilah(m) + `<div class="card" style="border-top:6px solid ${D.TAHAP[q.s].warna}">
+      <div class="verdict" style="grid-template-columns:1fr"><div style="border-color:${a.ok ? 'var(--green)' : 'var(--red)'}"><div class="muted">Soal ${tm.ans.length} dari ${t.n} · ${a.detik} detik</div><div class="big" style="color:${a.ok ? 'var(--green)' : 'var(--red)'}">${a.ok ? '✓ Tepat' : a.pick == null ? '⌛ Waktu habis' : '✕ Belum tepat'} · +${a.pts}</div></div></div>
+      ${chip(q)}<div class="q" style="font-size:1.1rem;margin-top:8px">${q.q}</div>
+      <div class="opts">${ord.map((oi, k) => `<button type="button" class="opt ${oi === q.a ? 'ok' : oi === a.pick ? 'bad' : ''}" disabled><span class="L">${LET[k]}</span><span>${q.o[oi]}</span></button>`).join('')}</div>
+      <div class="exp">${q.exp}</div>
+      <div class="row" style="justify-content:flex-end"><button class="btn gold" id="lanjutL" type="button">${last ? '🏁 Selesaikan laga' : 'Soal berikutnya ▶'}</button></div></div>`;
+    $('#lanjutL').onclick = () => { tm.phase = 'q'; tm.tq = Date.now(); simpan(m); render(); scrollTo(0, 0) };
+  }
+  return { aktif, render, onCtl, onPair, LIVE };
+})();
+
+/* ---------- pengarah layar ---------- */
+function render() {
+  if (kodePilih == null) return layarKode();
+  if (!ST) return layarNama();
+  if (ST.tahap < 3) return layarTahap();
+  if (LG.aktif()) return LG.render();
+  return layarTunggu();
+}
+hdr();
+if (ST && ST.kode && kodePilih && kodePilih !== ST.kode) { ST = null; store.set('state', null) }   // kode baru = peserta baru di kelas itu
+if (ST && ST.kode) sambung(ST.kode);
+render();
+</script>
+</body>
+</html>
