@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="../../assets/logo-tazkia.png">
+<title>Bursa Sukuk Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"></noscript>
+<style>
+/* Same terminal language as the Bursa Syariah (stock) simulator: watchlist | sukuk desk | account, learning tabs below. */
+:root{
+  --bg:#eef1f6; --surface:#ffffff; --surface2:#f6f8fb; --ink:#14233a; --muted:#5d6b80; --line:#d9e0ea;
+  --navy:#10243f; --navy-ink:#ffffff; --gold:#c9960a; --gold-soft:#fbf1d0;
+  --up:#0f8a4f; --down:#c4362b; --flat:#7a8597; --up-soft:#e2f4ea; --down-soft:#fbe6e3;
+  --halal:#0f6e6a; --halal-soft:#dff1ef; --warn:#a15c00; --warn-soft:#fdf0db;
+  --display:"Archivo","Segoe UI",system-ui,sans-serif; --body:"Source Sans 3","Segoe UI",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0b1422; --surface:#122036; --surface2:#172843; --ink:#e7edf6; --muted:#9aa9be; --line:#25385a;
+  --navy:#0a1730; --navy-ink:#ffffff; --gold:#f2c200; --gold-soft:#3a3010;
+  --up:#3cc684; --down:#ff6b5e; --flat:#8d99ab; --up-soft:#103426; --down-soft:#3d1a18;
+  --halal:#4fc7bf; --halal-soft:#0f302e; --warn:#ffb54a; --warn-soft:#3a2a10; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1422; --surface:#122036; --surface2:#172843; --ink:#e7edf6; --muted:#9aa9be; --line:#25385a;
+  --navy:#0a1730; --navy-ink:#ffffff; --gold:#f2c200; --gold-soft:#3a3010;
+  --up:#3cc684; --down:#ff6b5e; --flat:#8d99ab; --up-soft:#103426; --down-soft:#3d1a18;
+  --halal:#4fc7bf; --halal-soft:#0f302e; --warn:#ffb54a; --warn-soft:#3a2a10; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;margin:0}
+.wrap{max-width:1440px;margin:0 auto;padding-inline:16px;padding-block:0 32px}
+.num,.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:default;opacity:.5}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
+.top{background:var(--navy);color:var(--navy-ink);margin-inline:-16px;padding:12px 16px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;position:sticky;top:0;z-index:5}
+.brand{display:flex;flex-direction:column;min-width:0}
+.brand h1{font-size:1.15rem;font-weight:800;letter-spacing:.01em}
+.brand small{color:#c7d2e2;font-size:.78rem}
+.brand small a{color:var(--gold)}
+.clock{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.phase{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:#0f8a4f;color:#fff}
+.phase.off{background:#2a3d5c}
+.prog{width:120px;height:6px;border-radius:3px;background:#2a3d5c;overflow:hidden}.prog i{display:block;height:100%;background:var(--gold)}
+.idx{display:flex;gap:18px;flex-wrap:wrap}
+.idx div{display:flex;flex-direction:column;font-size:.75rem;color:#c7d2e2}
+.idx b{font-family:var(--mono);font-size:.95rem;color:#fff;font-weight:600}
+.ctrl{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;align-items:center}
+.ctrl button{background:#203654;border:1px solid #344c70;color:#fff;border-radius:6px;padding:5px 10px;font-size:.85rem}
+.ctrl button[aria-pressed="true"]{background:var(--gold);color:#10243f;border-color:var(--gold);font-weight:700}
+.who{display:flex;align-items:center;gap:8px;font-size:.85rem;background:#203654;border:1px solid #344c70;border-radius:6px;padding:4px 10px}
+.who span{font-family:var(--mono);color:#c7d2e2}
+.mode{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:14px 0;padding:10px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:6px 12px;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--halal);color:#fff}
+.seg button.reg[aria-pressed="true"]{background:var(--warn);color:#fff}
+.mode p{margin:0;color:var(--muted);font-size:.9rem;flex:1 1 320px;min-width:0}
+.grid{display:grid;grid-template-columns:300px minmax(0,1fr) 350px;gap:14px;align-items:start}
+@media (max-width:1180px){.grid{grid-template-columns:270px minmax(0,1fr)}.acct{grid-column:1/-1}}
+@media (max-width:760px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;min-width:0}
+.panel>header{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.panel>header h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.pad{padding:12px}
+.wl{list-style:none;margin:0;padding:0}
+.wl li button{width:100%;display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:8px 12px;border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left}
+.wl li button:hover{background:var(--surface2)}
+.wl li button[aria-current="true"]{background:var(--gold-soft);box-shadow:inset 3px 0 0 var(--gold)}
+.wl .tk{font-family:var(--mono);font-weight:600}
+.wl .nm{font-size:.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wl .px{text-align:right;font-family:var(--mono)}
+.wl .ch{text-align:right;font-family:var(--mono);font-size:.8rem}
+.wl .grp{padding:6px 12px;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--surface2);border-bottom:1px solid var(--line)}
+.badge{display:inline-block;font-family:var(--body);font-size:.66rem;font-weight:700;letter-spacing:.04em;padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:1px}
+.b-sh{background:var(--halal-soft);color:var(--halal)}
+.b-no{background:var(--down-soft);color:var(--down)}
+.b-lock{background:var(--warn-soft);color:var(--warn)}
+.b-pri{background:var(--gold-soft);color:var(--warn)}
+.desk-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;padding:12px}
+.desk-head h2{font-size:1.45rem;font-weight:800}
+.desk-head .sub{color:var(--muted);font-size:.9rem}
+.bigpx{text-align:right}
+.bigpx .p{font-family:var(--mono);font-size:1.8rem;font-weight:600;line-height:1.1}
+.bigpx small{display:block;color:var(--muted);font-size:.78rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:1px;background:var(--line);border-block:1px solid var(--line)}
+.stats div{background:var(--surface);padding:7px 12px;display:flex;flex-direction:column}
+.stats span{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.stats b{font-family:var(--mono);font-weight:600;font-size:.9rem}
+.chartbox{padding:8px 12px 0}
+canvas{width:100%;height:200px;display:block}
+.desk-low{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;padding:12px}
+@media (max-width:900px){.desk-low{grid-template-columns:minmax(0,1fr)}}
+.struct{border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--surface2);font-size:.88rem;display:flex;flex-direction:column;gap:6px}
+.struct h3{font-size:.95rem}
+.struct p{margin:0}
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:4px;text-align:center;font-size:.76rem;margin:4px 0}
+.flow b{display:block;border-radius:6px;padding:6px 4px;color:#fff;font-size:.78rem}
+.flow .a{color:var(--muted);font-family:var(--mono)}
+.ticket{border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--surface2);display:flex;flex-direction:column;gap:10px}
+.side{display:grid;grid-template-columns:1fr 1fr;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.side button{border:0;padding:8px;font-weight:700;background:var(--surface)}
+.side button.buy[aria-pressed="true"]{background:var(--up);color:#fff}
+.side button.sell[aria-pressed="true"]{background:var(--down);color:#fff}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+input[type=number],input[type=text]{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-family:var(--mono);width:100%}
+.chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.chips button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:1px 9px;font-size:.78rem;font-family:var(--mono)}
+.go{border:0;border-radius:7px;padding:10px;font-weight:700;color:#fff;background:var(--up);font-size:1rem}
+.go.sell{background:var(--down)}.go.navy{background:var(--navy)}
+.est{font-size:.85rem;color:var(--muted)}
+.est b{font-family:var(--mono);color:var(--ink);font-weight:600}
+.msg{font-size:.88rem;border-radius:6px;padding:8px 10px;display:none}
+.msg.show{display:block}
+.msg.err{background:var(--down-soft);color:var(--down)}
+.msg.ok{background:var(--up-soft);color:var(--up)}
+.msg.fatwa{background:var(--warn-soft);color:var(--warn)}
+.primary{border:1px dashed var(--gold);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--gold-soft);margin:0 12px 12px}
+.primary h3{font-size:1rem}
+.primary p{margin:0;font-size:.87rem}
+.primary .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;align-items:end}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:.9rem}
+.kv span{color:var(--muted)} .kv b{font-family:var(--mono);font-weight:600;text-align:right}
+.kv .tot{font-size:1.05rem}
+.hold{width:100%;border-collapse:collapse;font-size:.82rem}
+.hold th{font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;text-align:right;padding:4px 5px;border-bottom:1px solid var(--line)}
+.hold td{text-align:right;padding:5px;border-bottom:1px solid var(--line);font-family:var(--mono)}
+.hold th:first-child,.hold td:first-child{text-align:left}
+.empty{color:var(--muted);font-size:.88rem;padding:6px 0}
+.redeem{background:var(--halal-soft);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.redeem p{margin:0;font-size:.85rem}
+.redeem button{border:0;background:var(--halal);color:#fff;border-radius:6px;padding:7px;font-weight:700}
+.macro{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+.macro .m{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px;display:flex;flex-direction:column;min-width:0;flex:1 1 120px}
+.macro .m span{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.macro .m b{font-family:var(--mono);font-size:1rem;font-weight:600}
+.macro .m small{font-family:var(--mono);font-size:.72rem}
+.macro .next{flex:2 1 280px;background:var(--navy);border-color:var(--navy);color:#fff}
+.macro .next span{color:var(--gold)}
+.macro .next b{font-family:var(--body);font-size:.95rem}
+.tape{overflow:hidden;background:#0a1730;margin-inline:-16px;border-top:1px solid #213656;white-space:nowrap}
+.tape-in{display:inline-block;padding:5px 0;animation:tape 60s linear infinite;font-family:var(--mono);font-size:.8rem;color:#dfe6f1}
+.tape-in span{margin-right:26px}.tape-in .up{color:#3cc684}.tape-in .down{color:#ff6b5e}
+@keyframes tape{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion: reduce){.tape-in{animation:none}}
+.tabs{margin-top:16px}
+.tablist{display:flex;gap:4px;flex-wrap:wrap;border-bottom:2px solid var(--line)}
+.tablist button{border:0;background:transparent;padding:9px 14px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px}
+.tablist button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--gold)}
+.tabpanel{background:var(--surface);border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px;padding:16px}
+.news{list-style:none;margin:0;padding:0;max-height:340px;overflow:auto;font-size:.88rem}
+.news li{padding:7px 4px;border-bottom:1px solid var(--line)}
+.news time{font-family:var(--mono);color:var(--muted);font-size:.75rem;margin-right:6px}
+.journal{list-style:none;margin:0;padding:0;font-size:.88rem;max-height:420px;overflow:auto}
+.journal li{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}
+.journal .akad{display:block;color:var(--halal);font-size:.8rem}
+.journal .akad.riba{color:var(--down)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.rules section{border:1px solid var(--line);border-radius:8px;padding:12px}
+.rules h3{font-size:.95rem;margin-bottom:6px}
+.rules p,.rules ul{margin:0;font-size:.88rem}
+.rules ul{padding-left:18px}
+.report{border:2px solid var(--navy);border-radius:10px;padding:14px;margin-bottom:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;background:var(--surface2)}
+.report .t{grid-column:1/-1;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;align-items:baseline}
+.report .t h3{font-size:1.05rem}
+.report div span{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.report div b{font-family:var(--mono);font-size:1rem}
+.fb{font-size:.9rem}.fb li{margin-bottom:4px}
+.attbox{margin:0 0 14px;border:1px solid var(--line);border-radius:8px;overflow:auto}
+.attbox table{width:100%;border-collapse:collapse;font-size:.85rem}
+.attbox th{text-align:left;font-size:.7rem;text-transform:uppercase;color:var(--muted);padding:6px 12px;border-bottom:1px solid var(--line)}
+.attbox td{padding:6px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.overlay{position:fixed;inset:0;z-index:30;background:rgba(6,14,30,.72);display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px;overflow:auto}
+.card{width:100%;max-width:560px;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card .hd{background:var(--navy);color:#fff;padding:16px 20px}
+.card .hd small{color:var(--gold);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:.72rem}
+.card .hd h2{font-size:1.3rem;font-weight:800;margin-top:4px}
+.card .bd{padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+.card .bd p{margin:0}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opts button{text-align:left;border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:10px 12px}
+.opts button.right{border-color:var(--up);background:var(--up-soft)}
+.opts button.wrong{border-color:var(--down);background:var(--down-soft)}
+.why{font-size:.9rem;color:var(--muted);border-left:3px solid var(--gold);padding-left:10px}
+.regcard form{display:flex;flex-direction:column;gap:12px}
+.known{display:flex;flex-direction:column;gap:6px}
+.known button{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--line);background:var(--surface2);border-radius:6px;padding:8px 10px;text-align:left}
+.foot{margin-top:14px;font-size:.8rem;color:var(--muted)}
+.reset{border:1px solid var(--down);color:var(--down);background:transparent;border-radius:6px;padding:4px 10px;font-size:.8rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>Bursa Sukuk Simulator</h1><small>Learn Islamic Fintech with Tazkia · sister desk of the <a href="../saham/main.html">Bursa Syariah stock simulator</a></small></div>
+    <div class="clock"><span class="phase" id="phase">Open</span><b class="mono" id="month">Month 1 of 12</b><div class="prog" aria-hidden="true"><i id="prog"></i></div></div>
+    <div class="idx">
+      <div>BI-Rate<b id="i-bi">–</b></div>
+      <div>SBSN 10Y yield<b id="i-y10">–</b></div>
+      <div>Corporate spread<b id="i-sp">–</b></div>
+    </div>
+    <div class="ctrl">
+      <button type="button" id="b-pause" aria-pressed="false">Pause</button>
+      <button type="button" data-speed="1" aria-pressed="true">1×</button>
+      <button type="button" data-speed="2" aria-pressed="false">2×</button>
+      <button type="button" data-speed="4" aria-pressed="false">4×</button>
+      <button type="button" id="b-next">Next month ▸</button>
+      <span class="who"><b id="who-n">–</b><span id="who-i"></span></span>
+    </div>
+  </header>
+  <div class="tape" aria-hidden="true"><div class="tape-in" id="tape"></div></div>
+
+  <div class="mode">
+    <span class="seg" role="group" aria-label="Account type"><button type="button" id="m-sh" aria-pressed="true">Sharia account</button><button type="button" id="m-reg" class="reg" aria-pressed="false">Regular account</button></span>
+    <p id="mode-note">Sharia account: only sukuk are available. Switch to a regular account to see a conventional bond next to them; every choice is recorded in your behaviour profile.</p>
+  </div>
+
+  <div class="macro" id="macro"></div>
+
+  <div class="grid" style="margin-top:14px">
+    <section class="panel">
+      <header><h2>Market watch</h2><small class="mono" id="wl-note">clean price, % of face</small></header>
+      <ul class="wl" id="wl"></ul>
+    </section>
+
+    <section class="panel" id="desk">
+      <div class="desk-head">
+        <div><h2 id="d-tk">–</h2><div class="sub" id="d-nm"></div><div id="d-badges" style="margin-top:4px"></div></div>
+        <div class="bigpx"><div class="p" id="d-px">–</div><small id="d-ch"></small></div>
+      </div>
+      <div class="stats" id="d-stats"></div>
+      <div class="chartbox"><canvas id="chart" width="900" height="200" aria-label="Price history"></canvas></div>
+      <div id="d-primary"></div>
+      <div class="desk-low">
+        <div class="struct" id="d-struct"></div>
+        <div class="ticket">
+          <div class="side" role="group" aria-label="Side"><button type="button" class="buy" id="s-buy" aria-pressed="true">Buy</button><button type="button" class="sell" id="s-sell" aria-pressed="false">Sell</button></div>
+          <div class="field"><label for="o-nom">Nominal (Rp million)</label><input type="number" id="o-nom" min="1" step="1" value="50">
+            <div class="chips"><button type="button" data-nom="10">10</button><button type="button" data-nom="50">50</button><button type="button" data-nom="100">100</button><button type="button" data-nom="max">max</button></div></div>
+          <div class="est" id="o-est"></div>
+          <button type="button" class="go" id="o-go">Buy</button>
+          <div class="msg" id="o-msg" role="status"></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel acct">
+      <header><h2>Account</h2><small class="mono" id="acc-type">Sharia</small></header>
+      <div class="pad">
+        <div class="kv">
+          <span>Cash</span><b id="a-cash">–</b>
+          <span>Sukuk at market value</span><b id="a-mv">–</b>
+          <span>Income received (after tax)</span><b id="a-inc">–</b>
+          <span>Ujrah sent to waqf programmes</span><b id="a-waqf">–</b>
+          <span class="tot">Total value</span><b class="tot" id="a-tot">–</b>
+          <span>Return so far</span><b id="a-ret">–</b>
+        </div>
+        <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:14px 0 6px">Holdings</h3>
+        <div style="overflow-x:auto"><table class="hold"><thead><tr><th>Series</th><th>Nominal</th><th>Value</th><th>P/L</th></tr></thead><tbody id="a-hold"></tbody></table></div>
+        <div id="a-redeem"></div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="tabs">
+    <div class="tablist" role="tablist">
+      <button type="button" role="tab" aria-selected="true" data-tab="news">News</button>
+      <button type="button" role="tab" aria-selected="false" data-tab="journal">Akad journal</button>
+      <button type="button" role="tab" aria-selected="false" data-tab="learn">How it works</button>
+      <button type="button" role="tab" aria-selected="false" data-tab="report">Report</button>
+    </div>
+    <div class="tabpanel" id="tab-news"><ul class="news" id="news"></ul></div>
+    <div class="tabpanel" id="tab-journal" hidden><ul class="journal" id="journal"></ul></div>
+    <div class="tabpanel" id="tab-learn" hidden>
+      <div class="rules">
+        <section><h3>What you are trading</h3><p>A sukuk certificate is a share in an asset, a usufruct, or a business, held for you by an SPV. Prices are quoted as a percentage of face value. Corporate names and SBSN series numbers here are fictional.</p></section>
+        <section><h3>Clean price, accrued ujrah, yield</h3><ul><li>The market quotes the <b>clean price</b>. When you buy, you also pay the seller's share of the next ujrah (the <b>accrued</b> part).</li><li>Price = present value of the remaining ujrah and the buy-back price, discounted at the market <b>yield</b>.</li><li>Yield up, price down. Long series move most.</li></ul></section>
+        <section><h3>Which sukuk can trade?</h3><ul><li><b>Ijarah, mudharabah, wakalah</b> (asset or equity) trade freely.</li><li><b>Murabahah</b> is a receivable: selling it below face value is riba, so it cannot trade.</li><li><b>ST</b> savings sukuk and <b>CWLS</b> are non-tradable by design; ST has an early redemption window.</li><li>SR may trade only after its holding period.</li></ul></section>
+        <section><h3>Primary market</h3><ul><li><b>PBS auction</b>: bid a yield. If your yield is at or below the cut-off you win, at your own yield (multiple price).</li><li><b>SR, ST, CWLS, corporate</b>: order during the offer window, priced at par.</li></ul></section>
+        <section><h3>Income and tax</h3><ul><li>SR, ST, CWLS pay monthly; corporates quarterly; PBS every six months.</li><li>Ujrah and profit share are taxed at a final 10%.</li><li>Mudharabah pays the holders' share (nisbah 70%) of actual profit. It can fall.</li><li>Broker fee on secondary trades: 0.10%.</li></ul></section>
+        <section><h3>How your score is computed</h3><ul><li><b>40</b> points: total return over 12 months.</li><li><b>30</b> points: questions that pop up with market events.</li><li><b>30</b> points: sharia conduct and investing behaviour (diversification, panic selling, churning, conventional bonds).</li></ul></section>
+        <section><h3>Simplifications</h3><p>Settlement is instant (in reality T+2), the yield curve is stylised, ratings and events are scripted with random outcomes, and coupon dates are rounded to month ends.</p></section>
+      </div>
+    </div>
+    <div class="tabpanel" id="tab-report" hidden>
+      <div class="attbox" id="att"></div>
+      <div id="report"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="go navy" id="b-pdf">Download PDF report</button><button type="button" class="reset" id="b-reset">Start a new attempt</button></div>
+    </div>
+  </div>
+  <p class="foot">Educational simulation by Learn Islamic Fintech with Tazkia. Not investment advice. Data, issuers, and series are fictional; mechanics follow SBSN and IDX practice in simplified form.</p>
+</div>
+
+<div class="overlay" id="reg" hidden>
+  <div class="card regcard">
+    <div class="hd"><small>Bursa Sukuk Simulator</small><h2>Open your sukuk account</h2></div>
+    <div class="bd">
+      <p>Twelve months of a sukuk market in about ten minutes. Start with Rp500 million, join auctions and retail offers, trade on the secondary market, and see your report at the end.</p>
+      <form id="r-form">
+        <div class="field"><label for="r-name">Name</label><input type="text" id="r-name" autocomplete="name" required maxlength="60"></div>
+        <div class="field"><label for="r-nim">Student ID (NIM)</label><input type="text" id="r-nim" required maxlength="30"></div>
+        <button class="go navy" type="submit">Enter the market</button>
+      </form>
+      <div class="known" id="r-known"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="quiz" hidden>
+  <div class="card">
+    <div class="hd"><small id="q-k">Market event</small><h2 id="q-t"></h2></div>
+    <div class="bd">
+      <p id="q-body"></p>
+      <p><b id="q-q"></b></p>
+      <div class="opts" id="q-opts"></div>
+      <p class="why" id="q-why" hidden></p>
+      <button type="button" class="go navy" id="q-ok" hidden>Back to the market</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="endwrap" hidden>
+  <div class="card" style="max-width:760px">
+    <div class="hd"><small>Year closed</small><h2>Your sukuk year in review</h2></div>
+    <div class="bd"><div id="end-report"></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="go navy" id="e-pdf">Download PDF report</button><button type="button" class="reset" id="e-close">Close</button></div></div>
+  </div>
+</div>
+
+<script src="../saham/lib/jspdf-2.5.1.umd.min.js" defer></script>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const UKEY='ifl-sukuk-users',ATT='ifl-sukuk-att',START=500e6,MONTHS=12,TICKS=60,TICK_MS=500,TAX=.10,FEE=.001;
+const RATING_SP={'AAA':.6,'AA+':.85,'AA':1.0,'AA-':1.25,'A+':1.5,'A':1.8,'A-':2.3,'BBB':3.5,'CCC':7.0};
+/* Series. kind: sov | corp | conv | social. trade: true | false | 'after' (from month tradeFrom). freq = payments a year. */
+const SEC=[
+ {id:'PBS',tk:'PBS-041',grp:'Sovereign (SBSN)',name:'SBSN project-based, 10 years',akad:'Ijarah asset to be leased',fam:'asset',sharia:true,trade:true,T:10,rate:6.75,freq:2,liq:0,spr:.004,
+  under:'State budget projects: toll roads, campuses, and ports (asset to be leased)',flow:['Investors','SPV (Perusahaan Penerbit SBSN)','Government'],
+  note:'Institutions buy it by auction; it trades actively in the secondary market. The longest series here, so it moves most with yields.',pri:{type:'auction',months:[1,7]}},
+ {id:'SR',tk:'SR-027',grp:'Sovereign (SBSN)',name:'Sukuk Ritel, 3 years, fixed',akad:'Ijarah asset to be leased',fam:'asset',sharia:true,trade:'after',tradeFrom:4,T:3,rate:6.40,freq:12,liq:.40,spr:.006,
+  under:'State property (BMN) and budget projects',flow:['Retail investors','SPV (Perusahaan Penerbit SBSN)','Government'],
+  note:'Sold to individuals from Rp1 million through distribution partners. It can be sold on the secondary market only after the holding period (from month 4).',pri:{type:'book',months:[1,2],cap:2000}},
+ {id:'ST',tk:'ST-015G',grp:'Sovereign (SBSN)',name:'Green Sukuk Tabungan, 2 years, floating',akad:'Wakalah',fam:'agency',sharia:true,trade:false,T:2,rate:6.30,freq:12,liq:0,spr:0,floating:true,
+  under:'Pool of green projects managed by the government as wakil',flow:['Retail investors','SPV','Government (wakil)'],
+  note:'Non-tradable savings sukuk. Ujrah floats with BI-Rate (BI-Rate + 0.55%, floor 6.30%). An early redemption window opens in month 8 for up to half your holding, at par.',pri:{type:'book',months:[3,4],cap:2000}},
+ {id:'CWLS',tk:'SWR-005',grp:'Sovereign (SBSN)',name:'Cash Waqf Linked Sukuk, 2 years',akad:'Wakalah (temporary waqf)',fam:'agency',sharia:true,trade:false,T:2,rate:5.95,freq:12,liq:0,spr:0,social:true,
+  under:'Your temporary cash waqf, placed in SBSN by the nazhir',flow:['Wakif (you)','Nazhir / BWI','SBSN, ujrah to social programmes'],
+  note:'Your principal is a temporary waqf: it comes back to you at maturity, but every ujrah payment goes to social programmes (clinics, scholarships). Personal return: zero. Impact: real.',pri:{type:'book',months:[5,6],cap:1000}},
+ {id:'TOLN',tk:'TOLN-27',grp:'Corporate',name:'Sukuk Ijarah PT Tol Nusantara I, 5 years',akad:'Ijarah',fam:'asset',sharia:true,trade:true,T:5,rate:7.25,freq:4,rating:'AA',spr:.008,
+  under:'Usufruct of a toll road section (asset based: the road stays on the company balance sheet)',flow:['Investors','Trustee / SPV','PT Tol Nusantara'],
+  note:'Fixed ujrah from leasing the right to operate the toll road. Rated by Pefindo. Asset based: if the company fails you rely on its credit, not on the road.'},
+ {id:'AGRO',tk:'AGRO-26',grp:'Corporate',name:'Sukuk Mudharabah PT Agro Lestari, 3 years',akad:'Mudharabah',fam:'equity',sharia:true,trade:true,T:3,rate:9.0,freq:4,rating:'A-',spr:.010,mudh:true,
+  under:'Palm-oil replanting project; holders are rabb al-mal, the company is mudarib',flow:['Investors (rabb al-mal)','Trustee','PT Agro Lestari (mudarib)'],
+  note:'Indicative return 9% a year, but holders receive 70% of actual project profit. A bad harvest lowers what you get; only negligence by the mudarib lets you claim your capital back.'},
+ {id:'MFS',tk:'MFS-26',grp:'Corporate',name:'Sukuk Murabahah PT Multi Finance Syariah, 2 years',akad:'Murabahah',fam:'debt',sharia:true,trade:false,T:2,rate:7.90,freq:4,rating:'A',spr:0,
+  under:'Receivables from vehicle murabahah sold to customers',flow:['Investors','SPV','PT MF Syariah (buyer on deferred payment)'],
+  note:'Debt based: once the goods are sold, the sukuk is a receivable. It can only change hands at face value, so it is not traded before maturity.',pri:{type:'book',months:[2,3],cap:1500}},
+ {id:'KBTN',tk:'KBTN-27',grp:'Conventional (regular account only)',name:'Obligasi PT Kota Beton 8.60%, 5 years',akad:'Loan with interest',fam:'none',sharia:false,trade:true,T:5,rate:8.60,freq:4,rating:'A',spr:.008,
+  under:'None. A plain debt of the company',flow:['Bondholders (lenders)','Trustee','PT Kota Beton (borrower)'],
+  note:'A conventional bond. The coupon is interest on a loan, which is riba. It is here so you can compare, and it is blocked in a sharia account.'}
+];
+SEC.forEach(s=>s.kind=s.rating?'corp':'sov');
+const BYID=Object.fromEntries(SEC.map(s=>[s.id,s]));
+let PMSG=null,S=null,USER=null,timer=null,paused=false,speed=1,sel='PBS',side='buy',lastSig='',QOPEN=false;
+let rng=1;function R(){let a=(rng=(rng+0x6D2B79F5)|0);a=Math.imul(a^a>>>15,a|1);a^=a+Math.imul(a^a>>>7,a|61);return((a^a>>>14)>>>0)/4294967296}
+function gauss(){let u=0,v=0;while(!u)u=R();while(!v)v=R();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const rp=n=>'Rp'+Math.round(n).toLocaleString('id-ID');
+const rpm=n=>'Rp'+(n/1e6).toLocaleString('id-ID',{maximumFractionDigits:1})+' jt';
+const pct=(n,d=2)=>(n>=0?'':'−')+Math.abs(n).toFixed(d)+'%';
+const sgn=(n,d=2)=>(n>0?'+':n<0?'−':'')+Math.abs(n).toFixed(d);
+
+/* ---------------- market model ---------------- */
+function fresh(){const seed=(Date.now()^Math.floor(Math.random()*1e9))>>>0;rng=seed;
+ const pick=(a,w)=>{let r=R(),k=0;for(;k<w.length-1;k++){if(r<w[k])break;r-=w[k]}return a[k]};
+ const plan={bi2:pick(['cut','hold','hike'],[.45,.3,.25]),toln:pick(['up','down'],[.5,.5]),agro:pick(['bad','good'],[.6,.4]),bi6:pick(['cut','hold','hike'],[.35,.35,.3]),bi9:pick(['hike','hold','cut'],[.4,.35,.25])};
+ plan.restr=plan.agro==='bad'&&R()<.55;
+ const st={seed,v:1,m:1,t:0,bi:4.75,bi0:4.75,rp:0,crp:0,noise:{},rating:{TOLN:'AA',AGRO:'A-',MFS:'A',KBTN:'A'},agroExp:1,agroReal:1,agroSusp:0,
+  mode:'sh',cash:START,h:{},inc:0,waqf:0,tax:0,fees:0,news:[],journal:[],hist:{},q:{},plan,over:false,
+  stats:{trades:0,convBuys:0,blocked:0,panic:0,auction:0,auctionWon:0,primary:{},stRedeem:0,soldBadNews:0},att:null,regAt:new Date().toLocaleString('id-ID')};
+ SEC.forEach(s=>{st.noise[s.id]=0;st.hist[s.id]=[]});
+ return st}
+function remT(s){return Math.max(0,s.T-(S.m-1+S.t/TICKS)/12)}
+function curve(T){const pass=Math.max(.5,1-.05*T);return S.bi0+(S.bi-S.bi0)*pass+.9+.12*Math.min(T,10)+S.rp}
+function yieldOf(s){const T=Math.max(.25,remT(s));let y=curve(T)+(s.liq||0)+(S.noise[s.id]||0);
+ if(s.kind!=='sov'&&s.rating)y+=RATING_SP[S.rating[s.id]]+S.crp;return y}
+function rateOf(s){if(s.floating)return Math.max(6.30,S.bi+.55);if(s.mudh)return S.agroSusp>0?0:9.0*S.agroExp;return s.rate}
+function monthsPer(s){return 12/s.freq}
+function elapsedIn(s){const done=(S.m-1)+S.t/TICKS;const per=monthsPer(s);return done-Math.floor(done/per+1e-9)*per}
+function priceOf(s){/* per 100 of face */const per=monthsPer(s),el=elapsedIn(s),tau=(per-el)/per;const y=yieldOf(s)/100/s.freq;
+ const c=(s.mudh?9.0*S.agroExp:rateOf(s))/s.freq;const n=Math.max(1,Math.round(remT(s)*s.freq+ (1-tau)));let pv=0;
+ for(let i=0;i<n;i++)pv+=c/Math.pow(1+y,tau+i);pv+=100/Math.pow(1+y,tau+n-1);
+ const acc=c*(1-tau);const fixedPar=s.trade===false;const clean=fixedPar?100:pv-acc;
+ return {clean,dirty:clean+acc,acc,y:yieldOf(s)}}
+function quote(s){const p=priceOf(s);return {...p,bid:p.clean*(1-s.spr/2),ask:p.clean*(1+s.spr/2)}}
+function tradableNow(s){if(s.trade===true)return true;if(s.trade==='after')return S.m>=s.tradeFrom;return false}
+function available(s){return s.sharia||S.mode==='reg'}
+function holdVal(id){const h=S.h[id];if(!h)return 0;const s=BYID[id],p=priceOf(s);return h.nom*(s.trade===false?100:p.clean+p.acc)/100}
+function mv(){let v=0;for(const id in S.h)v+=holdVal(id);return v}
+function equity(){return S.cash+mv()}
+function primOpen(s){return s.pri&&s.pri.months.includes(S.m)&&!S.over}
+
+/* ---------------- journal & news ---------------- */
+function when(){return 'M'+S.m+' · d'+String(1+Math.floor(S.t/TICKS*21)).padStart(2,'0')}
+function news(t){S.news.unshift({at:when(),t});S.news=S.news.slice(0,60)}
+function jour(type,text,akad,riba){S.journal.unshift({at:when(),type,text,akad,riba:!!riba});S.journal=S.journal.slice(0,200)}
+function save(){if(!USER||!S)return;try{localStorage.setItem('ifl-sukuk-'+USER.nim,JSON.stringify(S))}catch(e){}}
+function msg(t,k){const m=$('o-msg');m.className='msg show '+k;m.innerHTML=t}
+
+/* ---------------- trading ---------------- */
+function addHold(id,nom,cost){const h=S.h[id]||(S.h[id]={nom:0,cost:0});h.nom+=nom;h.cost+=cost}
+function trade(){const s=BYID[sel];const nom=Math.floor(+$('o-nom').value||0)*1e6;if(S.over)return msg('The year has closed.','err');
+ if(!available(s)){S.stats.blocked++;jour('Blocked',`Tried to ${side} ${s.tk}`,'A conventional bond is a loan with interest (riba). The sharia account does not offer it.',true);save();render();return msg('Blocked: <b>'+s.tk+'</b> is a conventional bond. A sharia account cannot hold riba-based securities.','fatwa')}
+ if(nom<1e6)return msg('Enter a nominal of at least Rp1 million.','err');
+ if(!tradableNow(s)){S.stats.blocked++;
+   const why=s.fam==='debt'?'It is a murabahah sukuk: what you hold is a receivable. Selling a debt for more or less than its face value is riba (bay\' al-dayn), so it cannot be traded before maturity.':s.id==='ST'?'Sukuk Tabungan is non-tradable by design. Use the early redemption window in month 8 instead.':s.id==='CWLS'?'CWLS is a temporary waqf. It cannot be traded; the principal returns to you at maturity.':'SR can be traded only after its holding period, from month '+s.tradeFrom+'.';
+   jour('Blocked',`${side==='buy'?'Buy':'Sell'} ${s.tk} on the secondary market`,why);save();render();
+   return msg('Not tradable on the secondary market. '+why+(s.pri?' Buy it in the primary offer (months '+s.pri.months.join(' and ')+').':''),'fatwa')}
+ const q=quote(s);
+ if(side==='buy'){const cost=nom*(q.ask+q.acc)/100,fee=cost*FEE;if(cost+fee>S.cash)return msg('Not enough cash. You need '+rp(cost+fee)+'.','err');
+  S.cash-=cost+fee;S.fees+=fee;addHold(s.id,nom,nom*q.ask/100);S.stats.trades++;if(!s.sharia)S.stats.convBuys++;
+  jour('Buy',`${rpm(nom)} ${s.tk} at ${q.ask.toFixed(2)} + accrued ${q.acc.toFixed(2)}`,s.sharia?`Bay' (sale) of a share in the ${s.akad.toLowerCase()} asset; your broker acts under wakalah.`:'You became a lender at interest. This is riba.',!s.sharia);
+  msg(`Bought ${rpm(nom)} ${s.tk} at ${q.ask.toFixed(2)}% plus accrued ${q.acc.toFixed(2)}%. Paid ${rp(cost+fee)}.`,'ok')}
+ else{const h=S.h[s.id];if(!h||h.nom<nom)return msg('You hold only '+rpm(h?h.nom:0)+' of '+s.tk+'.','err');
+  const got=nom*(q.bid+q.acc)/100,fee=got*FEE,basis=h.cost*nom/h.nom;S.cash+=got-fee;S.fees+=fee;h.cost-=basis;h.nom-=nom;if(h.nom<1)delete S.h[s.id];S.stats.trades++;
+  const pl=nom*q.bid/100-basis;
+  if(s.id==='AGRO'&&S.q.agroBadAt&&S.m-S.q.agroBadAt<=1&&pl<0)S.stats.soldBadNews++;
+  if(pl<0&&S.q.shockAt&&S.m-S.q.shockAt<=0)S.stats.panic++;
+  jour('Sell',`${rpm(nom)} ${s.tk} at ${q.bid.toFixed(2)} (P/L ${rp(pl)})`,s.sharia?'Bay\' of your share in the asset to another investor, at the market price.':'Sale of an interest-bearing debt claim.',!s.sharia);
+  msg(`Sold ${rpm(nom)} ${s.tk} at ${q.bid.toFixed(2)}%. Received ${rp(got-fee)}. P/L ${rp(pl)}.`,pl>=0?'ok':'err')}
+ save();render()}
+
+/* ---------------- primary market ---------------- */
+function primOrder(id){const s=BYID[id];if(!primOpen(s))return;const inp=$('p-nom'),nom=Math.floor(+inp.value||0)*1e6;const pm=$('p-msg');
+ const say=(t,k)=>{PMSG={id,m:S.m,t,k};const el=$('p-msg');if(el){el.className='msg show '+k;el.innerHTML=t}};
+ if(nom<1e6)return say('Enter at least Rp1 million.','err');
+ if(S.stats.primary[id+S.m])return say('You already placed an order in this window.','err');
+ if(s.pri.type==='auction'){const by=+$('p-y').value;if(!(by>3&&by<12))return say('Enter a bid yield, for example 6.85.','err');
+  const cut=yieldOf(s)+(-.04+R()*.12);const p=(()=>{const per=monthsPer(s),el=elapsedIn(s),tau=(per-el)/per,y=by/100/s.freq,c=s.rate/s.freq,n=Math.max(1,Math.round(remT(s)*s.freq+(1-tau)));let pv=0;for(let i=0;i<n;i++)pv+=c/Math.pow(1+y,tau+i);pv+=100/Math.pow(1+y,tau+n-1);return {clean:pv-c*(1-tau),acc:c*(1-tau)}})();
+  S.stats.auction++;S.stats.primary[id+S.m]=true;
+  if(by>cut+1e-9){news(`PBS-041 auction: cut-off yield ${cut.toFixed(3)}%. Your bid at ${by.toFixed(3)}% was above the cut-off and was rejected.`);jour('Auction',`Bid ${rpm(nom)} PBS-041 at ${by.toFixed(3)}%: rejected (cut-off ${cut.toFixed(3)}%)`,'No sale took place.');save();render();return say(`Rejected. The cut-off yield was ${cut.toFixed(3)}%; you asked for more.`,'err')}
+  const cost=nom*(p.clean+p.acc)/100;if(cost>S.cash)return say('Not enough cash: '+rp(cost)+' needed.','err');
+  S.cash-=cost;addHold(id,nom,nom*p.clean/100);S.stats.auctionWon++;
+  news(`PBS-041 auction: cut-off ${cut.toFixed(3)}%. You won ${rpm(nom)} at your own yield of ${by.toFixed(3)}% (price ${p.clean.toFixed(2)}).`);
+  jour('Auction',`Won ${rpm(nom)} PBS-041 at ${by.toFixed(3)}%, price ${p.clean.toFixed(2)}`,'Bay\' of a share in the ijarah asset from the SPV; multiple-price auction.');
+  if(!S.q.auction)ask('auction');save();render();return say(`Won at your yield of ${by.toFixed(3)}% (cut-off ${cut.toFixed(3)}%). Price ${p.clean.toFixed(2)}%.`,'ok')}
+ const cap=(s.pri.cap||1000)*1e6;if(nom>cap)return say('The maximum per investor is '+rpm(cap)+'.','err');
+ if(nom>S.cash)return say('Not enough cash.','err');
+ const fill=s.id==='MFS'?(.7+R()*.3):1;const got=Math.floor(nom*fill/1e6)*1e6;S.cash-=got;addHold(id,got,got);S.stats.primary[id+S.m]=true;
+ const ak={SR:'Bay\' of a share in the ijarah asset at par; you become a lessor through the SPV.',ST:'Wakalah: you appoint the government, through the SPV, as your agent to invest in green projects.',CWLS:'Temporary waqf (waqf muaqqat): the nazhir places your waqf in SBSN; ujrah goes to beneficiaries.',MFS:'Bay\' of a share in a murabahah receivable at face value.'}[id];
+ jour('Primary',`${s.tk}: ordered ${rpm(nom)}, allotted ${rpm(got)} at par`,ak);news(`${s.tk} offer: you were allotted ${rpm(got)}${fill<1?' (oversubscribed, scaled back)':''}.`);
+ if(id==='CWLS'&&!S.q.cwls)ask('cwls');
+ save();render();say(`Allotted ${rpm(got)} at par.`,'ok')}
+function stRedeem(){const h=S.h.ST;if(!h||S.m!==8||S.stats.stRedeem)return;const amt=Math.floor(h.nom/2/1e6)*1e6;if(amt<1e6)return;h.nom-=amt;h.cost-=amt;S.cash+=amt;S.stats.stRedeem=amt;
+ jour('Redeem',`Early redemption of ${rpm(amt)} ST-015G at par`,'The government buys back part of the wakalah certificates at face value, as agreed.');news(`You redeemed ${rpm(amt)} of ST-015G at par.`);save();render()}
+
+/* ---------------- time ---------------- */
+function payIncome(){/* at month end */const m=S.m;
+ for(const id in S.h){const s=BYID[id],h=S.h[id];if(m%monthsPer(s)!==0)continue;
+  let r=rateOf(s);if(s.mudh&&S.agroSusp<=0)r=9.0*S.agroReal;const amt=h.nom*r/100/s.freq;if(amt<=0){if(s.mudh)news('AGRO-26: no distribution this quarter (suspended).');continue}
+  if(s.social){S.waqf+=amt;jour('Ujrah',`${rp(amt)} from SWR-005 sent to waqf programmes`,'The ujrah belongs to the waqf beneficiaries, not to the wakif.');continue}
+  const tax=amt*TAX;S.cash+=amt-tax;S.inc+=amt-tax;S.tax+=tax;
+  jour('Income',`${s.tk}: ${s.mudh?'profit share':'ujrah'} ${rp(amt)} less tax ${rp(tax)}`,s.mudh?'Mudharabah profit share at the agreed nisbah (70% to holders).':s.sharia?(s.fam==='agency'?'Wakalah return passed on by the agent.':'Ujrah (rent) from the leased asset.'):'Interest on a loan.',!s.sharia)}
+ if(S.agroSusp>0&&m%3===0)S.agroSusp--}
+function maturityCheck(){/* nothing matures inside 12 months except none */}
+function endMonth(){payIncome();if(S.m>=MONTHS){S.over=true;S.t=TICKS;logAttempt();save();render();showEnd();return}
+ S.m++;S.t=0;fireMonth();snap();save();render()}
+function tick(){if(!S||S.over||paused||QOPEN)return;S.t++;
+ for(const s of SEC){const n=S.noise[s.id]||0;S.noise[s.id]=n*.92+gauss()*(s.kind==='sov'?.006:.01)}
+ if(S.t%3===0)snap()
+ if(S.t>=TICKS)endMonth();else render()}
+function snap(){for(const s of SEC){const h=S.hist[s.id];h.push(+priceOf(s).clean.toFixed(3));if(h.length>800)h.shift()}}
+function restart(){clearInterval(timer);timer=setInterval(tick,Math.round(TICK_MS/speed))}
+
+/* ---------------- events ---------------- */
+function biMove(kind,label){const old=S.bi;if(kind==='cut')S.bi-=.25;if(kind==='hike')S.bi+=.25;
+ news(`${label}: Bank Indonesia ${kind==='cut'?'cuts':kind==='hike'?'raises':'holds'} BI-Rate ${kind==='hold'?'at':'to'} ${S.bi.toFixed(2)}%${kind==='hold'?'':' (from '+old.toFixed(2)+'%)'}.`)}
+function fireMonth(){const m=S.m,P=S.plan;
+ if(m===2){biMove(P.bi2,'Board of Governors meeting');ask('bi')}
+ if(m===3){if(P.toln==='up'){S.rating.TOLN='AA+';news('Pefindo upgrades PT Tol Nusantara to idAA+ on strong traffic growth.')}else{S.rating.TOLN='AA-';news('Pefindo downgrades PT Tol Nusantara to idAA− after a costly new section; leverage rises.')}ask('rating');news('ST-015G (green Sukuk Tabungan) offer opens this month and next.')}
+ if(m===4){if(P.agro==='bad'){S.agroExp=.55;S.agroReal=.45;S.rating.AGRO='BBB';S.q.agroBadAt=4;news('PT Agro Lestari: El Niño cuts the harvest; quarterly project profit falls about 55%. Pefindo lowers AGRO-26 to idBBB.')}
+  else{S.agroExp=1.12;S.agroReal=1.15;S.rating.AGRO='A';news('PT Agro Lestari: record crude palm oil prices; project profit 15% above plan. Outlook raised to idA.')}
+  ask('agro');news('SR-027 holding period ends: it can now trade on the secondary market.')}
+ if(m===5){S.rp+=.35;S.crp+=.45;S.q.shockAt=5;news('Global risk-off: US Treasury yields jump; foreign investors sell SBSN. Yields rise across the curve and corporate spreads widen.');ask('riskoff');news('SWR-005 Cash Waqf Linked Sukuk offer opens this month and next.')}
+ if(m===6){biMove(P.bi6,'Board of Governors meeting');ask('st')}
+ if(m===7){S.crp+=.15;news('AAOIFI consults on tighter rules for purchase undertakings at face value. Asset-based corporate sukuk widen slightly. A new PBS-041 auction is held this month.');ask('aaoifi')}
+ if(m===8){if(P.restr){S.agroSusp=2;S.rating.AGRO='CCC';S.agroExp=.35;news('PT Agro Lestari asks sukukholders to suspend two quarterly distributions and extend maturity. Pefindo cuts to idCCC.');ask('restr')}
+  else news('PT Agro Lestari reports a normal quarter.');news('ST-015G early redemption window is open this month: redeem up to half of your holding at par.')}
+ if(m===9){biMove(P.bi9,'Inflation surprise; Board of Governors meeting')}
+ if(m===10){ask('murabahah');news('Toll traffic data released; PT Tol Nusantara on track.')}
+ if(m===11){S.rp=Math.max(0,S.rp-.25);S.crp=Math.max(0,S.crp-.3);if(P.restr){S.rating.AGRO='BBB';S.agroExp=.6;news('AGRO-26 restructuring approved by a sukukholder vote; distributions resume next year. Pefindo raises to idBBB.')}news('Year-end inflows: foreign investors return; yields ease.')}
+ if(m===12)news('Final month. Your portfolio will be valued at the close of month 12.')}
+
+/* ---------------- questions ---------------- */
+const QS={
+ auction:()=>({k:'Primary market',t:'You just won a PBS auction',b:'SBSN auctions are multiple price: every winning bidder pays the price implied by their own yield.',q:'You bid 6.80% and the cut-off was 6.86%. At what yield are your sukuk priced?',o:[['At your own 6.80%',1],['At the cut-off 6.86%',0],['At the average of all bids',0]],w:'Multiple price: you get your own yield. Bidding too low wins but costs you; bidding too high gets rejected.'}),
+ bi:()=>{const P=S.plan.bi2;return P==='hold'?{k:'BI-Rate',t:'BI holds the rate',b:'BI-Rate is unchanged this month, yet your sukuk prices still move a little every day.',q:'Why does a fixed-ujrah sukuk price move when BI holds?',o:[['Market yields also react to inflation, global rates, and risk appetite',1],['Because the ujrah is reset every day',0],['It should not move; this is a bug',0]],w:'Price discounts fixed ujrah at the market yield, and that yield moves for many reasons besides BI-Rate.'}:
+  {k:'BI-Rate',t:P==='cut'?'BI cuts the rate':'BI raises the rate',b:`BI-Rate is now ${S.bi.toFixed(2)}%. Look at PBS-041 (10 years) and SR-027 (3 years).`,q:`What happens to the price of the 10-year PBS-041?`,o:[[P==='cut'?'It rises, more than SR-027':'It falls, more than SR-027',1],[P==='cut'?'It falls, because ujrah is now too low':'It rises, because new sukuk pay more',0],['Nothing: ujrah is fixed, so the price is fixed',0]],w:'Fixed ujrah is discounted at the new market yield. The longer the remaining term (duration), the bigger the move.'}},
+ rating:()=>S.plan.toln==='up'?{k:'Rating',t:'TOLN-27 upgraded',b:'The toll-road sukuk was upgraded. Its ujrah did not change.',q:'Why did its price rise?',o:[['Investors now require a lower yield for its credit risk',1],['The ujrah was raised by the trustee',0],['The SPV bought the road outright',0]],w:'Better credit means a lower spread, so the same ujrah is worth more.'}:
+  {k:'Rating',t:'TOLN-27 downgraded',b:'TOLN-27 is asset based: the toll road stays on PT Tol Nusantara\'s balance sheet.',q:'As a holder, what is your main risk now?',o:[['The company\'s credit: you would rank with its unsecured creditors',1],['None: the SPV owns the road and will sell it',0],['Only traffic volume on the road',0]],w:'In an asset-based sukuk the rating follows the obligor. Only an asset-backed (true sale) sukuk would give you recourse to the road.'},
+ agro:()=>S.plan.agro==='bad'?{k:'Mudharabah',t:'AGRO profit falls 55%',b:'The next distribution on AGRO-26 will be 70% of a much smaller profit.',q:'Who bears this drop in return?',o:[['The holders, as rabb al-mal, unless the mudarib was negligent',1],['The company, which must top up to the indicative 9%',0],['The trustee, from its own funds',0]],w:'In mudharabah the capital provider bears business loss; the mudarib loses its effort. Guaranteeing 9% would turn it into a loan.'}:
+  {k:'Mudharabah',t:'AGRO profit beats plan',b:'Holders will receive more than the indicative 9% this quarter.',q:'May the company keep part of the surplus to smooth weaker quarters?',o:[['Yes, through a reserve agreed in advance in the prospectus',1],['No, every rupiah must be paid out immediately',0],['Yes, by lending it to holders later',0]],w:'A profit equalisation reserve agreed upfront is accepted; covering shortfalls with loans to holders is not (AAOIFI 2008).'},
+ riskoff:()=>({k:'Global shock',t:'Foreign investors sell SBSN',b:'Yields rise about 35 basis points and corporate spreads widen.',q:'Which holding loses most value?',o:[['PBS-041, the longest series',1],['ST-015G',0],['SR-027, because retail investors panic',0]],w:'Long duration means large price moves. ST is non-tradable and redeemable at par, so its value does not move.'}),
+ st:()=>({k:'Floating ujrah',t:'BI meets again',b:`BI-Rate is ${S.bi.toFixed(2)}%. ST-015G pays BI-Rate + 0.55% with a floor of 6.30%.`,q:'What is the ST-015G ujrah now?',o:[[Math.max(6.30,S.bi+.55).toFixed(2)+'%',1],['Still 6.30%, it never changes',0],[(S.bi+.55+.25).toFixed(2)+'%',0]],w:'The ujrah resets with BI-Rate but never falls below the floor. Its price stays at par because it is redeemed, not traded.'}),
+ aaoifi:()=>({k:'Standards',t:'AAOIFI and purchase undertakings',b:'Many sukuk promise that the obligor will buy the asset back at face value at maturity.',q:'Why do scholars object to that promise for mudharabah, musyarakah, and wakalah sukuk?',o:[['It moves asset risk to the obligor, making the sukuk behave like a bond',1],['It makes the sukuk too hard to trade',0],['It creates gharar in the rent',0]],w:'AAOIFI (2008) allows buy-back at market or net value for these structures; face value is allowed only for the lessee in ijarah.'}),
+ restr:()=>({k:'Restructuring',t:'AGRO asks to suspend payments',b:'The company proposes skipping two distributions and extending maturity. Holders will vote.',q:'When can holders demand their capital back from the mudarib itself?',o:[['Only if the mudarib was negligent or breached the terms (ta\'addi or taqsir)',1],['Always: capital is guaranteed in sukuk',0],['Never: holders must accept any proposal',0]],w:'Compare Dana Gas (2017): disputes over mudharabah sukuk become legal fights. Read the terms before you buy.'}),
+ murabahah:()=>({k:'Debt sukuk',t:'You need cash',b:'A friend offers to buy your MFS-26 murabahah sukuk at 98% of face value.',q:'Why can\'t you sell it at 98?',o:[['It is a receivable; selling debt below face value is riba',1],['Because the exchange is closed this month',0],['Because the lot is too small',0]],w:'Debt-based sukuk can change hands only at par. This is why the market prefers ijarah and wakalah.'}),
+ cwls:()=>({k:'Social finance',t:'Your waqf is working',b:'You placed cash in SWR-005, a Cash Waqf Linked Sukuk.',q:'Who receives the monthly ujrah?',o:[['The waqf beneficiaries, through the nazhir',1],['You, after tax',0],['The government, as a fee',0]],w:'Your principal is a temporary waqf and returns to you at maturity; the ujrah is the waqf\'s benefit.'})
+};
+function ask(id){if(S.q[id]!==undefined)return;const Q=QS[id]();S.q[id]=null;QOPEN=true;
+ $('q-k').textContent=Q.k;$('q-t').textContent=Q.t;$('q-body').textContent=Q.b;$('q-q').textContent=Q.q;$('q-why').hidden=true;$('q-ok').hidden=true;
+ const opts=Q.o.map(x=>x).sort(()=>R()-.5);$('q-opts').innerHTML='';
+ opts.forEach(([t,ok])=>{const b=document.createElement('button');b.type='button';b.textContent=t;b.onclick=()=>{if(S.q[id]!==null)return;S.q[id]=ok?1:0;
+  [...$('q-opts').children].forEach((x,i)=>{x.disabled=true;if(opts[i][1])x.className='right';else if(x===b)x.className='wrong'});
+  $('q-why').textContent=(ok?'Correct. ':'Not quite. ')+Q.w;$('q-why').hidden=false;$('q-ok').hidden=false;$('q-ok').focus();
+  jour('Question',Q.t+': '+(ok?'correct':'wrong'),Q.w);save()};$('q-opts').appendChild(b)});
+ $('quiz').hidden=false}
+$('q-ok').onclick=()=>{$('quiz').hidden=true;QOPEN=false;render()};
+
+/* ---------------- scoring ---------------- */
+function grade(){const ret=(equity()-START)/START*100;const st=S.stats;
+ const retPts=ret<0?Math.max(0,10+ret*2):ret<6?10+ret/6*20:Math.min(40,30+(ret-6)/3*10);
+ const qs=Object.keys(QS).filter(k=>S.q[k]!==undefined);const right=qs.reduce((a,k)=>a+(S.q[k]||0),0);const asked=Math.max(qs.length,1);
+ const quizPts=30*right/asked;
+ let cond=30;const held=Object.keys(S.h).length;
+ if(st.convBuys)cond-=12;if(st.panic)cond-=4;if(st.soldBadNews)cond-=3;if(held<2)cond-=6;else if(held<3)cond-=2;if(st.trades>30)cond-=4;cond=Math.max(0,cond);
+ const sc=Math.round(retPts+quizPts+cond);
+ return {ret,retPts,quizPts,cond,sc,right,asked:qs.length,held}}
+function behaviour(){const st=S.stats,b=[];const held=Object.keys(S.h);
+ b.push(held.length>=4?'Diversified: you ended with '+held.length+' series.':held.length>=2?'Moderately diversified ('+held.length+' series).':'Concentrated: one series or none at the end.');
+ if(st.auction)b.push(`Primary-market player: ${st.auction} auction bid(s), ${st.auctionWon} won.`);
+ if(S.h.CWLS||S.waqf>0)b.push('Social investor: your CWLS sent '+rp(S.waqf)+' to waqf programmes.');
+ if(st.convBuys)b.push('Bought a conventional bond in the regular account: '+st.convBuys+' time(s).');
+ if(st.panic)b.push('Sold at a loss in the month of the global shock (possible panic selling).');
+ if(st.soldBadNews)b.push('Sold AGRO-26 at a loss right after the bad harvest news.');
+ if(st.blocked)b.push(`Tested the rules: ${st.blocked} blocked order(s) on non-tradable or non-sharia series.`);
+ b.push(st.trades>30?'Active trader: '+st.trades+' secondary trades (high churn).':st.trades<=3?'Buy-and-hold: '+st.trades+' secondary trades.':'Balanced trading: '+st.trades+' secondary trades.');
+ return b}
+function feedback(g){const f=[];if(g.ret<5.5)f.push('Your return was below simply holding SR-027 (about 5.8% after tax). Compare what you did with that benchmark.');
+ if(!S.stats.auction)f.push('Try the PBS auction next time: it is where institutions buy at their own yield.');
+ if(S.plan.agro==='bad'&&S.h.AGRO)f.push('You held AGRO-26 through a bad year. That is what risk sharing feels like: it is the price of a mudharabah return.');
+ if(g.right<g.asked)f.push('Review the questions you missed in the akad journal.');
+ if(S.stats.convBuys)f.push('The conventional bond paid more because it carries interest. Ask whether the extra yield was worth the riba.');
+ if(!f.length)f.push('Strong year. Next time, test a different strategy: long duration before rate cuts, or more equity-based sukuk.');return f}
+function attempts(){try{return JSON.parse(localStorage.getItem(ATT)||'[]')}catch(e){return []}}
+function logAttempt(){if(!USER)return;const g=grade(),l=attempts().filter(a=>!(a.nim===USER.nim&&a.n===S.att));if(!S.att)S.att=l.filter(a=>a.nim===USER.nim).reduce((x,a)=>Math.max(x,a.n),0)+1;
+ l.push({nim:USER.nim,n:S.att,sc:g.sc,ret:+g.ret.toFixed(2),at:new Date().toLocaleString('id-ID')});try{localStorage.setItem(ATT,JSON.stringify(l))}catch(e){}}
+function reportHTML(){const g=grade();return `<div class="report"><div class="t"><h3>${esc(USER.name)} · ${esc(USER.nim)}</h3><span class="mono">${S.over?'Final':'Month '+S.m+' of 12 (in progress)'}</span></div>
+ <div><span>Score</span><b>${g.sc} / 100</b></div><div><span>Return</span><b class="${g.ret>=0?'up':'down'}">${sgn(g.ret)}%</b></div><div><span>Total value</span><b>${rpm(equity())}</b></div>
+ <div><span>Return points</span><b>${g.retPts.toFixed(1)} / 40</b></div><div><span>Questions</span><b>${g.right}/${g.asked} · ${g.quizPts.toFixed(1)} / 30</b></div><div><span>Conduct</span><b>${g.cond} / 30</b></div>
+ <div><span>Income after tax</span><b>${rpm(S.inc)}</b></div><div><span>To waqf</span><b>${rpm(S.waqf)}</b></div></div>
+ <h3 style="font-size:1rem;margin:6px 0">Behaviour profile</h3><ul class="fb">${behaviour().map(x=>'<li>'+esc(x)+'</li>').join('')}</ul>
+ <h3 style="font-size:1rem;margin:6px 0">What to try next</h3><ul class="fb">${feedback(g).map(x=>'<li>'+esc(x)+'</li>').join('')}</ul>`}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function pdf(){const J=window.jspdf&&window.jspdf.jsPDF;if(!J){alertMsg('PDF library is still loading. Try again in a moment.');return}
+ const d=new J({unit:'mm',format:'a4'}),g=grade();let y=18;const line=(t,sz=10,b=false,col=[20,35,58])=>{d.setFont('helvetica',b?'bold':'normal');d.setFontSize(sz);d.setTextColor(...col);for(const l of d.splitTextToSize(t,180)){if(y>280){d.addPage();y=18}d.text(l,15,y);y+=sz*.48}y+=1.5};
+ d.setFillColor(16,36,63);d.rect(0,0,210,12,'F');d.setTextColor(242,194,0);d.setFontSize(9);d.text('LEARN ISLAMIC FINTECH WITH TAZKIA · BURSA SUKUK SIMULATOR',15,8);
+ line('Sukuk Market Report',18,true);line(`${USER.name} · ${USER.nim} · attempt ${S.att||1} · ${new Date().toLocaleString('id-ID')}`,10,false,[93,107,128]);y+=2;
+ line(`Score ${g.sc}/100   Return ${sgn(g.ret)}%   Total value ${rpm(equity())}`,13,true);
+ line(`Return ${g.retPts.toFixed(1)}/40 · Questions ${g.right}/${g.asked} = ${g.quizPts.toFixed(1)}/30 · Conduct ${g.cond}/30`,10);
+ line(`Income after tax ${rpm(S.inc)} · Tax ${rpm(S.tax)} · Fees ${rpm(S.fees)} · Ujrah to waqf ${rpm(S.waqf)}`,10);y+=2;
+ line('Holdings at the close',12,true);for(const id in S.h){const s=BYID[id];line(`${s.tk} (${s.akad}): nominal ${rpm(S.h[id].nom)}, value ${rpm(holdVal(id))}`,10)}if(!Object.keys(S.h).length)line('None',10);y+=2;
+ line('Market path',12,true);line(`BI-Rate ended at ${S.bi.toFixed(2)}%. TOLN rating ${S.rating.TOLN}; AGRO harvest ${S.plan.agro}${S.plan.restr?' with restructuring':''}.`,10);y+=2;
+ line('Behaviour profile',12,true);behaviour().forEach(x=>line('• '+x,10));y+=2;line('What to try next',12,true);feedback(g).forEach(x=>line('• '+x,10));y+=2;
+ line('Akad journal (latest first)',12,true);S.journal.slice(0,40).forEach(j=>line(`${j.at}  ${j.type}: ${j.text}. ${j.akad}`,8.5,false,j.riba?[196,54,43]:[20,35,58]));
+ d.save(`Bursa Sukuk - ${USER.nim} - attempt ${S.att||1}.pdf`)}
+function alertMsg(t){msg(t,'err')}
+function showEnd(){$('end-report').innerHTML=reportHTML();$('endwrap').hidden=false;clearInterval(timer)}
+
+/* ---------------- render ---------------- */
+function render(){if(!S)return;const tot=equity();
+ $('month').textContent=S.over?'Year closed':'Month '+S.m+' of '+MONTHS;$('phase').textContent=S.over?'Closed':paused?'Paused':'Open';$('phase').className='phase'+(S.over||paused?' off':'');
+ $('prog').style.width=(S.t/TICKS*100)+'%';$('i-bi').textContent=S.bi.toFixed(2)+'%';$('i-y10').textContent=curve(9.5).toFixed(2)+'%';$('i-sp').textContent='+'+(RATING_SP.AA+S.crp).toFixed(2)+'% (AA)';
+ $('who-n').textContent=USER.name;$('who-i').textContent=USER.nim;
+ $('m-sh').setAttribute('aria-pressed',S.mode==='sh');$('m-reg').setAttribute('aria-pressed',S.mode==='reg');$('acc-type').textContent=S.mode==='sh'?'Sharia':'Regular';
+ $('mode-note').textContent=S.mode==='sh'?'Sharia account: only sukuk are available. Switch to a regular account to see a conventional bond next to them; every choice is recorded in your behaviour profile.':'Regular account: the conventional bond KBTN-27 is now open to you. It pays more because it is a loan with interest. Your choice is recorded.';
+ // macro strip
+ const nextEv={1:'PBS auction and SR-027 offer are open now',2:'BI Board meeting this month',3:'Rating review; ST offer opens',4:'AGRO harvest report; SR tradable',5:'Watch global markets; CWLS offer',6:'BI Board meeting',7:'Second PBS auction',8:'ST early redemption window',9:'Inflation data and BI meeting',10:'Quarterly coupons',11:'Year-end flows',12:'Final valuation at month end'}[S.m];
+ $('macro').innerHTML=`<div class="m"><span>Total value</span><b>${rpm(tot)}</b><small class="${tot>=START?'up':'down'}">${sgn((tot-START)/START*100)}%</small></div><div class="m"><span>Cash</span><b>${rpm(S.cash)}</b></div><div class="m"><span>SBSN 3Y / 10Y</span><b>${curve(3).toFixed(2)} / ${curve(9.5).toFixed(2)}</b></div><div class="m"><span>ST ujrah now</span><b>${Math.max(6.3,S.bi+.55).toFixed(2)}%</b></div><div class="m next"><span>This month</span><b>${S.over?'The year has closed. See your report.':nextEv}</b></div>`;
+ // watchlist
+ let grp='',wl='';for(const s of SEC){if(s.grp!==grp){grp=s.grp;wl+=`<li class="grp">${grp}</li>`}
+  const q=priceOf(s),h=S.hist[s.id],first=h[0]||q.clean,ch=q.clean-first;
+  const bd=(s.sharia?'':'<span class="badge b-no">RIBA</span>')+(primOpen(s)?'<span class="badge b-pri">OFFER</span>':'')+(!tradableNow(s)?'<span class="badge b-lock">'+(s.trade==='after'?'HOLD':'NO TRADE')+'</span>':'');
+  wl+=`<li><button type="button" data-sel="${s.id}" aria-current="${sel===s.id}"><span><span class="tk">${s.tk}</span>${bd}<div class="nm">${s.akad} · ${s.rating?'id'+S.rating[s.id]:'sovereign'}</div></span><span><div class="px">${s.trade===false?'100.00':q.clean.toFixed(2)}</div><div class="ch ${ch>0.005?'up':ch<-0.005?'down':'flat'}">${s.trade===false?'at par':sgn(ch)}</div></span></button></li>`}
+ if(wl!==lastSig){$('wl').innerHTML=wl;lastSig=wl}
+ // tape
+ $('tape').innerHTML=(SEC.map(s=>{const q=priceOf(s),h=S.hist[s.id],ch=q.clean-(h[0]||q.clean);return `<span>${s.tk} ${s.trade===false?'100.00':q.clean.toFixed(2)} <i class="${ch>=0?'up':'down'}">${sgn(ch)}</i> · y ${q.y.toFixed(2)}%</span>`}).join('')).repeat(2);
+ // desk
+ const s=BYID[sel],q=quote(s);$('d-tk').textContent=s.tk;$('d-nm').textContent=s.name;
+ $('d-badges').innerHTML=(s.sharia?'<span class="badge b-sh">SHARIA</span>':'<span class="badge b-no">CONVENTIONAL</span>')+`<span class="badge b-sh" style="background:var(--surface2);color:var(--ink)">${s.akad}</span>`+(!tradableNow(s)?'<span class="badge b-lock">'+(s.trade==='after'?'tradable from month '+s.tradeFrom:'not tradable')+'</span>':'');
+ const first=S.hist[s.id][0]||q.clean;$('d-px').textContent=s.trade===false?'100.00':q.clean.toFixed(2);$('d-ch').innerHTML=s.trade===false?'redeemed at par, not traded':`<span class="${q.clean>=first?'up':'down'}">${sgn(q.clean-first)} since month 1</span> · yield ${q.y.toFixed(2)}%`;
+ const st=[['Ujrah / return',(s.mudh?'≈':'')+rateOf(s).toFixed(2)+'%'+(s.floating?' float':'')],['Yield',s.trade===false?'–':q.y.toFixed(2)+'%'],['Bid / Ask',tradableNow(s)?q.bid.toFixed(2)+' / '+q.ask.toFixed(2):'–'],['Accrued',q.acc.toFixed(3)],['Remaining',remT(s).toFixed(2)+' yrs'],['Pays',{12:'monthly',4:'quarterly',2:'semiannual'}[s.freq]],['Rating',s.rating?'id'+S.rating[s.id]:'sovereign']];
+ $('d-stats').innerHTML=st.map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join('');
+ const cols=['#1b3a63','#10243f','#1e6e4b'];$('d-struct').innerHTML=`<h3>How ${s.tk} works</h3><div class="flow"><b style="background:${cols[0]}">${s.flow[0]}</b><span class="a">⇄</span><b style="background:${cols[1]}">${s.flow[1]}</b><span class="a">⇄</span><b style="background:${s.sharia?cols[2]:'#b23a2e'}">${s.flow[2]}</b></div><p><b>Underlying:</b> ${s.under}</p><p>${s.note}</p>`;
+ // primary
+ let pri='';if(primOpen(s)){const done=S.stats.primary[s.id+S.m];
+  if(s.pri.type==='auction')pri=`<div class="primary"><h3>PBS-041 auction is open (month ${S.m})</h3><p>Bid a yield. Market yield now: <b class="mono">${yieldOf(s).toFixed(3)}%</b>. The cut-off is set by all bids; at or below it you win at your own yield.</p><div class="row"><div class="field"><label for="p-nom">Nominal (Rp million)</label><input type="number" id="p-nom" min="1" value="100"></div><div class="field"><label for="p-y">Bid yield (%)</label><input type="number" id="p-y" step="0.01" value="${yieldOf(s).toFixed(2)}"></div><button type="button" class="go navy" data-prim="${s.id}" ${done?'disabled':''}>${done?'Bid submitted':'Submit bid'}</button></div><div class="msg" id="p-msg"></div></div>`;
+  else pri=`<div class="primary"><h3>${s.tk} offer is open (months ${s.pri.months.join(' and ')})</h3><p>Priced at par (100%). ${s.id==='CWLS'?'Your principal returns at maturity; every ujrah goes to waqf programmes.':s.id==='MFS'?'Book building may scale back your order if oversubscribed.':'Maximum '+rpm((s.pri.cap||1000)*1e6)+' per investor.'}</p><div class="row"><div class="field"><label for="p-nom">Nominal (Rp million)</label><input type="number" id="p-nom" min="1" value="${s.id==='CWLS'?25:100}"></div><button type="button" class="go navy" data-prim="${s.id}" ${done?'disabled':''}>${done?'Order placed':'Place order'}</button></div><div class="msg" id="p-msg"></div></div>`}
+ else if(s.pri&&!S.over){const nx=s.pri.months.find(m=>m>S.m);if(nx)pri=`<div class="primary" style="border-style:solid;background:var(--surface2)"><p>Primary offer for ${s.tk}: month ${s.pri.months.join(' and ')}. ${nx?'Next window: month '+nx+'.':''}</p></div>`}
+ const dp=$('d-primary'),dsig=s.id+S.m+(S.stats.primary[s.id+S.m]?1:0)+S.over;if(dp.dataset.sig!==dsig){dp.innerHTML=pri;dp.dataset.sig=dsig;const el=$('p-msg');if(el&&PMSG&&PMSG.id===s.id&&PMSG.m===S.m){el.className='msg show '+PMSG.k;el.innerHTML=PMSG.t}}
+ // ticket
+ $('s-buy').setAttribute('aria-pressed',side==='buy');$('s-sell').setAttribute('aria-pressed',side==='sell');
+ const go=$('o-go');go.className='go'+(side==='sell'?' sell':'');go.textContent=(side==='buy'?'Buy ':'Sell ')+s.tk;
+ const nom=Math.floor(+$('o-nom').value||0)*1e6;
+ $('o-est').innerHTML=!tradableNow(s)?'Not tradable on the secondary market right now.':side==='buy'?`Pay ≈ <b>${rp(nom*(q.ask+q.acc)/100*(1+FEE))}</b> (ask ${q.ask.toFixed(2)} + accrued ${q.acc.toFixed(2)} + fee)`:`Receive ≈ <b>${rp(nom*(q.bid+q.acc)/100*(1-FEE))}</b> (bid ${q.bid.toFixed(2)} + accrued ${q.acc.toFixed(2)} − fee)`;
+ drawChart();
+ // account
+ $('a-cash').textContent=rp(S.cash);$('a-mv').textContent=rp(mv());$('a-inc').textContent=rp(S.inc);$('a-waqf').textContent=rp(S.waqf);$('a-tot').textContent=rp(tot);
+ const r=(tot-START)/START*100;$('a-ret').innerHTML=`<span class="${r>=0?'up':'down'}">${sgn(r)}%</span>`;
+ const hs=Object.keys(S.h);$('a-hold').innerHTML=hs.length?hs.map(id=>{const h=S.h[id],v=holdVal(id),s2=BYID[id],p=priceOf(s2),pl=h.nom*(s2.trade===false?100:p.clean)/100-h.cost;return `<tr><td>${s2.tk}</td><td>${rpm(h.nom)}</td><td>${rpm(v)}</td><td class="${pl>=0?'up':'down'}">${(pl>=0?'+':'−')+rpm(Math.abs(pl)).replace('Rp','')}</td></tr>`}).join(''):'<tr><td colspan="4" class="empty">No sukuk yet. Start with the PBS auction or the SR-027 offer.</td></tr>';
+ $('a-redeem').innerHTML=S.m===8&&S.h.ST&&!S.stats.stRedeem&&!S.over?`<div class="redeem"><p><b>ST-015G early redemption is open.</b> Redeem up to half (${rpm(Math.floor(S.h.ST.nom/2/1e6)*1e6)}) at par.</p><button type="button" id="b-red">Redeem half at par</button></div>`:'';
+ const br=$('b-red');if(br)br.onclick=stRedeem;
+ // tabs
+ $('news').innerHTML=S.news.map(n=>`<li><time>${n.at}</time>${esc(n.t)}</li>`).join('');
+ $('journal').innerHTML=S.journal.map(j=>`<li><span class="mono" style="font-size:.78rem;color:var(--muted)">${j.at}<br><b>${j.type}</b></span><span>${esc(j.text)}<span class="akad${j.riba?' riba':''}">${esc(j.akad)}</span></span></li>`).join('')||'<li class="empty">Your transactions and the akad behind each one appear here.</li>';
+ if(!$('tab-report').hidden)renderReport();
+ $('b-next').disabled=S.over;$('b-pause').textContent=paused?'Resume':'Pause';$('b-pause').setAttribute('aria-pressed',paused)}
+function renderReport(){$('report').innerHTML=reportHTML();const l=attempts().filter(a=>a.nim===USER.nim);
+ $('att').innerHTML=l.length?`<table><thead><tr><th>Attempt</th><th>Score</th><th>Return</th><th>Finished</th></tr></thead><tbody>${l.map(a=>`<tr><td>${a.n}</td><td class="mono">${a.sc}</td><td class="mono">${sgn(a.ret)}%</td><td>${a.at}</td></tr>`).join('')}</tbody></table>`:'<p style="padding:8px 12px;margin:0;color:var(--muted)">Finished attempts are listed here.</p>'}
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+function drawChart(){const c=$('chart'),x=c.getContext('2d'),W=c.width=c.clientWidth*devicePixelRatio,H=c.height=200*devicePixelRatio;x.clearRect(0,0,W,H);
+ const s=BYID[sel],h=S.hist[s.id];if(s.trade===false||h.length<2){x.fillStyle=css('--muted');x.font=`${13*devicePixelRatio}px sans-serif`;x.fillText(s.trade===false?'Not traded: valued at par (100%) until maturity.':'Price history builds as the market runs…',12*devicePixelRatio,40*devicePixelRatio);return}
+ let lo=Math.min(...h),hi=Math.max(...h);if(hi-lo<.5){const m=(hi+lo)/2;lo=m-.25;hi=m+.25}const pd=8*devicePixelRatio;
+ x.strokeStyle=css('--line');x.lineWidth=1;x.fillStyle=css('--muted');x.font=`${10*devicePixelRatio}px monospace`;
+ for(let i=0;i<=3;i++){const y=pd+(H-2*pd)*i/3;x.beginPath();x.moveTo(0,y);x.lineTo(W,y);x.stroke();x.fillText((hi-(hi-lo)*i/3).toFixed(2),4,y-2)}
+ const per=TICKS/3;for(let m=1;m<S.m;m++){const xx=(m*per)/(h.length-1)*W;if(xx<W){x.strokeStyle=css('--line');x.setLineDash([3,4]);x.beginPath();x.moveTo(xx,0);x.lineTo(xx,H);x.stroke();x.setLineDash([])}}
+ x.strokeStyle=h[h.length-1]>=h[0]?css('--up'):css('--down');x.lineWidth=2*devicePixelRatio;x.beginPath();h.forEach((v,i)=>{const X=i/(h.length-1)*W,Y=pd+(hi-v)/(hi-lo)*(H-2*pd);i?x.lineTo(X,Y):x.moveTo(X,Y)});x.stroke()}
+
+/* ---------------- wiring ---------------- */
+document.addEventListener('click',e=>{const b=e.target.closest('[data-sel]');if(b){sel=b.dataset.sel;$('o-msg').className='msg';lastSig='';render();return}
+ const p=e.target.closest('[data-prim]');if(p){primOrder(p.dataset.prim);return}
+ const n=e.target.closest('[data-nom]');if(n){const s=BYID[sel],q=quote(s);let v=n.dataset.nom;if(v==='max'){v=side==='buy'?Math.floor(S.cash/((q.ask+q.acc)/100*(1+FEE))/1e6):Math.floor(((S.h[sel]||{}).nom||0)/1e6)}$('o-nom').value=Math.max(0,v);render();return}
+ const sp=e.target.closest('[data-speed]');if(sp){speed=+sp.dataset.speed;document.querySelectorAll('[data-speed]').forEach(x=>x.setAttribute('aria-pressed',x===sp));restart();return}
+ const tb=e.target.closest('[data-tab]');if(tb){document.querySelectorAll('[data-tab]').forEach(x=>x.setAttribute('aria-selected',x===tb));['news','journal','learn','report'].forEach(k=>$('tab-'+k).hidden=k!==tb.dataset.tab);render()}});
+$('o-nom').addEventListener('input',render);
+$('s-buy').onclick=()=>{side='buy';render()};$('s-sell').onclick=()=>{side='sell';render()};
+$('o-go').onclick=trade;
+$('b-pause').onclick=()=>{paused=!paused;render()};
+$('b-next').onclick=()=>{if(S&&!S.over&&!QOPEN){S.t=TICKS;endMonth()}};
+$('m-sh').onclick=()=>{S.mode='sh';if(!BYID[sel].sharia)sel='PBS';lastSig='';jour('Account','Switched to a sharia account','Only sharia-compliant securities are offered.');save();render()};
+$('m-reg').onclick=()=>{if(S.mode!=='reg'){S.mode='reg';lastSig='';jour('Account','Switched to a regular account','Conventional bonds are now visible. Interest-bearing debt is riba.',true);save();render()}};
+$('b-pdf').onclick=pdf;$('e-pdf').onclick=pdf;$('e-close').onclick=()=>{$('endwrap').hidden=true;document.querySelector('[data-tab="report"]').click()};
+$('b-reset').onclick=()=>{S=fresh();S.att=attempts().filter(a=>a.nim===USER.nim).reduce((x,a)=>Math.max(x,a.n),0)+1;sel='PBS';lastSig='';$('endwrap').hidden=true;fireMonth0();save();render();restart()};
+function fireMonth0(){snap();news('Market opens. You hold Rp500 million in cash. The PBS-041 auction and the SR-027 retail offer are open this month.');news('Tip: click a series in Market watch to see how it works and whether it can trade.')}
+function users(){try{return JSON.parse(localStorage.getItem(UKEY)||'[]')}catch(e){return []}}
+function login(u){USER=u;const l=users().filter(x=>x.nim!==u.nim);l.unshift(u);try{localStorage.setItem(UKEY,JSON.stringify(l.slice(0,8)))}catch(e){}
+ let st=null;try{st=JSON.parse(localStorage.getItem('ifl-sukuk-'+u.nim)||'null')}catch(e){}
+ if(st&&st.v===1){S=st;rng=(S.seed+S.m*7919+S.t)>>>0}else{S=fresh();S.att=attempts().filter(a=>a.nim===u.nim).reduce((x,a)=>Math.max(x,a.n),0)+1;fireMonth0()}
+ $('reg').hidden=true;save();render();if(S.over){showEnd();return}restart();const pend=Object.keys(QS).find(k=>S.q[k]===null);if(pend){delete S.q[pend];ask(pend)}}
+$('r-form').onsubmit=e=>{e.preventDefault();const name=$('r-name').value.trim(),nim=$('r-nim').value.trim().replace(/\s+/g,'');if(!name||!nim)return;login({name,nim})};
+(function init(){const l=users();$('r-known').innerHTML=l.length?'<p style="font-size:.85rem;color:var(--muted)">Continue as</p>'+l.map((u,i)=>`<button type="button" data-u="${i}"><span>${esc(u.name)}</span><span>${esc(u.nim)}</span></button>`).join(''):'';
+ $('r-known').onclick=e=>{const b=e.target.closest('[data-u]');if(b)login(l[+b.dataset.u])};$('reg').hidden=false;$('r-name').focus()})();
+window.addEventListener('resize',()=>S&&drawChart());
+document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
+</script>
+</body>
+</html>
