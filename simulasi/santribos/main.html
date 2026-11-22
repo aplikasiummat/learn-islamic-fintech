@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="../../assets/logo-tazkia.png">
+<title>Kantor AI SantriBos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"></noscript>
+<style>
+/* Kantor AI SantriBos: lantai kantor (kiri), layar toko (kanan), meja Bos (bawah). Hijau santri + oranye semangat. */
+:root{
+  --bg:#f3f5f1; --surface:#fff; --surface2:#f7f9f5; --ink:#18241c; --muted:#5f6d63; --line:#dde5dc;
+  --green:#0f7a4a; --green2:#0b5c37; --green-soft:#e1f3e8; --orange:#f47b20; --orange-soft:#ffeedd;
+  --blue:#2459c4; --blue-soft:#e4ecfb; --purple:#7b3fc4; --purple-soft:#efe6fb; --red:#d0453b; --red-soft:#fde5e2; --gold:#c9960a; --gold-soft:#fbf1d0;
+  --font:"Plus Jakarta Sans","Segoe UI",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1612; --surface:#15211a; --surface2:#1a2920; --ink:#e6efe8; --muted:#9db0a3; --line:#2a3d31;
+  --green:#3cc684; --green2:#2aa56b; --green-soft:#12301f; --orange:#ff9a4d; --orange-soft:#3a2614; --blue:#7fa6f0; --blue-soft:#17243d;
+  --purple:#b48cf0; --purple-soft:#271a3a; --red:#ff7b70; --red-soft:#3d1a18; --gold:#f2c200; --gold-soft:#3a3010; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1612; --surface:#15211a; --surface2:#1a2920; --ink:#e6efe8; --muted:#9db0a3; --line:#2a3d31;
+  --green:#3cc684; --green2:#2aa56b; --green-soft:#12301f; --orange:#ff9a4d; --orange-soft:#3a2614; --blue:#7fa6f0; --blue-soft:#17243d;
+  --purple:#b48cf0; --purple-soft:#271a3a; --red:#ff7b70; --red-soft:#3d1a18; --gold:#f2c200; --gold-soft:#3a3010; color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14.5px;line-height:1.45}
+.wrap{max-width:1480px;margin:0 auto;padding:0 14px 28px}
+h1,h2,h3{margin:0}
+button,input{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.top{background:linear-gradient(90deg,#0b5c37,#0f7a4a);color:#fff;margin-inline:-14px;padding:10px 14px;display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;position:sticky;top:0;z-index:10}
+.logo{display:flex;align-items:center;gap:10px}.logo .mk{width:38px;height:38px;border-radius:10px;background:#fff;color:#0b5c37;display:grid;place-items:center;font-weight:800;font-size:1.05rem}
+.logo h1{font-size:1.1rem;font-weight:800}.logo small{display:block;color:#cfe9da;font-size:.76rem}.logo a{color:#ffd9b8}
+.clock{display:flex;align-items:center;gap:8px}.clock b{font-family:var(--mono);font-size:1.25rem}.day{background:rgba(255,255,255,.15);border-radius:6px;padding:2px 8px;font-weight:700;font-size:.8rem}
+.kpi{display:flex;gap:16px;flex-wrap:wrap}.kpi div{display:flex;flex-direction:column;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:#cfe9da}.kpi b{font-family:var(--mono);font-size:1rem;color:#fff;letter-spacing:0;text-transform:none}
+.ctrl{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}.ctrl button{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);color:#fff;border-radius:7px;padding:5px 10px;font-weight:700;font-size:.85rem}
+.ctrl button[aria-pressed="true"]{background:#fff;color:#0b5c37}
+.layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;margin-top:14px}
+@media (max-width:1100px){.layout{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;min-width:0}
+.panel>header{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.panel>header h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}
+/* office floor */
+.floor{position:relative;padding:12px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;background:repeating-linear-gradient(0deg,transparent 0 31px,rgba(15,122,74,.05) 31px 32px),repeating-linear-gradient(90deg,transparent 0 31px,rgba(15,122,74,.05) 31px 32px)}
+@media (max-width:700px){.floor{grid-template-columns:minmax(0,1fr)}}
+.zone{border:2px dashed var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;background:color-mix(in srgb,var(--surface) 82%,transparent)}
+.zone h3{font-size:.74rem;text-transform:uppercase;letter-spacing:.1em;font-weight:800;display:flex;align-items:center;gap:6px}
+.zone.mk{border-color:color-mix(in srgb,var(--purple) 45%,transparent)}.zone.mk h3{color:var(--purple)}
+.zone.fn{border-color:color-mix(in srgb,var(--blue) 45%,transparent)}.zone.fn h3{color:var(--blue)}
+.zone.op{border-color:color-mix(in srgb,var(--orange) 50%,transparent)}.zone.op h3{color:var(--orange)}
+.zone.ld{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;align-items:stretch;border-color:color-mix(in srgb,var(--green) 50%,transparent)}.zone.ld h3{color:var(--green);width:100%}
+.desk{position:relative;display:grid;grid-template-columns:46px minmax(0,1fr);gap:4px 10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface);min-height:74px;transition:box-shadow .3s,border-color .3s}
+.zone.ld .desk{flex:1 1 260px}
+.desk.busy{border-color:var(--green);box-shadow:0 0 0 3px var(--green-soft)}
+.av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:1.45rem;grid-row:span 2;position:relative;background:var(--surface2);border:2px solid var(--line)}
+.desk.busy .av{animation:bob 1.2s ease-in-out infinite;border-color:var(--green)}
+@keyframes bob{50%{transform:translateY(-3px)}}
+.av .ai{position:absolute;bottom:-4px;right:-6px;font-size:.58rem;font-weight:800;background:var(--orange);color:#fff;border-radius:4px;padding:0 3px}
+.nm{font-weight:800;font-size:.92rem;line-height:1.15}.nm small{display:block;font-weight:600;color:var(--muted);font-size:.74rem}
+.stt{grid-column:2;font-size:.78rem;color:var(--muted);min-height:1.2em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.desk.busy .stt{color:var(--green);font-weight:700}
+.bar{grid-column:1/-1;height:4px;border-radius:2px;background:var(--surface2);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--green);transition:width .25s linear}
+.cnt{position:absolute;top:6px;right:8px;font-family:var(--mono);font-size:.7rem;color:var(--muted)}
+.q{position:absolute;top:-8px;left:38px;background:var(--orange);color:#fff;font-size:.66rem;font-weight:800;border-radius:9px;padding:0 6px}
+.typing{display:inline-flex;gap:2px;margin-left:4px}.typing i{width:4px;height:4px;border-radius:50%;background:currentColor;animation:ty 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes ty{50%{opacity:.2}}
+.desk.boss{background:var(--gold-soft);border-color:var(--gold)}
+.fly{position:fixed;z-index:40;font-size:1.2rem;pointer-events:none;transition:transform .7s cubic-bezier(.4,.1,.3,1),opacity .7s;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
+/* activity log */
+.log{list-style:none;margin:0;padding:0;max-height:260px;overflow:auto;font-size:.84rem}
+.log li{display:grid;grid-template-columns:48px minmax(0,1fr);gap:8px;padding:6px 12px;border-bottom:1px solid var(--line)}.log li time{font-family:var(--mono);color:var(--muted);font-size:.75rem}
+.log li.new{animation:hl 1.4s ease-out}@keyframes hl{from{background:var(--green-soft)}to{background:transparent}}
+.tag{display:inline-block;font-size:.66rem;font-weight:800;padding:0 5px;border-radius:4px;margin-right:4px;vertical-align:1px}
+.t-mk{background:var(--purple-soft);color:var(--purple)}.t-fn{background:var(--blue-soft);color:var(--blue)}.t-op{background:var(--orange-soft);color:var(--orange)}.t-ld{background:var(--green-soft);color:var(--green)}.t-bos{background:var(--gold-soft);color:var(--gold)}.t-cust{background:var(--surface2);color:var(--muted)}
+/* screens */
+.tabs{display:flex;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.bell{border:0;border-radius:7px;padding:5px 10px;font-weight:800;font-size:.85rem;background:#ffd9b8;color:#7a3a00}.bell.on{background:#f47b20;color:#fff;animation:pulse 1.2s infinite}@keyframes pulse{50%{opacity:.75}}
+.tabs button{border:0;background:transparent;padding:10px 12px;font-weight:800;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--green);border-bottom-color:var(--green)}
+.tabs button .n{font-size:.68rem;background:var(--red);color:#fff;border-radius:9px;padding:0 5px;margin-left:4px}
+.scr{padding:12px;max-height:520px;overflow:auto}
+.chat{display:grid;grid-template-columns:200px minmax(0,1fr);gap:10px;min-height:380px}
+@media (max-width:600px){.chat{grid-template-columns:minmax(0,1fr)}}
+.threads{list-style:none;margin:0;padding:0;border-right:1px solid var(--line);max-height:480px;overflow:auto}
+.threads button{width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:transparent;padding:8px;display:flex;flex-direction:column;gap:1px}
+.threads button[aria-current="true"]{background:var(--green-soft)}.threads b{font-size:.86rem}.threads span{font-size:.74rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.threads .unread b::after{content:" ●";color:var(--red)}
+.msgs{display:flex;flex-direction:column;gap:6px;max-height:480px;overflow:auto;padding-right:4px}
+.msg{max-width:82%;padding:7px 10px;border-radius:12px;font-size:.86rem}
+.msg.in{align-self:flex-start;background:var(--surface2);border:1px solid var(--line);border-bottom-left-radius:3px}
+.msg.out{align-self:flex-end;background:var(--green-soft);border-bottom-right-radius:3px}
+.msg small{display:block;font-size:.68rem;color:var(--muted);margin-top:2px}
+.tbl{width:100%;border-collapse:collapse;font-size:.83rem}.tbl th{text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:6px;border-bottom:1px solid var(--line);vertical-align:top}.tbl td.n{text-align:right;font-family:var(--mono)}
+.chip{display:inline-block;font-size:.7rem;font-weight:800;border-radius:10px;padding:1px 8px;white-space:nowrap}
+.c-wait{background:var(--gold-soft);color:var(--gold)}.c-paid{background:var(--blue-soft);color:var(--blue)}.c-ship{background:var(--orange-soft);color:var(--orange)}.c-done{background:var(--green-soft);color:var(--green)}.c-ask{background:var(--purple-soft);color:var(--purple)}
+.posts{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.post{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.post .pic{height:120px;display:grid;place-items:center;font-size:2.6rem;color:#fff;position:relative}
+.post .pic .pf{position:absolute;top:6px;left:6px;font-size:.66rem;font-weight:800;background:rgba(0,0,0,.45);border-radius:5px;padding:1px 6px}
+.post .bd{padding:8px 10px;font-size:.8rem}.post .st{display:flex;gap:10px;font-family:var(--mono);font-size:.76rem;color:var(--muted);margin-top:4px}
+.fin{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:10px}
+.fin div{background:var(--surface2);border-radius:8px;padding:8px 10px}.fin span{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800}.fin b{font-family:var(--mono)}
+/* boss desk */
+.bossbar{margin-top:14px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:14px}
+@media (max-width:900px){.bossbar{grid-template-columns:minmax(0,1fr)}}
+.cmd{display:flex;gap:8px;padding:12px}.cmd input{flex:1;min-width:0;border:2px solid var(--green);border-radius:10px;padding:10px 12px;background:var(--surface)}
+.cmd button{border:0;border-radius:10px;background:var(--green);color:#fff;font-weight:800;padding:0 16px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 12px}.chips button{border:1px solid var(--line);background:var(--surface2);border-radius:999px;padding:3px 10px;font-size:.78rem}
+.chips button:hover{border-color:var(--green)}
+.inbox{list-style:none;margin:0;padding:0;max-height:300px;overflow:auto}
+.inbox li{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.inbox li b{font-size:.88rem}.inbox p{margin:0;font-size:.84rem;color:var(--muted);white-space:pre-line}
+.inbox .acts{display:flex;gap:6px;flex-wrap:wrap}.inbox .acts button{border:0;border-radius:7px;padding:5px 10px;font-weight:800;font-size:.8rem;color:#fff}
+.a-ok{background:var(--green)}.a-rev{background:var(--gold)}.a-no{background:var(--red)}
+.empty{color:var(--muted);font-size:.86rem;padding:12px}
+.toast{position:fixed;right:16px;bottom:16px;z-index:50;max-width:380px;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--orange);border-radius:10px;padding:10px 14px;box-shadow:0 10px 30px rgba(0,0,0,.2);font-size:.88rem}
+.overlay{position:fixed;inset:0;z-index:60;background:rgba(5,20,12,.7);display:flex;align-items:flex-start;justify-content:center;padding:5vh 14px;overflow:auto}
+.card{width:100%;max-width:680px;background:var(--surface);border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.card .hd{background:var(--green2);color:#fff;padding:14px 18px}.card .hd small{color:#ffd9b8;font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:.72rem}.card .hd h2{font-size:1.25rem;margin-top:2px}
+.card .bd{padding:14px 18px;display:flex;flex-direction:column;gap:10px}.card .bd p{margin:0}
+.doc{white-space:pre-wrap;font-family:var(--mono);font-size:.8rem;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:10px;max-height:380px;overflow:auto}
+.go{border:0;border-radius:10px;padding:10px 16px;font-weight:800;background:var(--green);color:#fff}.go.ghost{background:var(--surface2);color:var(--ink);border:1px solid var(--line)}
+.train{list-style:none;margin:0;padding:0;font-size:.82rem}.train li{padding:6px 12px;border-bottom:1px solid var(--line)}
+.foot{margin-top:12px;font-size:.78rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo"><span class="mk">SB</span><div><h1>Kantor AI SantriBos</h1><small><a href="./">← Tentang simulasi</a> · toko perlengkapan santri di marketplace · Anda Bos-nya</small></div></div>
+    <div class="clock"><span class="day" id="dayl">Hari 1</span><b id="clk">07:55</b></div>
+    <div class="kpi">
+      <div>Transaksi<b id="k-tx">0</b></div><div>Omzet<b id="k-om">Rp0</b></div><div>Laba bersih<b id="k-lb">Rp0</b></div><div>Chat dibalas<b id="k-ch">0</b></div><div>Views konten<b id="k-vw">0</b></div>
+    </div>
+    <div class="ctrl"><button type="button" class="bell" id="b-bell" title="Lompat ke Persetujuan Bos">🔔 <span id="bell-n">0</span></button><button type="button" id="b-play" aria-pressed="false">▶ Mulai hari</button><button type="button" data-sp="1" aria-pressed="true">1×</button><button type="button" data-sp="2" aria-pressed="false">2×</button><button type="button" data-sp="4" aria-pressed="false">4×</button><button type="button" id="b-auto" aria-pressed="false" title="Bos menyetujui otomatis">Autopilot</button></div>
+  </header>
+
+  <div class="layout">
+    <section class="panel">
+      <header><h2>Lantai kantor · karyawan AI bekerja</h2><span class="mono" style="font-size:.78rem;color:var(--muted)" id="busy">0 sedang bekerja</span></header>
+      <div class="floor" id="floor">
+        <div class="zone ld"><h3>👑 Pimpinan</h3><div class="desk boss" id="d-bos"></div><div class="desk" id="d-lead"></div></div>
+        <div class="zone mk"><h3>📣 Tim Marketing</h3><div class="desk" id="d-konten"></div><div class="desk" id="d-editor"></div></div>
+        <div class="zone fn"><h3>💰 Tim Keuangan</h3><div class="desk" id="d-akunting"></div><div class="desk" id="d-finance"></div></div>
+        <div class="zone op"><h3>📦 Tim Operasional</h3><div class="desk" id="d-admin"></div><div class="desk" id="d-cs"></div></div>
+      </div>
+      <header style="border-top:1px solid var(--line)"><h2>Catatan aktivitas</h2><span style="font-size:.76rem;color:var(--muted)">semua kerja agen tercatat di sini</span></header>
+      <ul class="log" id="log"></ul>
+    </section>
+
+    <section class="panel">
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="chat" aria-selected="true">💬 Chat pembeli<span class="n" id="n-chat" hidden></span></button>
+        <button type="button" role="tab" data-tab="order" aria-selected="false">🛒 Pesanan toko</button>
+        <button type="button" role="tab" data-tab="sosmed" aria-selected="false">📱 IG & TikTok</button>
+        <button type="button" role="tab" data-tab="fin" aria-selected="false">📒 Keuangan</button>
+        <button type="button" role="tab" data-tab="prod" aria-selected="false">🏷️ Produk</button>
+      </div>
+      <div class="scr" id="scr"></div>
+    </section>
+  </div>
+
+  <div class="bossbar">
+    <section class="panel">
+      <header><h2>Meja Bos · beri perintah apa saja</h2><span style="font-size:.76rem;color:var(--muted)">pakai @nama atau tulis bebas; Team Leader yang membagi tugas</span></header>
+      <form class="cmd" id="cmd-f"><input id="cmd" autocomplete="off" placeholder="Contoh: @konten bikin video TikTok promo sarung, atau: kasih diskon 10% untuk peci hari ini"><button type="submit">Kirim</button></form>
+      <div class="chips" id="chips"></div>
+      <header style="border-top:1px solid var(--line)"><h2>Ruang pelatihan</h2><span style="font-size:.76rem;color:var(--muted)">koreksi Bos jadi panduan agen</span></header>
+      <ul class="train" id="train"></ul>
+    </section>
+    <section class="panel" id="inbox-p">
+      <header><h2>Persetujuan Bos</h2><span class="mono" id="inbox-n" style="font-size:.8rem">0 menunggu</span></header>
+      <ul class="inbox" id="inbox"></ul>
+    </section>
+  </div>
+  <p class="foot">Simulasi edukasi Learn Islamic Fintech with Tazkia untuk materi "Siap Jadi Bos Dengan AI". SantriBos, pembeli, dan angka adalah fiktif; nama marketplace hanya contoh, bukan tampilan resmi. Karyawan AI di sini berjalan dengan alur dan templat, untuk menunjukkan cara kerja kantor AI. <button type="button" class="go ghost" style="padding:3px 10px;font-size:.78rem" id="b-reset">Ulang dari Hari 1</button></p>
+</div>
+<div class="toast" id="toast" hidden></div>
+<div class="overlay" id="ov" hidden><div class="card"><div class="hd"><small id="ov-k"></small><h2 id="ov-t"></h2></div><div class="bd" id="ov-b"></div></div></div>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const rp=n=>(n<0?'−':'')+'Rp'+Math.round(Math.abs(n)).toLocaleString('id-ID');
+const KEY='santribos-v1',FEE=.06;
+// ---------------- team
+const AG={
+ bos:{nm:'Anda',role:'Bos SantriBos',em:'🧕',team:'bos',human:true},
+ lead:{nm:'Lina',role:'Team Leader · membagi & memantau tugas',em:'👩‍💼',team:'ld'},
+ konten:{nm:'Raka',role:'Konten · ide, caption, naskah',em:'✍️',team:'mk'},
+ editor:{nm:'Nisa',role:'Editor · video, desain, posting',em:'🎬',team:'mk'},
+ akunting:{nm:'Aldi',role:'Akunting · jurnal & laporan',em:'📊',team:'fn'},
+ finance:{nm:'Fikri',role:'Finance · verifikasi dana & harga',em:'💳',team:'fn'},
+ admin:{nm:'Tari',role:'Admin Toko · listing, stok, kirim',em:'📦',team:'op'},
+ cs:{nm:'Sari',role:'CS · balas chat & pesanan masuk',em:'💬',team:'op'}};
+const ALIAS={leader:'lead',lead:'lead',lina:'lead',tl:'lead',konten:'konten',content:'konten',raka:'konten',copywriter:'konten',editor:'editor',nisa:'editor',desain:'editor',designer:'editor',
+ akunting:'akunting',akuntan:'akunting',aldi:'akunting',finance:'finance',keuangan:'finance',fikri:'finance',admin:'admin',toko:'admin',tari:'admin',cs:'cs',sari:'cs',chat:'cs',marketing:'konten',operasional:'admin'};
+// ---------------- products
+const PROD0=[
+ {id:'PCI',nm:'Peci Rajut Hitam',em:'🧢',harga:45000,hpp:25000,stok:40},
+ {id:'SRG',nm:'Sarung Tenun Santri',em:'🧣',harga:135000,hpp:85000,stok:40},
+ {id:'KKO',nm:'Koko Kurta Putih',em:'👕',harga:159000,hpp:95000,stok:25},
+ {id:'PRF',nm:'Parfum Non-Alkohol 35 ml',em:'🌸',harga:69000,hpp:32000,stok:50},
+ {id:'TSB',nm:'Tasbih Kayu Kaukah',em:'📿',harga:39000,hpp:18000,stok:60},
+ {id:'BKU',nm:'Buku Catatan Ngaji (3 buku)',em:'📓',harga:29000,hpp:14000,stok:80}];
+// ---------------- day 1 script: 10 transactions
+const DAY1=[
+ {at:40,cust:'Bu Aisyah',kota:'Bekasi',ask:'Assalamualaikum kak, peci rajut hitam ukuran 56 ready?',items:[['PCI',2]]},
+ {at:75,cust:'Hafidz',kota:'Bogor',ask:'Sarung tenunnya motif apa aja kak? Yang hijau ada?',items:[['SRG',1]]},
+ {at:110,cust:'Ustadzah Nur',kota:'Depok',ask:'Parfumnya halal kak? Ada alkoholnya nggak?',items:[['PRF',3]],halal:true},
+ {at:150,cust:'Rizky',kota:'Jakarta',ask:'Koko putih size L masih ada? Sekalian tasbih ya kak',items:[['KKO',1],['TSB',1]]},
+ {at:200,cust:'Pak Darmawan',kota:'Tangerang',ask:'Kalau ambil 5 sarung bisa diskon nggak kak?',items:[['SRG',5]],nego:7},
+ {at:310,cust:'Salsa',kota:'Bandung',ask:'Buku catatan ngajinya isi berapa lembar kak?',items:[['BKU',3]]},
+ {at:360,cust:'Fatimah',kota:'Serang',ask:'Mau peci 3 sama tasbih 2, bisa kirim hari ini?',items:[['PCI',3],['TSB',2]]},
+ {at:450,cust:'Andi',kota:'Cikarang',ask:'Koko XL ada? Saya butuh buat Jumat',items:[['KKO',1]]},
+ {at:550,cust:'Yusuf',kota:'Karawang',ask:'Parfumnya wangi apa aja kak? Yang kalem buat kerja',items:[['PRF',2]]},
+ {at:705,cust:'Pesantren Al-Hikmah',kota:'Cianjur',ask:'Kami mau pesan 20 sarung untuk santri baru, ada harga grosir?',items:[['SRG',20]],grosir:120000}];
+const fresh=()=>({v:1,day:1,min:0,run:false,prod:PROD0.map(p=>({...p})),tasks:[],q:{},cur:{},done:{},log:[],chats:[],orders:[],posts:[],jur:[],inbox:[],train:[],
+  kpi:{tx:0,om:0,hpp:0,fee:0,ads:0,ch:0,vw:0},sched:[],seq:1,promo:null,auto:false,dayLog:[]});
+let S=null,speed=1,timer=null,tab='chat',thread=null;
+// ---------------- utils
+const hhmm=m=>{const t=475+m;return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')};
+const P=id=>S.prod.find(p=>p.id===id);
+function price(id){const p=P(id);let h=p.harga;if(S.promo&&(S.promo.id==='ALL'||S.promo.id===id))h=Math.round(h*(1-S.promo.pct/100)/100)*100;return h}
+function log(team,text){S.log.unshift({t:hhmm(S.min),team,text});S.log=S.log.slice(0,300);renderLog(true)}
+function toast(t){const e=$('toast');e.innerHTML=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,4200)}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+// ---------------- task engine: every agent works one task at a time; finishing a task hands work to the next agent
+// task: {id,ag,title,dur,left,from,kind,data}
+function give(ag,title,dur,kind,data,from){const t={id:S.seq++,ag,title,dur,left:dur,kind,data:data||{},from:from||'lead'};(S.q[ag]=S.q[ag]||[]).push(t);if(from&&from!==ag)fly(from,ag);return t}
+const HANDLERS={};
+function step(){for(const ag in AG){if(AG[ag].human)continue;let c=S.cur[ag];if(!c){const q=S.q[ag]||[];if(!q.length)continue;c=S.cur[ag]=q.shift();if(c.kind!=='silent')log(AG[ag].team,`<b>${AG[ag].nm}</b> mulai: ${c.title}`)}
+  c.left--;if(c.left<=0){S.cur[ag]=null;S.done[ag]=(S.done[ag]||0)+1;const h=HANDLERS[c.kind];if(h)h(c)}}}
+function at(min,fn,data){S.sched.push({min,fn,data})}
+// ---------------- flying envelope between desks
+function fly(a,b,em){const A=$('d-'+a),B=$('d-'+b);if(!A||!B||document.hidden)return;const ra=A.getBoundingClientRect(),rb=B.getBoundingClientRect();if(!ra.width||!rb.width)return;
+ const f=document.createElement('div');f.className='fly';f.textContent=em||'📨';f.style.left=(ra.left+24)+'px';f.style.top=(ra.top+20)+'px';document.body.appendChild(f);
+ requestAnimationFrame(()=>{f.style.transform=`translate(${rb.left-ra.left}px,${rb.top-ra.top}px)`});setTimeout(()=>{f.style.opacity='0'},650);setTimeout(()=>f.remove(),1400)}
+// ---------------- chats and orders
+function chatOf(cust){let c=S.chats.find(x=>x.cust===cust);if(!c){c={cust,msgs:[],unread:0};S.chats.unshift(c)}return c}
+function say(cust,who,text){const c=chatOf(cust);c.msgs.push({who,text,t:hhmm(S.min)});if(who==='in')c.unread++;else c.unread=0;S.chats=[c].concat(S.chats.filter(x=>x!==c))}
+function custArrives(x){say(x.cust,'in',x.ask);log('cust',`<span class="tag t-cust">PEMBELI</span>${esc(x.cust)} (${x.kota}) chat: “${esc(x.ask)}”`);give('cs',`Balas chat ${x.cust}`,6+Math.floor(Math.random()*5),'reply',{x},'lead')}
+const STOCK_TXT=it=>it.map(([id,n])=>`${P(id).nm} ${n} pcs (stok ${P(id).stok})`).join(', ');
+HANDLERS.reply=t=>{const x=t.data.x,it=x.items;S.kpi.ch++;
+ if(x.halal){say(x.cust,'out',`Waalaikumsalam Ustadzah 🙏 Parfum SantriBos tanpa alkohol, berbahan dasar minyak, dan sudah bersertifikat halal (nomor sertifikat ada di foto produk ke-3). Stok ready, silakan checkout ya.`);log('op',`<b>Sari</b> menjawab soal halal dengan data dari Tari (Admin Toko).`);fly('admin','cs','📄')}
+ else if(x.nego){say(x.cust,'out',`Terima kasih Pak 🙏 Untuk 5 sarung saya ajukan dulu ke Bos ya, sebentar.`);ask('Diskon untuk Pak Darmawan',`Pak Darmawan minta diskon untuk 5 Sarung Tenun (harga ${rp(P('SRG').harga)}).\nUsul Fikri (Finance): diskon ${x.nego}%, margin tetap ${Math.round((1-(P('SRG').hpp/(P('SRG').harga*(1-x.nego/100))))*100)}%.`,'nego',{x});fly('cs','lead');fly('lead','bos');return}
+ else if(x.grosir){say(x.cust,'out',`Waalaikumsalam, terima kasih atas kepercayaannya 🙏 Untuk 20 sarung kami cek stok dan harga grosir dulu ya.`);give('finance','Hitung harga grosir 20 sarung',8,'grosir',{x},'cs');return}
+ else say(x.cust,'out',`Halo kak ${x.cust.split(' ').pop()} 😊 ${STOCK_TXT(it)} ready ya. Silakan langsung checkout, hari ini dikirim.`);
+ at(S.min+8+Math.floor(Math.random()*10),'checkout',{x})};
+HANDLERS.grosir=t=>{const x=t.data.x,p=P('SRG');const m=Math.round((1-p.hpp/x.grosir)*100);
+ ask('Harga grosir Pesantren Al-Hikmah',`20 Sarung Tenun untuk Pesantren Al-Hikmah.\nHarga normal ${rp(p.harga)}, usul harga grosir ${rp(x.grosir)} (margin ${m}%). Stok ${p.stok} pcs.\nTotal ${rp(20*x.grosir)}.`,'grosir',{x});fly('finance','lead');fly('lead','bos')};
+function checkout(x,unit){const items=x.items.map(([id,n])=>({id,n,h:unit&&unit[id]?unit[id]:price(id)}));const tot=items.reduce((a,i)=>a+i.n*i.h,0);
+ for(const i of items){if(P(i.id).stok<i.n){say(x.cust,'out',`Mohon maaf kak, stok ${P(i.id).nm} tinggal ${P(i.id).stok}.`);log('op',`<b>Tari</b>: stok ${P(i.id).nm} kurang. Bos, perlu restock.`);return}}
+ const o={no:'SB'+String(1000+S.orders.length+1),cust:x.cust,kota:x.kota,items,tot,st:'wait',day:S.day,t:hhmm(S.min)};S.orders.unshift(o);
+ say(x.cust,'in','Sudah checkout ya kak 🙏');log('op',`<span class="tag t-cust">PESANAN</span>${o.no} dari ${esc(x.cust)}: ${items.map(i=>P(i.id).nm+' ×'+i.n).join(', ')} = <b>${rp(tot)}</b>`);
+ at(S.min+4+Math.floor(Math.random()*12),'pay',{no:o.no})}
+function pay(no){const o=S.orders.find(x=>x.no===no);if(!o)return;log('fn',`<span class="tag t-cust">MARKETPLACE</span>Pembayaran ${o.no} masuk ${rp(o.tot)}.`);give('finance',`Verifikasi dana ${o.no}`,4,'verify',{no},'lead')}
+HANDLERS.verify=t=>{const o=S.orders.find(x=>x.no===t.data.no);o.st='paid';give('admin',`Kemas & input resi ${o.no}`,12,'ship',{no:o.no},'finance');give('akunting',`Jurnal penjualan ${o.no}`,4,'journal',{no:o.no},'finance');log('fn',`<b>Fikri</b> memastikan dana ${o.no} masuk saldo marketplace (tertahan sampai barang diterima).`)};
+HANDLERS.ship=t=>{const o=S.orders.find(x=>x.no===t.data.no);for(const i of o.items)P(i.id).stok-=i.n;o.st='ship';o.resi='JNX'+Math.floor(1e9+Math.random()*9e9);say(o.cust,'out',`Pesanan ${o.no} sudah dikirim ya kak 📦 Resi ${o.resi}. Semoga berkah!`);
+ S.kpi.tx++;log('op',`<b>Tari</b> mengirim ${o.no}, resi ${o.resi}. <b>Sari</b> mengabari pembeli.`);fly('admin','cs','📦');
+ const low=S.prod.filter(p=>p.stok<=8);if(low.length)log('op',`<b>Tari</b>: stok menipis ${low.map(p=>p.nm+' ('+p.stok+')').join(', ')}.`)};
+HANDLERS.journal=t=>{const o=S.orders.find(x=>x.no===t.data.no);const hpp=o.items.reduce((a,i)=>a+i.n*P(i.id).hpp,0),fee=Math.round(o.tot*FEE);
+ S.kpi.om+=o.tot;S.kpi.hpp+=hpp;S.kpi.fee+=fee;
+ S.jur.unshift({t:hhmm(S.min),ref:o.no,rows:[['Saldo marketplace (tertahan)',o.tot-fee,0],['Beban layanan marketplace (6%)',fee,0],['Penjualan',0,o.tot],['HPP',hpp,0],['Persediaan',0,hpp]]});
+ log('fn',`<b>Aldi</b> mencatat jurnal ${o.no}: penjualan ${rp(o.tot)}, HPP ${rp(hpp)}, biaya marketplace ${rp(fee)}.`)};
+// ---------------- marketing pipeline
+const THEMES=[['peci rajut','🧢','#0f7a4a'],['sarung tenun','🧣','#2459c4'],['parfum non-alkohol','🌸','#7b3fc4'],['koko putih','👕','#c9960a'],['tasbih kayu','📿','#8a5a2b'],['buku catatan ngaji','📓','#d0453b']];
+function themeOf(txt){txt=(txt||'').toLowerCase();for(const p of S.prod){const k=p.nm.toLowerCase().split(' ')[0];if(txt.includes(k))return [p.nm.toLowerCase(),p.em,'#0f7a4a',p.id]}const th=THEMES.find(x=>txt.includes(x[0].split(' ')[0]));return th?th.concat([null]):null}
+function content(brief,plat,from){const th=themeOf(brief)||THEMES[Math.floor(Math.random()*THEMES.length)];const c={id:S.seq++,brief,plat:plat||'IG Reels + TikTok',th,rev:0};
+ log('ld',`<b>Lina</b> membagi tugas konten “${esc(brief)}” ke Raka (naskah) dan Nisa (editing).`);give('konten',`Tulis caption & naskah: ${brief}`,14,'draft',{c},from||'lead')}
+function caption(c){const nm=c.th[0],notes=S.train.filter(x=>x.ag==='konten').map(x=>x.note);const promo=S.promo?` Lagi promo ${S.promo.pct}%!`:'';
+ const hooks=[`POV: kamu santri yang mau tampil rapi tapi tetap hemat 😎`,`3 alasan ${nm} SantriBos jadi favorit santri 👇`,`Unboxing ${nm} SantriBos: worth it nggak?`,`Siap-siap Jumat berkah? ✨`];
+ return `${hooks[(c.id+c.rev)%hooks.length]}\n${nm[0].toUpperCase()+nm.slice(1)} pilihan santri: adem, rapi, dan amanah.${promo}\nCheckout di toko SantriBos, link di bio.\n#santri #santribos #pesantren #muslimstyle${notes.length?'\n(Sudah mengikuti catatan Bos: '+notes.slice(-2).join('; ')+')':''}`}
+HANDLERS.draft=t=>{const c=t.data.c;c.cap=caption(c);log('mk',`<b>Raka</b> selesai menulis naskah 30 detik + caption untuk ${c.plat}.`);give('editor',`Edit video & thumbnail: ${c.brief}`,16,'edit',{c},'konten')};
+HANDLERS.edit=t=>{const c=t.data.c;log('mk',`<b>Nisa</b> selesai mengedit video (cut, subtitle, musik nasyid tanpa alat musik) dan thumbnail.`);give('lead',`Review konten: ${c.brief}`,4,'review',{c},'editor')};
+HANDLERS.review=t=>{const c=t.data.c;ask(`Konten siap tayang: ${c.brief}`,`Platform: ${c.plat}\n\n${c.cap}`,'content',{c});fly('lead','bos','🎞️')};
+function postIt(c){for(const pf of c.plat.includes('TikTok')&&c.plat.includes('IG')?['IG','TikTok']:[c.plat.includes('TikTok')?'TikTok':'IG']){S.posts.unshift({pf,cap:c.cap,th:c.th,t:hhmm(S.min),day:S.day,vw:0,lk:0,cm:0,rate:(pf==='TikTok'?60:35)*(1+Math.random()),boost:0})}
+ log('mk',`<b>Nisa</b> memposting “${esc(c.brief)}” di ${c.plat}. Views mulai naik.`);
+ if(S.day>1||S.min>600){for(let i=0;i<2;i++)at(S.min+20+Math.floor(Math.random()*60),'randomBuyer',{th:c.th})}}
+// ---------------- approvals (human in the loop)
+function ask(title,body,kind,data){const it={id:S.seq++,title,body,kind,data,t:hhmm(S.min)};S.inbox.unshift(it);log('bos',`<span class="tag t-bos">PERLU PERSETUJUAN</span>${esc(title)}`);toast(`🔔 <b>Perlu persetujuan Bos:</b> ${esc(title)}`);
+ if(S.auto)setTimeout(()=>decide(it.id,'ok'),900);renderInbox()}
+function decide(id,act,note){const i=S.inbox.findIndex(x=>x.id===id);if(i<0)return;const it=S.inbox.splice(i,1)[0];const d=it.data;
+ if(act==='rev'&&note===undefined){note=prompt('Catatan revisi untuk agen (misal: hook lebih singkat, sebut gratis ongkir):','')||'perbaiki lagi';}
+ if(it.kind==='content'){if(act==='ok'){log('bos',`<span class="tag t-bos">BOS</span>menyetujui konten “${esc(d.c.brief)}”.`);postIt(d.c)}
+   else if(act==='rev'){d.c.rev++;S.train.unshift({ag:'konten',note,t:hhmm(S.min)});log('bos',`<span class="tag t-bos">BOS</span>minta revisi: “${esc(note)}”. Catatan masuk Ruang Pelatihan.`);give('konten',`Revisi naskah: ${d.c.brief}`,8,'draft',{c:d.c},'bos')}
+   else{S.train.unshift({ag:'konten',note:'konten ditolak: '+d.c.brief,t:hhmm(S.min)});log('bos',`<span class="tag t-bos">BOS</span>menolak konten “${esc(d.c.brief)}”.`)}}
+ if(it.kind==='nego'){const x=d.x;if(act==='ok'){const u={SRG:Math.round(price('SRG')*(1-x.nego/100)/100)*100};say(x.cust,'out',`Alhamdulillah Pak, Bos setuju diskon ${x.nego}%: ${rp(u.SRG)} per sarung. Silakan checkout 🙏`);log('bos',`<span class="tag t-bos">BOS</span>menyetujui diskon ${x.nego}% untuk ${esc(x.cust)}.`);at(S.min+6,'checkoutU',{x,u})}
+   else{say(x.cust,'out','Mohon maaf Pak, untuk saat ini harga sudah harga terbaik 🙏');log('bos',`<span class="tag t-bos">BOS</span>tidak memberi diskon. ${act==='rev'?'Catatan: '+esc(note):''}`);if(Math.random()<.6)at(S.min+10,'checkout',{x})}}
+ if(it.kind==='grosir'){const x=d.x;if(act==='ok'){say(x.cust,'out',`Harga grosir ${rp(x.grosir)} per sarung disetujui. Total ${rp(20*x.grosir)}. Silakan checkout, kami kirim besok pagi 🙏`);log('bos',`<span class="tag t-bos">BOS</span>menyetujui harga grosir untuk ${esc(x.cust)}.`);at(S.min+10,'checkoutU',{x,u:{SRG:x.grosir}})}
+   else{say(x.cust,'out','Mohon maaf, harga grosir belum bisa kami berikan saat ini.');log('bos',`<span class="tag t-bos">BOS</span>menolak harga grosir.`)}}
+ if(it.kind==='task'){if(act==='ok')log('bos',`<span class="tag t-bos">BOS</span>menyetujui hasil: ${esc(it.title)}.`);else{S.train.unshift({ag:d.ag,note:note||'ditolak',t:hhmm(S.min)});log('bos',`<span class="tag t-bos">BOS</span>${act==='rev'?'minta revisi':'menolak'}: ${esc(it.title)}${note?' · “'+esc(note)+'”':''}`);if(act==='rev')give(d.ag,'Revisi: '+d.task,6,'generic',{cmd:d.cmd+' (revisi: '+note+')',ag:d.ag},'bos')}}
+ renderAll();save()}
+// ---------------- boss commands: routed by @mention or keywords; anything else goes to the team leader, so every command runs
+function command(raw){const txt=raw.trim();if(!txt)return;const low=txt.toLowerCase();log('bos',`<span class="tag t-bos">PERINTAH BOS</span>“${esc(txt)}”`);fly('bos','lead','📝');
+ const m=low.match(/@(\w+)/);const to=m&&ALIAS[m[1]];const num=(re)=>{const r=low.match(re);return r?Number(r[1].replace(/\./g,'')):null};
+ const prodIn=S.prod.find(p=>low.includes(p.nm.toLowerCase().split(' ')[0]));
+ if(/konten|video|reels|tiktok|caption|posting|ig\b|instagram|story|feed/.test(low)&&(!to||['konten','editor','lead'].includes(to))){const plat=/tiktok/.test(low)&&!/ig\b|instagram|reels/.test(low)?'TikTok':/ig\b|instagram|reels|story|feed/.test(low)&&!/tiktok/.test(low)?'IG Reels':'IG Reels + TikTok';content(txt.replace(/@\w+/,'').trim(),plat,'bos');return}
+ if(/diskon|promo|potongan/.test(low)){const pct=num(/(\d+)\s*%/)||10;S.promo={pct,id:prodIn?prodIn.id:'ALL'};log('ld',`<b>Lina</b>: siap Bos. Fikri cek margin, Tari ubah harga, Raka siapkan konten promo.`);
+   give('finance',`Cek margin diskon ${pct}%`,5,'promoFin',{pct,id:S.promo.id},'lead');give('admin',`Ubah harga promo ${pct}%${prodIn?' '+prodIn.nm:' semua produk'}`,6,'promoAdm',{pct},'lead');content(`promo ${pct}% ${prodIn?prodIn.nm:'semua produk'}`,'IG Reels + TikTok','lead');return}
+ if(/naik(kan)? harga|turun(kan)? harga|ubah harga|harga jadi/.test(low)&&prodIn){const pct=num(/(\d+)\s*%/),abs=num(/rp\s?([\d.]+)/);give('admin',`Ubah harga ${prodIn.nm}`,5,'price',{id:prodIn.id,pct,abs,up:/naik/.test(low)},'lead');return}
+ if(/stok|restock|re-stock|kulakan|belanja barang/.test(low)){if(/tambah|restock|kulakan|belanja|isi/.test(low)){const n=num(/(\d+)\s*(pcs|buah|unit|lusin)?/)||20;give('finance',`Bayar kulakan ${n} ${prodIn?prodIn.nm:'produk terlaris'}`,6,'restock',{id:prodIn?prodIn.id:null,n},'lead')}else give('admin','Cek stok semua produk',4,'stock',{},'lead');return}
+ if(/laporan|rekap|laba|rugi|neraca|keuangan|cashflow|arus kas/.test(low)){give('akunting','Susun laporan keuangan hari ini',8,'report',{},'lead');return}
+ if(/zakat|sedekah|infak/.test(low)){give('finance','Hitung zakat/sedekah dari laba',5,'zakat',{pct:num(/(\d+)\s*%/)},'lead');return}
+ if(/iklan|ads|boost|promosikan|naikkan views/.test(low)){const b=num(/rp\s?([\d.]+)/)||num(/(\d+)\s*(rb|ribu)/)*1000||100000;give('finance',`Setujui anggaran iklan ${rp(b)}`,4,'adsFin',{b},'lead');return}
+ if(/live/.test(low)){give('konten','Siapkan rundown live TikTok',8,'liveprep',{},'lead');return}
+ if(/produk baru|tambah produk|jual (juga )?/.test(low)){const nm=(txt.match(/(?:produk baru|tambah produk|jual(?: juga)?)\s*:?\s*([^,.]+?)(?:\s+harga|$|,)/i)||[])[1]||'Produk Baru SantriBos';const h=num(/rp\s?([\d.]+)/)||num(/harga\s*([\d.]+)/)||50000;give('admin',`Upload produk baru: ${nm}`,8,'newprod',{nm:nm.trim(),h},'lead');return}
+ if(/follow ?up|balas (semua )?chat|chat yang belum/.test(low)){give('cs','Follow up pembeli yang belum bayar dan chat belum terbalas',6,'followup',{},'lead');return}
+ // anything else: the leader decides who does it, and it always produces a result
+ const ag=to&&to!=='bos'?to:guess(low);log('ld',`<b>Lina</b>: “Siap, Bos.” Tugas diberikan ke ${AG[ag].nm} (${AG[ag].role.split(' · ')[0]}).`);give(ag,txt.replace(/@\w+\s*/,''),8+Math.floor(Math.random()*6),'generic',{cmd:txt.replace(/@\w+\s*/,''),ag},'lead')}
+function guess(low){const K=[['konten',/konten|caption|copy|ide|tema|hashtag|tren|influencer|endorse|brand|logo|nama|slogan|desain|poster|foto/],['editor',/edit|thumbnail|video|gambar|template/],['akunting',/jurnal|pajak|catat|akuntansi|laporan|audit|biaya/],['finance',/uang|bayar|transfer|modal|harga|margin|budget|anggaran|gaji|bank|investasi|pinjam/],['admin',/kirim|resi|kemas|toko|marketplace|listing|etalase|gudang|supplier|ongkir|kurir/],['cs',/pembeli|pelanggan|customer|chat|komplain|review|ulasan|rating|balas|tanya/]];
+ for(const [a,re] of K)if(re.test(low))return a;return 'lead'}
+HANDLERS.generic=t=>{const a=t.data.ag||t.ag,cmd=t.data.cmd,who=AG[a],notes=S.train.filter(x=>x.ag===a).map(x=>x.note);
+ const plan={lead:['Membagi tugas ke tim terkait','Memantau progres tiap agen','Merangkum hasil untuk Bos'],konten:['Riset tren dan kata kunci santri','Menyusun 3 opsi ide atau naskah','Memilih opsi terbaik sesuai gaya SantriBos'],editor:['Menyiapkan aset visual','Mengedit dan memberi subtitle','Ekspor format IG dan TikTok'],
+  akunting:['Mengumpulkan data transaksi','Mencatat dan mencocokkan jurnal','Menyusun ringkasan angka'],finance:['Mengecek saldo dan arus kas','Menghitung dampak ke margin','Memberi rekomendasi angka'],admin:['Mengecek toko dan stok','Menjalankan perubahan di marketplace','Memastikan pesanan tidak terganggu'],cs:['Membaca chat dan riwayat pembeli','Membalas dengan sopan dan jelas','Mencatat pertanyaan yang sering muncul']}[a];
+ const res=`TUGAS: ${cmd}\nDIKERJAKAN: ${who.nm} (${who.role})\n\nLangkah:\n1. ${plan[0]}\n2. ${plan[1]}\n3. ${plan[2]}\n\nHasil:\n${genericResult(a,cmd)}${notes.length?'\n\nMengikuti catatan Bos: '+notes.slice(0,2).join('; '):''}\n\nMohon dicek, Bos: setujui, revisi, atau tolak.`;
+ log(who.team,`<b>${who.nm}</b> menyelesaikan: “${esc(cmd)}”. Hasil dikirim ke Meja Bos.`);ask(`Hasil kerja ${who.nm}: ${cmd}`,res,'task',{ag:a,task:cmd,cmd});fly(a,'bos','📄')};
+function genericResult(a,cmd){const k=S.kpi,lb=k.om-k.hpp-k.fee-k.ads;
+ if(a==='konten')return `• Ide 1: “Sehari jadi santri SantriBos” (vlog pendek)\n• Ide 2: “Tips rapi ke masjid” dengan produk SantriBos\n• Ide 3: kuis ringan di story, hadiah tasbih\nRekomendasi: ide 1 untuk TikTok, ide 3 untuk IG Story.`;
+ if(a==='editor')return `• 1 video 30 detik (9:16) dan 1 thumbnail\n• Subtitle bahasa Indonesia, logo SantriBos di pojok\n• Siap diunggah ke IG dan TikTok`;
+ if(a==='akunting')return `• Transaksi tercatat: ${k.tx}\n• Penjualan ${rp(k.om)}, HPP ${rp(k.hpp)}, biaya marketplace ${rp(k.fee)}, iklan ${rp(k.ads)}\n• Laba bersih sementara ${rp(lb)}`;
+ if(a==='finance')return `• Saldo marketplace tertahan ${rp(k.om-k.fee)}\n• Margin rata-rata ${k.om?Math.round((1-k.hpp/k.om)*100):0}%\n• Rekomendasi: sisihkan 2,5% laba untuk zakat dan 20% untuk modal kulakan`;
+ if(a==='admin')return `• Etalase toko dicek: ${S.prod.length} produk aktif\n• Stok terendah: ${S.prod.slice().sort((x,y)=>x.stok-y.stok)[0].nm} (${S.prod.slice().sort((x,y)=>x.stok-y.stok)[0].stok})\n• Pesanan diproses: ${S.orders.filter(o=>o.st!=='wait').length}`;
+ if(a==='cs')return `• Chat dibalas hari ini: ${k.ch}\n• Pertanyaan terbanyak: stok, ukuran, dan kehalalan produk\n• Template balasan baru disimpan untuk dipakai agen`;
+ return `• Tugas dibagi: konten ke Raka, data ke Aldi, toko ke Tari\n• Semua agen sudah mengerjakan bagiannya\n• Ringkasan: ${k.tx} transaksi, omzet ${rp(k.om)}, ${S.posts.length} konten tayang`}
+HANDLERS.promoFin=t=>{const {pct,id}=t.data;const ps=id==='ALL'?S.prod:[P(id)];const worst=ps.map(p=>[p,1-p.hpp/(p.harga*(1-pct/100))]).sort((a,b)=>a[1]-b[1])[0];
+ log('fn',`<b>Fikri</b>: diskon ${pct}% aman, margin terendah ${worst[0].nm} jadi ${Math.round(worst[1]*100)}%.${worst[1]<.15?' Hati-hati, margin tipis.':''}`)};
+HANDLERS.promoAdm=t=>log('op',`<b>Tari</b> memasang harga coret ${t.data.pct}% di toko. Pesanan berikutnya memakai harga promo.`);
+HANDLERS.price=t=>{const p=P(t.data.id),old=p.harga;p.harga=t.data.abs||Math.round(p.harga*(1+(t.data.up?1:-1)*(t.data.pct||10)/100)/100)*100;log('op',`<b>Tari</b> mengubah harga ${p.nm}: ${rp(old)} → ${rp(p.harga)}.`)};
+HANDLERS.stock=t=>log('op',`<b>Tari</b> cek stok: ${S.prod.map(p=>p.nm.split(' ')[0]+' '+p.stok).join(' · ')}.`);
+HANDLERS.restock=t=>{const p=t.data.id?P(t.data.id):S.prod.slice().sort((a,b)=>a.stok-b.stok)[0],n=t.data.n,c=n*p.hpp;S.kpi.kas=(S.kpi.kas||0)-c;
+ log('fn',`<b>Fikri</b> membayar kulakan ${n} ${p.nm} ${rp(c)} ke supplier.`);give('admin',`Terima barang & update stok ${p.nm}`,6,'restockAdm',{id:p.id,n},'finance');give('akunting',`Jurnal pembelian ${p.nm}`,3,'jpurch',{id:p.id,c},'finance')};
+HANDLERS.restockAdm=t=>{const p=P(t.data.id);p.stok+=t.data.n;log('op',`<b>Tari</b> menerima barang. Stok ${p.nm} sekarang ${p.stok}.`)};
+HANDLERS.jpurch=t=>{S.jur.unshift({t:hhmm(S.min),ref:'Kulakan',rows:[['Persediaan',t.data.c,0],['Kas bank',0,t.data.c]]});log('fn',`<b>Aldi</b> mencatat pembelian persediaan ${rp(t.data.c)}.`)};
+HANDLERS.report=t=>{const k=S.kpi,lb=k.om-k.hpp-k.fee-k.ads;const doc=`LAPORAN LABA RUGI SANTRIBOS · Hari ${S.day} s.d. ${hhmm(S.min)}\n\nPenjualan                      ${rp(k.om).padStart(14)}\nHarga pokok penjualan (HPP)   (${rp(k.hpp).padStart(13)})\nLaba kotor                     ${rp(k.om-k.hpp).padStart(14)}\nBiaya layanan marketplace     (${rp(k.fee).padStart(13)})\nBiaya iklan                   (${rp(k.ads).padStart(13)})\nLaba bersih                    ${rp(lb).padStart(14)}\n\nTransaksi terkirim: ${k.tx}\nZakat perdagangan (2,5%, bila haul & nisab terpenuhi): ${rp(Math.max(0,lb)*.025)}\nCatatan: saldo marketplace cair setelah pesanan diterima pembeli.`;
+ log('fn',`<b>Aldi</b> menyelesaikan laporan laba rugi. Laba bersih ${rp(lb)}.`);ask('Laporan keuangan hari ini',doc,'task',{ag:'akunting',task:'laporan keuangan',cmd:'laporan keuangan'});fly('akunting','bos','📊')};
+HANDLERS.zakat=t=>{const k=S.kpi,lb=Math.max(0,k.om-k.hpp-k.fee-k.ads),pct=t.data.pct||2.5;log('fn',`<b>Fikri</b>: ${pct}% dari laba bersih ${rp(lb)} = <b>${rp(lb*pct/100)}</b>. ${pct===2.5?'Zakat perdagangan dibayar saat haul dan nisab terpenuhi; sementara disisihkan ke rekening zakat.':'Disisihkan untuk sedekah.'}`)};
+HANDLERS.adsFin=t=>{S.kpi.ads+=t.data.b;log('fn',`<b>Fikri</b> menyetujui iklan ${rp(t.data.b)}; Aldi mencatat biaya iklan.`);give('editor','Pasang iklan di IG & TikTok',5,'ads',{b:t.data.b},'finance')};
+HANDLERS.ads=t=>{for(const p of S.posts.slice(0,2))p.boost+=t.data.b/2000;log('mk',`<b>Nisa</b> memasang iklan. Jangkauan konten naik.`);const n=Math.min(4,1+Math.floor(t.data.b/150000));for(let i=0;i<n;i++)at(S.min+15+Math.floor(Math.random()*90),'randomBuyer',{})};
+HANDLERS.liveprep=t=>{log('mk',`<b>Raka</b> menyiapkan rundown live 30 menit: sapa, demo produk, kuis, promo khusus live.`);give('editor','Siaran live TikTok 30 menit',30,'live',{},'konten')};
+HANDLERS.live=t=>{S.posts.unshift({pf:'TikTok',cap:'LIVE: belanja perlengkapan santri bareng SantriBos',th:['live','🔴','#d0453b'],t:hhmm(S.min),day:S.day,vw:0,lk:0,cm:0,rate:140,boost:0});log('mk',`<b>Nisa</b> selesai live. Penonton masuk ke toko.`);for(let i=0;i<3;i++)at(S.min+5+i*12,'randomBuyer',{})};
+HANDLERS.newprod=t=>{const id='N'+S.seq;S.prod.push({id,nm:t.data.nm,em:'🆕',harga:t.data.h,hpp:Math.round(t.data.h*.6),stok:30});log('op',`<b>Tari</b> mengunggah produk baru “${esc(t.data.nm)}” ${rp(t.data.h)}, stok 30.`);content('produk baru '+t.data.nm,'IG Reels + TikTok','admin')};
+HANDLERS.followup=t=>{const w=S.orders.filter(o=>o.st==='wait');w.forEach(o=>say(o.cust,'out','Kak, pesanannya masih menunggu pembayaran ya. Ada yang bisa kami bantu? 🙏'));S.chats.forEach(c=>c.unread=0);log('op',`<b>Sari</b> follow up ${w.length} pesanan belum bayar dan menuntaskan semua chat.`)};
+// random buyers after content, ads, live, and on day 2+
+const NAMES=['Zahra','Ilham','Bu Rahma','Fajar','Nabila','Hasan','Kak Dinda','Umar','Laila','Pak Hendra','Aulia','Rafi'];
+const KOTA=['Jakarta','Bogor','Depok','Bekasi','Bandung','Surabaya','Medan','Makassar','Yogyakarta','Semarang'];
+function randomBuyer(d){const p=d&&d.th&&d.th[3]?P(d.th[3]):S.prod[Math.floor(Math.random()*S.prod.length)];if(!p)return;const n=1+Math.floor(Math.random()*3);
+ const asks=[`Kak, ${p.nm.toLowerCase()} masih ada? Lihat dari TikTok`,`${p.nm} ready kak? Mau ${n}`,`Liat konten SantriBos di IG, ${p.nm.toLowerCase()} bisa kirim hari ini?`,`Assalamualaikum, mau order ${p.nm.toLowerCase()} ${n} ya`];
+ custArrives({cust:NAMES[Math.floor(Math.random()*NAMES.length)]+' '+String.fromCharCode(65+Math.floor(Math.random()*26))+'.',kota:KOTA[Math.floor(Math.random()*KOTA.length)],ask:asks[Math.floor(Math.random()*asks.length)],items:[[p.id,n]]})}
+// ---------------- clock
+const SCHED_FN={checkout:d=>checkout(d.x),checkoutU:d=>checkout(d.x,d.u),pay:d=>pay(d.no),randomBuyer:d=>randomBuyer(d),cust:d=>custArrives(d.x),content:d=>content(d.brief,d.plat,'lead'),brief:()=>{log('ld','<b>Lina</b> (Team Leader) membuka hari: Raka & Nisa siapkan konten pagi, Sari pegang chat, Tari cek stok, Fikri & Aldi siapkan pembukuan.');for(const a of ['konten','editor','admin','cs','finance','akunting'])fly('lead',a)},
+ close:()=>closeDay(),stockam:()=>give('admin','Cek stok & etalase pagi',6,'stock',{},'lead'),deliver:()=>{let n=0;S.orders.forEach(o=>{if(o.st==='ship'&&o.day<S.day){o.st='done';n++}});if(n)log('fn',`<b>Fikri</b>: ${n} pesanan kemarin diterima pembeli; saldo marketplace cair ke rekening.`)}};
+function planDay(){S.sched=[];at(1,'brief');at(3,'stockam');at(2,'deliver');at(5,'content',{brief:S.day===1?'peci rajut untuk santri baru':'konten harian produk SantriBos',plat:'IG Reels + TikTok'});at(420,'content',{brief:S.day===1?'unboxing sarung tenun santri':'tips rapi ke masjid',plat:'TikTok'});
+ if(S.day===1)DAY1.forEach(x=>at(x.at,'cust',{x}));else{const n=8+Math.floor(Math.random()*8);for(let i=0;i<n;i++)at(30+Math.floor(Math.random()*680),'randomBuyer',{})}
+ at(780,'close')}
+function tick(){if(!S.run)return;S.min++;
+ const due=S.sched.filter(s=>s.min<=S.min);S.sched=S.sched.filter(s=>s.min>S.min);for(const s of due)SCHED_FN[s.fn]&&SCHED_FN[s.fn](s.data);
+ step();for(const p of S.posts){if(p.day!==S.day&&p.rate<1)continue;const add=(p.rate+p.boost)*(.6+Math.random()*.8);p.vw+=add;p.lk+=add*.08;p.cm+=add*.006;p.rate*=.993;p.boost*=.99}
+ S.kpi.vw=S.posts.reduce((a,p)=>a+p.vw,0);if(S.min%5===0)save();renderAll()}
+function closeDay(){S.run=false;clearInterval(timer);const k=S.kpi,lb=k.om-k.hpp-k.fee-k.ads;S.dayLog.push({day:S.day,tx:k.tx,om:k.om,lb});
+ log('ld',`<b>Lina</b> menutup Hari ${S.day}: ${k.tx} transaksi terkirim, omzet ${rp(k.om)}, laba bersih ${rp(lb)}.`);
+ const pend=S.orders.filter(o=>o.st==='wait'||o.st==='paid').length;
+ $('ov-k').textContent='Laporan Team Leader';$('ov-t').textContent=`Rekap Hari ${S.day} SantriBos`;
+ $('ov-b').innerHTML=`<p>Assalamualaikum Bos, ini rekap hari ini dari Lina.</p><div class="fin"><div><span>Transaksi terkirim</span><b>${k.tx}</b></div><div><span>Omzet</span><b>${rp(k.om)}</b></div><div><span>Laba bersih</span><b>${rp(lb)}</b></div><div><span>Chat dibalas</span><b>${k.ch}</b></div><div><span>Views konten</span><b>${Math.round(k.vw).toLocaleString('id-ID')}</b></div><div><span>Belum selesai</span><b>${pend} pesanan</b></div></div>
+  <div class="doc">${Object.keys(AG).filter(a=>!AG[a].human).map(a=>`${AG[a].nm.padEnd(6)} ${AG[a].role.split(' · ')[0].padEnd(12)} ${String(S.done[a]||0).padStart(3)} tugas selesai`).join('\n')}</div>
+  <p>Pelajaran hari ini: Bos tidak mengerjakan hal teknis. Bos <b>mengarahkan</b> (perintah), <b>menilai</b> (setujui, revisi, tolak), dan <b>bertanggung jawab</b> atas hasil.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="go" type="button" id="ov-next">Lanjut Hari ${S.day+1} ▸</button><button class="go ghost" type="button" id="ov-x">Tutup</button></div>`;
+ $('ov').hidden=false;$('ov-next').onclick=()=>{$('ov').hidden=true;nextDay()};$('ov-x').onclick=()=>$('ov').hidden=true;save();renderAll()}
+function nextDay(){S.day++;S.min=0;S.kpi.tx=0;S.kpi.om=0;S.kpi.hpp=0;S.kpi.fee=0;S.kpi.ads=0;S.kpi.ch=0;S.done={};planDay();S.run=true;$('b-play').setAttribute('aria-pressed','true');$('b-play').textContent='⏸ Jeda';restart();save();renderAll()}
+function restart(){clearInterval(timer);timer=setInterval(tick,Math.round(250/speed))}
+// ---------------- render
+function deskHTML(a){const g=AG[a];if(g.human){const n=S.inbox.length;return `<div class="av">${g.em}</div><div class="nm">${g.nm}<small>${g.role}</small></div><div class="stt">${n?`🔔 ${n} menunggu persetujuan`:'Memantau tim'}</div>${n?`<span class="q">${n}</span>`:''}`}
+ const c=S.cur[a],q=(S.q[a]||[]).length;const pct=c?Math.round((1-c.left/c.dur)*100):0;
+ return `<div class="av">${g.em}<span class="ai">AI</span></div><div class="nm">${g.nm}<small>${g.role}</small></div><div class="stt">${c?esc(c.title)+'<span class="typing"><i></i><i></i><i></i></span>':'Siap menerima tugas'}</div><div class="bar"><i style="width:${pct}%"></i></div><span class="cnt">✓${S.done[a]||0}</span>${q?`<span class="q">+${q}</span>`:''}`}
+function renderDesks(){let busy=0;for(const a in AG){const el=$('d-'+a);el.innerHTML=deskHTML(a);const b=!!S.cur[a];el.classList.toggle('busy',b);if(b)busy++}$('busy').textContent=busy+' sedang bekerja'}
+let logSig='';
+function renderLog(fresh){const sig=S.log.length+(S.log[0]?S.log[0].t+S.log[0].text:'');if(sig===logSig)return;logSig=sig;
+ $('log').innerHTML=S.log.slice(0,120).map((l,i)=>`<li class="${fresh&&i===0?'new':''}"><time>${l.t}</time><span>${l.team&&l.team!=='cust'&&!/tag/.test(l.text.slice(0,30))?`<span class="tag t-${l.team}">${{ld:'LEADER',mk:'MARKETING',fn:'KEUANGAN',op:'OPERASIONAL',bos:'BOS'}[l.team]}</span>`:''}${l.text}</span></li>`).join('')}
+function renderScreen(){const el=$('scr');
+ if(tab==='chat'){if(!thread&&S.chats[0])thread=S.chats[0].cust;const c=S.chats.find(x=>x.cust===thread);
+   el.innerHTML=S.chats.length?`<div class="chat"><ul class="threads">${S.chats.map(x=>`<li class="${x.unread?'unread':''}"><button type="button" data-th="${esc(x.cust)}" aria-current="${x.cust===thread}"><b>${esc(x.cust)}</b><span>${esc(x.msgs[x.msgs.length-1].text)}</span></button></li>`).join('')}</ul><div class="msgs" id="msgs">${c?c.msgs.map(m=>`<div class="msg ${m.who}">${esc(m.text)}<small>${m.t}${m.who==='out'?' · Sari (CS AI)':''}</small></div>`).join(''):''}</div></div>`:'<p class="empty">Belum ada chat. Tekan ▶ Mulai hari.</p>';
+   const ms=$('msgs');if(ms)ms.scrollTop=ms.scrollHeight}
+ if(tab==='order')el.innerHTML=S.orders.length?`<table class="tbl"><thead><tr><th>No</th><th>Pembeli</th><th>Produk</th><th class="n">Total</th><th>Status</th></tr></thead><tbody>${S.orders.map(o=>`<tr><td class="mono">${o.no}<br><small>H${o.day} ${o.t}</small></td><td>${esc(o.cust)}<br><small>${o.kota}</small></td><td>${o.items.map(i=>P(i.id).em+' '+esc(P(i.id).nm)+' ×'+i.n).join('<br>')}</td><td class="n">${rp(o.tot)}</td><td><span class="chip ${{wait:'c-wait',paid:'c-paid',ship:'c-ship',done:'c-done'}[o.st]}">${{wait:'Menunggu bayar',paid:'Dibayar · dikemas',ship:'Dikirim',done:'Diterima'}[o.st]}</span>${o.resi?`<br><small class="mono">${o.resi}</small>`:''}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">Belum ada pesanan.</p>';
+ if(tab==='sosmed')el.innerHTML=S.posts.length?`<div class="posts">${S.posts.map(p=>`<div class="post"><div class="pic" style="background:${p.th[2]}"><span class="pf">${p.pf==='TikTok'?'♪ TikTok':'◎ Instagram'}</span>${p.th[1]}</div><div class="bd">${esc(p.cap.split('\n')[0])}<div class="st"><span>👁 ${Math.round(p.vw).toLocaleString('id-ID')}</span><span>♥ ${Math.round(p.lk).toLocaleString('id-ID')}</span><span>💬 ${Math.round(p.cm)}</span></div><small style="color:var(--muted)">H${p.day} ${p.t}</small></div></div>`).join('')}</div>`:'<p class="empty">Belum ada konten tayang. Konten pagi sedang dibuat tim marketing dan menunggu persetujuan Bos.</p>';
+ if(tab==='fin'){const k=S.kpi,lb=k.om-k.hpp-k.fee-k.ads;el.innerHTML=`<div class="fin"><div><span>Penjualan</span><b>${rp(k.om)}</b></div><div><span>HPP</span><b>${rp(k.hpp)}</b></div><div><span>Biaya marketplace</span><b>${rp(k.fee)}</b></div><div><span>Iklan</span><b>${rp(k.ads)}</b></div><div><span>Laba bersih</span><b>${rp(lb)}</b></div><div><span>Zakat 2,5% (cadangan)</span><b>${rp(Math.max(0,lb)*.025)}</b></div></div>
+   <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:6px 0">Jurnal umum (Aldi · Akunting AI)</h3>${S.jur.length?`<table class="tbl"><thead><tr><th>Jam</th><th>Ref</th><th>Akun</th><th class="n">Debit</th><th class="n">Kredit</th></tr></thead><tbody>${S.jur.slice(0,40).map(j=>j.rows.map((r,i)=>`<tr><td class="mono">${i?'':j.t}</td><td class="mono">${i?'':j.ref}</td><td style="${r[2]?'padding-left:22px':''}">${r[0]}</td><td class="n">${r[1]?rp(r[1]):''}</td><td class="n">${r[2]?rp(r[2]):''}</td></tr>`).join('')).join('')}</tbody></table>`:'<p class="empty">Belum ada jurnal.</p>'}`}
+ if(tab==='prod')el.innerHTML=`<table class="tbl"><thead><tr><th>Produk</th><th class="n">Harga</th><th class="n">HPP</th><th class="n">Margin</th><th class="n">Stok</th></tr></thead><tbody>${S.prod.map(p=>`<tr><td>${p.em} ${esc(p.nm)}${S.promo&&(S.promo.id==='ALL'||S.promo.id===p.id)?` <span class="chip c-ask">promo ${S.promo.pct}%</span>`:''}</td><td class="n">${rp(price(p.id))}</td><td class="n">${rp(p.hpp)}</td><td class="n">${Math.round((1-p.hpp/price(p.id))*100)}%</td><td class="n" style="${p.stok<=8?'color:var(--red);font-weight:800':''}">${p.stok}</td></tr>`).join('')}</tbody></table><p class="empty">Ubah lewat perintah, misalnya “naikkan harga parfum 10%”, “tambah stok sarung 30”, atau “produk baru Mukena Travel harga Rp150.000”.</p>`}
+let scrSig='';
+function renderAll(){if(!S)return;$('clk').textContent=hhmm(S.min);$('dayl').textContent='Hari '+S.day;const k=S.kpi;
+ $('k-tx').textContent=k.tx;$('k-om').textContent=rp(k.om);$('k-lb').textContent=rp(k.om-k.hpp-k.fee-k.ads);$('k-ch').textContent=k.ch;$('k-vw').textContent=Math.round(k.vw).toLocaleString('id-ID');
+ renderDesks();renderLog();renderInbox();renderTrain();
+ const un=S.chats.reduce((a,c)=>a+c.unread,0);$('n-chat').hidden=!un;$('n-chat').textContent=un;
+ const sig=tab+thread+JSON.stringify([S.chats.length,S.chats[0]&&S.chats[0].msgs.length,S.orders.map(o=>o.st).join(),S.posts.length,Math.round(k.vw/50),S.jur.length,S.prod.map(p=>p.stok+'/'+p.harga).join(),S.promo]);if(sig!==scrSig){scrSig=sig;renderScreen()}}
+let inSig='';
+function renderInbox(){$('inbox-n').textContent=S.inbox.length+' menunggu';$('bell-n').textContent=S.inbox.length;$('b-bell').classList.toggle('on',S.inbox.length>0);const sig=S.inbox.map(i=>i.id).join();if(sig===inSig)return;inSig=sig;
+ $('inbox').innerHTML=S.inbox.length?S.inbox.map(i=>`<li><b>${esc(i.title)}</b><p>${esc(i.body)}</p><div class="acts"><button type="button" class="a-ok" data-dec="${i.id}" data-a="ok">✓ Setujui</button><button type="button" class="a-rev" data-dec="${i.id}" data-a="rev">✎ Revisi</button><button type="button" class="a-no" data-dec="${i.id}" data-a="no">✕ Tolak</button></div></li>`).join(''):'<li class="empty">Tidak ada yang menunggu. Tim AI bekerja; Anda tinggal mengarahkan.</li>'}
+let trSig='';function renderTrain(){const sig=S.train.length;if(sig===trSig)return;trSig=sig;$('train').innerHTML=S.train.length?S.train.slice(0,8).map(t=>`<li><b>${AG[t.ag]?AG[t.ag].nm:t.ag}</b> · ${esc(t.note)} <small style="color:var(--muted)">${t.t}</small></li>`).join(''):'<li class="empty">Belum ada koreksi. Saat Anda memilih Revisi atau Tolak, catatannya masuk ke sini dan dipakai agen berikutnya.</li>'}
+// ---------------- wiring
+const CHIPS=['@konten bikin video TikTok promo sarung tenun','kasih diskon 10% untuk peci hari ini','@akunting buatkan laporan keuangan hari ini','tambah stok parfum 30','pasang iklan Rp200.000','live TikTok jam 8 malam','hitung zakat dari laba','produk baru Mukena Travel harga Rp150.000','@cs follow up pembeli yang belum bayar','cari supplier sarung yang lebih murah','buatkan slogan baru untuk SantriBos'];
+$('chips').innerHTML=CHIPS.map(c=>`<button type="button" data-chip="${esc(c)}">${esc(c)}</button>`).join('');
+document.addEventListener('click',e=>{const t=e.target;
+ const tb=t.closest('[data-tab]');if(tb){tab=tb.dataset.tab;document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',b===tb));scrSig='';renderAll();return}
+ const th=t.closest('[data-th]');if(th){thread=th.dataset.th;const c=S.chats.find(x=>x.cust===thread);if(c)c.unread=0;scrSig='';renderAll();return}
+ const d=t.closest('[data-dec]');if(d){decide(+d.dataset.dec,d.dataset.a);return}
+ const ch=t.closest('[data-chip]');if(ch){$('cmd').value=ch.dataset.chip;$('cmd').focus();return}
+ const sp=t.closest('[data-sp]');if(sp){speed=+sp.dataset.sp;document.querySelectorAll('[data-sp]').forEach(b=>b.setAttribute('aria-pressed',b===sp));if(S.run)restart()}});
+$('cmd-f').onsubmit=e=>{e.preventDefault();const v=$('cmd').value;if(!v.trim())return;command(v);$('cmd').value='';if(!S.run&&S.min===0){toast('Perintah dicatat. Tekan ▶ Mulai hari supaya tim mulai bekerja.')}else if(!S.run)toast('Tim akan mengerjakan saat jam berjalan. Tekan ▶.');save();renderAll()};
+$('b-play').onclick=()=>{if(S.min>=780){closeDay();return}S.run=!S.run;$('b-play').setAttribute('aria-pressed',S.run);$('b-play').textContent=S.run?'⏸ Jeda':'▶ Lanjut';if(S.run)restart();else clearInterval(timer);save()};
+$('b-bell').onclick=()=>$('inbox').scrollIntoView({behavior:'smooth',block:'center'});
+$('b-auto').onclick=()=>{S.auto=!S.auto;$('b-auto').setAttribute('aria-pressed',S.auto);if(S.auto)S.inbox.slice().forEach(i=>decide(i.id,'ok'));toast(S.auto?'Autopilot aktif: semua hasil disetujui otomatis. Bos tetap bertanggung jawab!':'Autopilot mati: hasil menunggu persetujuan Anda.');save()};
+let armed=false;$('b-reset').onclick=()=>{if(!armed){armed=true;$('b-reset').textContent='Klik lagi untuk mengulang';setTimeout(()=>{armed=false;$('b-reset').textContent='Ulang dari Hari 1'},3000);return}try{localStorage.removeItem(KEY)}catch(e){}location.reload()};
+document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
+(function init(){let st=null;try{st=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}S=st&&st.v===1?st:fresh();if(!st){planDay();log('ld','Selamat datang, Bos! Kantor AI SantriBos siap. Tekan ▶ Mulai hari untuk melihat tim bekerja. Hari 1 berisi 10 transaksi.')}
+ S.run=false;$('b-auto').setAttribute('aria-pressed',!!S.auto);$('b-play').textContent=S.min>0?'▶ Lanjut':'▶ Mulai hari';renderAll()})();
+window.__sb={S:()=>S,command,decide,tick:n=>{const r=S.run;S.run=true;for(let i=0;i<n;i++)tick();S.run=r}};
+})();
+</script>
+</body>
+</html>

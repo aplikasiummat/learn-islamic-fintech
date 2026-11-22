@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kantor AI SantriBos · Learn Islamic Fintech with Tazkia</title>
+<meta name="description" content="Simulasi kantor AI: toko SantriBos di marketplace dengan karyawan AI untuk marketing, keuangan, dan operasional. Anda Bos-nya: beri perintah, setujui, revisi, atau tolak.">
+<link rel="icon" href="../../assets/logo-tazkia.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="../../assets/site.css?v=20261112">
+<style>
+.facts4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:34px;max-width:900px}
+.facts4 div{border-top:1px solid var(--gold);padding-top:12px}
+.facts4 b{display:block;font-family:var(--serif);font-size:38px;line-height:1;color:#fff}
+.facts4 span{font-size:13.5px;color:#a9b4ab}
+@media (max-width:700px){.facts4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tick{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;gap:4px 12px;align-items:center;font-family:monospace;font-size:13px;color:#eef2f8;background:#1b2f52;border-radius:8px;padding:8px 12px}
+.tick small{font-family:var(--sans);color:#a9b7cc;font-size:11.5px}
+.tick .u{color:#3fb37f}.tick .d{color:#ff6b5e}
+.tick .des{font-family:var(--sans);font-size:10.5px;font-weight:700;background:#0f302e;color:#4fc7bf;border-radius:3px;padding:1px 5px}
+.tick .no{font-family:var(--sans);font-size:10.5px;font-weight:700;background:#3d1a18;color:#ff6b5e;border-radius:3px;padding:1px 5px}
+.blk{background:#3a2a10;color:#ffb54a;border-radius:8px;padding:8px 12px;font-size:12.5px}
+.mlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:30px}
+.mlist div{border:1px solid var(--line,#d8cfb8);padding:16px 18px;background:rgba(255,255,255,.55)}
+.mlist small{font-family:var(--cinzel);font-size:11px;letter-spacing:.16em;color:var(--gold3,#8a6520);text-transform:uppercase}
+.mlist b{display:block;font-family:var(--serif);font-size:21px;margin:4px 0 4px;line-height:1.15}
+.mlist span{font-size:14.5px;color:var(--muted)}
+.dosen{max-width:820px;margin:34px auto 0;border-left:3px solid var(--gold);padding:6px 0 6px 18px;color:var(--muted)}
+</style>
+</head>
+<body data-page="santribos" data-base="../../">
+
+<div class="topbar"><div class="wrap">
+  <span><span data-i="topbar"></span> · <span data-i="topbar2"></span></span>
+  <span class="ar">رَبِّ زِدْنِيْ عِلْمًا</span>
+</div></div>
+
+<header class="nav"><div class="wrap">
+  <a class="logo" href="../../" aria-label="Learn Islamic Fintech with Tazkia">
+    <span class="chip"><img src="../../assets/logo-tazkia.png" alt="Universitas Tazkia" width="600" height="206"></span>
+    <span><b>LEARN ISLAMIC FINTECH</b><small>WITH TAZKIA</small></span>
+  </a>
+  <nav class="menu" aria-label="Menu">
+    <a href="../../" data-i="nav0"></a>
+    <div class="dd"><a href="../../#selayang"><span data-i="menuAbout"></span><span>▼</span></a>
+      <div class="sub"><a href="../../#selayang" data-i="mKisah"></a><a href="../../#tentang" data-i="mPenyusun"></a><a href="../../#cara" data-i="mCara"></a><a href="../../#kolom" data-i="mKolom"></a></div></div>
+    <a href="../../bahan-ajar/" data-i="nav1"></a>
+    <div class="dd"><a href="../saham/" class="on"><span data-i="nav2"></span><span>▼</span></a>
+      <div class="sub"><a href="../dbcf/" data-i="mSimDbcf"></a><a href="../saham/" data-i="mSimSaham"></a><a href="../sukuk/" data-i="mSimSukuk"></a><a href="../amanah/" data-i="mSimAmanah"></a><a href="./" data-i="mSimSantribos"></a><a href="../mmq/" data-i="mSimMmq"></a><a href="../komite/" data-i="mSimKomite"></a><a href="../rcf/" data-i="mSimRcf"></a><a href="../agregator/" data-i="mSimAgg"></a><a href="../liga/" data-i="mSimLiga"></a></div></div>
+    <a href="../../#peta" data-i="nav3"></a>
+  </nav>
+  <button class="icobtn" type="button" data-search aria-label="Cari">⌕</button>
+  <div class="lang" role="group" aria-label="Bahasa / Language"><button type="button" data-lang="id" aria-pressed="true">ID</button><button type="button" data-lang="en" aria-pressed="false">EN</button></div>
+  <button class="burger" type="button" aria-label="Menu" aria-expanded="false">☰</button>
+</div></header>
+
+<main>
+  <section class="dark pbanner">
+    <div class="wm">مُدِيْر</div>
+    <div class="wrap" style="position:relative">
+      <div class="crumb"><a href="../../" data-i="nav0"></a><i>◆</i><span data-i="nav2"></span><i>◆</i><span data-i="sbCrumb"></span></div>
+      <h1 class="foil" data-i="sbTitle"></h1>
+      <p class="lead" data-i="sbLead"></p>
+      <div class="cta" style="margin-top:26px"><a class="btn gold" href="main.html" data-i="sbStart"></a><a class="btn line" href="#cara-main" data-i="sbHow"></a></div>
+      <div class="facts4">
+        <div><b>8</b><span data-i="sbF1"></span></div>
+        <div><b>7</b><span data-i="sbF2"></span></div>
+        <div><b>10</b><span data-i="sbF3"></span></div>
+        <div><b>0</b><span data-i="sbF4"></span></div>
+      </div>
+    </div>
+  </section>
+  <div class="zellige thin"></div>
+
+  <section class="dark" id="belajar">
+    <div class="wrap simgrid">
+      <div class="reveal">
+        <div class="eyebrow" data-i="sbLearnEyebrow"></div>
+        <h2 class="h2" data-i="sbLearnTitle"></h2>
+        <ul><li data-i="sbL1"></li><li data-i="sbL2"></li><li data-i="sbL3"></li><li data-i="sbL4"></li><li data-i="sbL5"></li><li data-i="sbL6"></li></ul>
+        <a class="btn gold" href="main.html" data-i="sbStart"></a>
+      </div>
+      <div class="browser reveal" aria-hidden="true">
+        <div class="bar"><i></i><i></i><i></i><span>learn-islamic-fintech / simulasi / santribos</span></div>
+        <div class="scr">
+          <div class="row"><span>Hari 1 · 09:52</span><span>4 agen bekerja</span></div>
+          <div class="tick"><b>SARI</b><small>CS AI</small><span>balas chat</span><span class="u">✓ 3</span><span class="des">OPERASIONAL</span></div>
+          <div class="tick"><b>RAKA</b><small>Konten AI</small><span>naskah TikTok</span><span class="u">✓ 1</span><span class="des">MARKETING</span></div>
+          <div class="tick"><b>ALDI</b><small>Akunting AI</small><span>jurnal SB1003</span><span class="u">✓ 2</span><span class="des">KEUANGAN</span></div>
+          <div class="blk" data-i="sbBlocked"></div>
+          <div class="m"><span data-i="sbM1"></span><b>Rp1,3 jt</b><span data-i="sbM2"></span><b>2</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="cara-main">
+    <div class="wrap">
+      <div class="center reveal" style="margin-bottom:44px"><div class="eyebrow" data-i="sbHowEyebrow"></div><h2 class="h2" data-i="sbHowTitle"></h2></div>
+      <div class="steps">
+        <div class="step reveal"><div class="k">I</div><b data-i="sbS1t"></b><span data-i="sbS1s"></span></div>
+        <div class="step reveal"><div class="k">II</div><b data-i="sbS2t"></b><span data-i="sbS2s"></span></div>
+        <div class="step reveal"><div class="k">III</div><b data-i="sbS3t"></b><span data-i="sbS3s"></span></div>
+        <div class="step reveal"><div class="k">IV</div><b data-i="sbS4t"></b><span data-i="sbS4s"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sebka" id="mekanisme">
+    <div class="wrap">
+      <div class="secthead reveal"><div><div class="eyebrow" data-i="sbMechEyebrow"></div><h2 class="h2" data-i="sbMechTitle"></h2><p class="lead" style="margin:0" data-i="sbMechLead"></p></div></div>
+      <div class="mlist reveal">
+        <div><small data-i="sbK1"></small><b data-i="sbK1t"></b><span data-i="sbK1s"></span></div>
+        <div><small data-i="sbK2"></small><b data-i="sbK2t"></b><span data-i="sbK2s"></span></div>
+        <div><small data-i="sbK3"></small><b data-i="sbK3t"></b><span data-i="sbK3s"></span></div>
+        <div><small data-i="sbK4"></small><b data-i="sbK4t"></b><span data-i="sbK4s"></span></div>
+        <div><small data-i="sbK5"></small><b data-i="sbK5t"></b><span data-i="sbK5s"></span></div>
+        <div><small data-i="sbK6"></small><b data-i="sbK6t"></b><span data-i="sbK6s"></span></div>
+        <div><small data-i="sbK7"></small><b data-i="sbK7t"></b><span data-i="sbK7s"></span></div>
+        <div><small data-i="sbK8"></small><b data-i="sbK8t"></b><span data-i="sbK8s"></span></div>
+      </div>
+      <p class="dosen reveal" data-i="sbDosen"></p>
+    </div>
+  </section>
+
+  <div class="zellige"></div>
+  <section class="dark ctaband">
+    <div class="wrap">
+      <div class="center"><div class="eyebrow">Wakaf Ilmu</div></div>
+      <h2 data-i="sbCta"></h2>
+      <div class="cta"><a class="btn gold" href="main.html" data-i="sbStart"></a><a class="btn line" href="../amanah/" data-i="mSimAmanah"></a></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="logo" href="../../"><span class="chip"><img src="../../assets/logo-tazkia.png" alt="Universitas Tazkia" width="600" height="206"></span><span><b>LEARN ISLAMIC FINTECH</b><small>WITH TAZKIA</small></span></a>
+      <p style="margin-top:18px" data-i="footAbout"></p>
+      <p data-i="footAddr" style="font-size:13.5px;color:#93a097"></p>
+      <div class="ar">وَلَا غَالِبَ إِلَّا اللّٰهُ</div>
+    </div>
+    <div>
+      <h4 data-i="footNav"></h4>
+      <ul><li><a href="../../bahan-ajar/" data-i="nav1"></a></li><li><a href="../dbcf/" data-i="mSimDbcf"></a></li><li><a href="../saham/" data-i="mSimSaham"></a></li><li><a href="../sukuk/" data-i="mSimSukuk"></a><a href="../amanah/" data-i="mSimAmanah"></a><a href="./" data-i="mSimSantribos"></a></li><li><a href="../mmq/" data-i="mSimMmq"></a></li><li><a href="../komite/" data-i="mSimKomite"></a></li><li><a href="../rcf/" data-i="mSimRcf"></a></li><li><a href="../agregator/" data-i="mSimAgg"></a></li><li><a href="../../#peta" data-i="nav3"></a></li><li><a href="../../#tentang" data-i="nav4"></a></li></ul>
+    </div>
+    <div>
+      <h4 data-i="footRel"></h4>
+      <ul><li><a href="https://tazkia.ac.id/" target="_blank" rel="noopener">Universitas Tazkia</a></li><li><a href="https://dsnmui.or.id/" target="_blank" rel="noopener">DSN-MUI</a></li><li><a href="https://www.ojk.go.id/" target="_blank" rel="noopener">Otoritas Jasa Keuangan</a></li><li><a href="https://www.idx.co.id/" target="_blank" rel="noopener">Bursa Efek Indonesia</a></li></ul>
+      <h4 style="margin-top:22px" data-i="footLic"></h4>
+      <p style="font-size:13.5px;margin:0" data-i="footLicTxt"></p>
+    </div>
+    <div class="bottom"><span data-i="footBottom"></span><span data-i="topbar"></span></div>
+  </div>
+</footer>
+<button class="totop" type="button" aria-label="Ke atas">↑</button>
+
+<script src="../../assets/site.js?v=20261123a"></script>
+</body>
+</html>
