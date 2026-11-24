@@ -68,6 +68,21 @@ button,input{font:inherit;color:inherit}button{cursor:pointer}
 @keyframes ty{50%{opacity:.2}}
 .desk.boss{background:var(--gold-soft);border-color:var(--gold)}
 .fly{position:fixed;z-index:40;font-size:1.2rem;pointer-events:none;transition:transform .7s cubic-bezier(.4,.1,.3,1),opacity .7s;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
+.walker{position:fixed;z-index:45;pointer-events:none;transition:transform 1.15s linear;display:flex;flex-direction:column;align-items:center}
+.walker .bd{font-size:1.7rem;line-height:1;animation:step .32s ease-in-out infinite alternate;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
+.walker .tagw{font-size:.62rem;font-weight:800;background:var(--green);color:#fff;border-radius:6px;padding:0 5px;margin-top:2px;white-space:nowrap}
+.walker .carry{position:absolute;top:-10px;right:-14px;font-size:1rem}
+@keyframes step{from{transform:translateY(0) rotate(-6deg)}to{transform:translateY(-4px) rotate(6deg)}}
+.desk.away .av{opacity:.25}.desk.away .stt::after{content:" · sedang berjalan";color:var(--orange)}
+.amen{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap}.amen div{flex:1 1 120px;border:2px dotted var(--line);border-radius:10px;padding:8px 10px;text-align:center;font-weight:800;font-size:.82rem;color:var(--muted);background:var(--surface)}
+.amen div.busy{border-color:var(--green);color:var(--green);background:var(--green-soft)}
+.mvpw{display:flex;flex-direction:column;gap:10px}.mvpw .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.mvpw .hd b{font-size:1rem}
+.phase{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;grid-template-columns:62px minmax(0,1fr);gap:4px 12px;background:var(--surface)}
+.phase .ill{grid-row:span 3;font-size:2rem;display:grid;place-items:center;border-radius:12px;background:var(--surface2);height:62px}
+.phase.run{border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-soft)}.phase.run .ill{animation:bob 1s ease-in-out infinite}.phase.ok{border-color:var(--green)}
+.phase h4{margin:0;font-size:.95rem}.phase .who{font-size:.78rem;color:var(--muted)}.phase .pr{font-family:var(--mono);font-size:.74rem;background:#111827;color:#e6f2ea;border-radius:8px;padding:6px 8px}
+.phase .out{grid-column:2;font-size:.82rem;white-space:pre-line}.phase .st{font-size:.7rem;font-weight:800;border-radius:8px;padding:1px 7px;margin-left:6px}
+.phase .st.ok{background:var(--green-soft);color:var(--green)}.phase .st.run{background:var(--orange-soft);color:var(--orange)}.phase .st.wait{background:var(--surface2);color:var(--muted)}
 /* activity log */
 .log{list-style:none;margin:0;padding:0;max-height:260px;overflow:auto;font-size:.84rem}
 .log li{display:grid;grid-template-columns:48px minmax(0,1fr);gap:8px;padding:6px 12px;border-bottom:1px solid var(--line)}.log li time{font-family:var(--mono);color:var(--muted);font-size:.75rem}
@@ -143,9 +158,10 @@ button,input{font:inherit;color:inherit}button{cursor:pointer}
       <header><h2>Lantai kantor · karyawan AI bekerja</h2><span class="mono" style="font-size:.78rem;color:var(--muted)" id="busy">0 sedang bekerja</span></header>
       <div class="floor" id="floor">
         <div class="zone ld"><h3>👑 Pimpinan</h3><div class="desk boss" id="d-bos"></div><div class="desk" id="d-lead"></div></div>
-        <div class="zone mk"><h3>📣 Tim Marketing</h3><div class="desk" id="d-konten"></div><div class="desk" id="d-editor"></div></div>
+        <div class="zone mk"><h3>📣 Tim Marketing</h3><div class="desk" id="d-analis"></div><div class="desk" id="d-konten"></div><div class="desk" id="d-editor"></div></div>
         <div class="zone fn"><h3>💰 Tim Keuangan</h3><div class="desk" id="d-akunting"></div><div class="desk" id="d-finance"></div></div>
         <div class="zone op"><h3>📦 Tim Operasional</h3><div class="desk" id="d-admin"></div><div class="desk" id="d-cs"></div></div>
+        <div class="amen"><div id="spot-pantry">☕ Pantry</div><div id="spot-musholla">🕌 Musholla</div><div id="spot-printer">🖨️ Printer</div><div id="spot-rapat">🗣️ Ruang rapat</div></div>
       </div>
       <header style="border-top:1px solid var(--line)"><h2>Catatan aktivitas</h2><span style="font-size:.76rem;color:var(--muted)">semua kerja agen tercatat di sini</span></header>
       <ul class="log" id="log"></ul>
@@ -157,6 +173,7 @@ button,input{font:inherit;color:inherit}button{cursor:pointer}
         <button type="button" role="tab" data-tab="order" aria-selected="false">🛒 Pesanan toko</button>
         <button type="button" role="tab" data-tab="sosmed" aria-selected="false">📱 IG & TikTok</button>
         <button type="button" role="tab" data-tab="fin" aria-selected="false">📒 Keuangan</button>
+        <button type="button" role="tab" data-tab="mvp" aria-selected="false">🚀 MVP</button>
         <button type="button" role="tab" data-tab="prod" aria-selected="false">🏷️ Produk</button>
       </div>
       <div class="scr" id="scr"></div>
@@ -192,13 +209,14 @@ const KEY='santribos-v1',FEE=.06;
 const AG={
  bos:{nm:'Anda',role:'Bos SantriBos',em:'🧕',team:'bos',human:true},
  lead:{nm:'Lina',role:'Team Leader · membagi & memantau tugas',em:'👩‍💼',team:'ld'},
+ analis:{nm:'Rani',role:'Analis Pasar · riset kebutuhan & tren',em:'🔎',team:'mk'},
  konten:{nm:'Raka',role:'Konten · ide, caption, naskah',em:'✍️',team:'mk'},
  editor:{nm:'Nisa',role:'Editor · video, desain, posting',em:'🎬',team:'mk'},
  akunting:{nm:'Aldi',role:'Akunting · jurnal & laporan',em:'📊',team:'fn'},
  finance:{nm:'Fikri',role:'Finance · verifikasi dana & harga',em:'💳',team:'fn'},
  admin:{nm:'Tari',role:'Admin Toko · listing, stok, kirim',em:'📦',team:'op'},
  cs:{nm:'Sari',role:'CS · balas chat & pesanan masuk',em:'💬',team:'op'}};
-const ALIAS={leader:'lead',lead:'lead',lina:'lead',tl:'lead',konten:'konten',content:'konten',raka:'konten',copywriter:'konten',editor:'editor',nisa:'editor',desain:'editor',designer:'editor',
+const ALIAS={analis:'analis',analisis:'analis',riset:'analis',rani:'analis',pasar:'analis',leader:'lead',lead:'lead',lina:'lead',tl:'lead',konten:'konten',content:'konten',raka:'konten',copywriter:'konten',editor:'editor',nisa:'editor',desain:'editor',designer:'editor',
  akunting:'akunting',akuntan:'akunting',aldi:'akunting',finance:'finance',keuangan:'finance',fikri:'finance',admin:'admin',toko:'admin',tari:'admin',cs:'cs',sari:'cs',chat:'cs',marketing:'konten',operasional:'admin'};
 // ---------------- products
 const PROD0=[
@@ -234,11 +252,20 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 // task: {id,ag,title,dur,left,from,kind,data}
 function give(ag,title,dur,kind,data,from){const t={id:S.seq++,ag,title,dur,left:dur,kind,data:data||{},from:from||'lead'};(S.q[ag]=S.q[ag]||[]).push(t);if(from&&from!==ag)fly(from,ag);return t}
 const HANDLERS={};
-function step(){for(const ag in AG){if(AG[ag].human)continue;let c=S.cur[ag];if(!c){const q=S.q[ag]||[];if(!q.length)continue;c=S.cur[ag]=q.shift();if(c.kind!=='silent')log(AG[ag].team,`<b>${AG[ag].nm}</b> mulai: ${c.title}`)}
+function step(){if(S.prayUntil&&S.min<S.prayUntil)return;for(const ag in AG){if(AG[ag].human)continue;let c=S.cur[ag];if(!c){const q=S.q[ag]||[];if(!q.length)continue;c=S.cur[ag]=q.shift();if(c.kind!=='silent')log(AG[ag].team,`<b>${AG[ag].nm}</b> mulai: ${c.title}`)}
   c.left--;if(c.left<=0){S.cur[ag]=null;S.done[ag]=(S.done[ag]||0)+1;const h=HANDLERS[c.kind];if(h)h(c)}}}
 function at(min,fn,data){S.sched.push({min,fn,data})}
 // ---------------- flying envelope between desks
-function fly(a,b,em){const A=$('d-'+a),B=$('d-'+b);if(!A||!B||document.hidden)return;const ra=A.getBoundingClientRect(),rb=B.getBoundingClientRect();if(!ra.width||!rb.width)return;
+let walking={};
+function walkPath(a,el,em,stay,back){const A=$('d-'+a);if(!A||!el||document.hidden||walking[a])return false;const av=A.querySelector('.av');const ra=(av||A).getBoundingClientRect(),rb=el.getBoundingClientRect();if(!ra.width||!rb.width)return false;
+ walking[a]=1;A.classList.add('away');const w=document.createElement('div');w.className='walker';w.innerHTML=`<span class="bd">${AG[a].em}</span><span class="tagw">${AG[a].nm}</span>${em?`<span class="carry">${em}</span>`:''}`;
+ w.style.left=(ra.left+4)+'px';w.style.top=(ra.top-2)+'px';document.body.appendChild(w);const dx=rb.left+rb.width/2-ra.left-24,dy=rb.top+rb.height/2-ra.top-24;
+ requestAnimationFrame(()=>{w.style.transform=`translate(${dx}px,${dy}px)`});
+ setTimeout(()=>{const c=w.querySelector('.carry');if(c&&back)c.remove();w.style.transform='translate(0,0)'},1150+stay);
+ setTimeout(()=>{w.remove();A.classList.remove('away');walking[a]=0},2350+stay);return true}
+function walk(a,b,em){const B=$('d-'+b);return B?walkPath(a,B,em||'📨',500,true):false}
+function walkTo(a,spot,stay){const el=$('spot-'+spot);if(!el)return;if(walkPath(a,el,'',stay||1500,false)){el.classList.add('busy');setTimeout(()=>el.classList.remove('busy'),2400+(stay||1500))}}
+function fly(a,b,em){if(a!=='bos'&&b!=='bos'&&AG[a]&&!AG[a].human&&walk(a,b,em))return;const A=$('d-'+a),B=$('d-'+b);if(!A||!B||document.hidden)return;const ra=A.getBoundingClientRect(),rb=B.getBoundingClientRect();if(!ra.width||!rb.width)return;
  const f=document.createElement('div');f.className='fly';f.textContent=em||'📨';f.style.left=(ra.left+24)+'px';f.style.top=(ra.top+20)+'px';document.body.appendChild(f);
  requestAnimationFrame(()=>{f.style.transform=`translate(${rb.left-ra.left}px,${rb.top-ra.top}px)`});setTimeout(()=>{f.style.opacity='0'},650);setTimeout(()=>f.remove(),1400)}
 // ---------------- chats and orders
@@ -272,10 +299,12 @@ HANDLERS.journal=t=>{const o=S.orders.find(x=>x.no===t.data.no);const hpp=o.item
 const THEMES=[['peci rajut','🧢','#0f7a4a'],['sarung tenun','🧣','#2459c4'],['parfum non-alkohol','🌸','#7b3fc4'],['koko putih','👕','#c9960a'],['tasbih kayu','📿','#8a5a2b'],['buku catatan ngaji','📓','#d0453b']];
 function themeOf(txt){txt=(txt||'').toLowerCase();for(const p of S.prod){const k=p.nm.toLowerCase().split(' ')[0];if(txt.includes(k))return [p.nm.toLowerCase(),p.em,'#0f7a4a',p.id]}const th=THEMES.find(x=>txt.includes(x[0].split(' ')[0]));return th?th.concat([null]):null}
 function content(brief,plat,from){const th=themeOf(brief)||THEMES[Math.floor(Math.random()*THEMES.length)];const c={id:S.seq++,brief,plat:plat||'IG Reels + TikTok',th,rev:0};
- log('ld',`<b>Lina</b> membagi tugas konten “${esc(brief)}” ke Raka (naskah) dan Nisa (editing).`);give('konten',`Tulis caption & naskah: ${brief}`,14,'draft',{c},from||'lead')}
+ log('ld',`<b>Lina</b> membagi tugas konten “${esc(brief)}”: Rani cek tren, Raka menulis naskah, Nisa mengedit.`);give('analis',`Cek tren untuk: ${brief}`,6,'insight',{c},from||'lead')}
+const INSIGHTS=['pencarian “hampers santri” naik menjelang akhir tahun','video 15–30 detik dengan teks besar paling banyak ditonton','wali santri paling aktif belanja malam hari pukul 19–21','kata kunci “halal” dan “tanpa alkohol” menaikkan klik','pesaing jarang membalas chat lebih dari 1 jam','ulasan bintang 1 pesaing banyak mengeluhkan ukuran']
+HANDLERS.insight=t=>{const c=t.data.c;c.insight=INSIGHTS[Math.floor(Math.random()*INSIGHTS.length)];log('mk',`<b>Rani</b> (Analis Pasar): ${c.insight}. Insight diteruskan ke Raka.`);give('konten',`Tulis caption & naskah: ${c.brief}`,14,'draft',{c},'analis')};
 function caption(c){const nm=c.th[0],notes=S.train.filter(x=>x.ag==='konten').map(x=>x.note);const promo=S.promo?` Lagi promo ${S.promo.pct}%!`:'';
  const hooks=[`POV: kamu santri yang mau tampil rapi tapi tetap hemat 😎`,`3 alasan ${nm} SantriBos jadi favorit santri 👇`,`Unboxing ${nm} SantriBos: worth it nggak?`,`Siap-siap Jumat berkah? ✨`];
- return `${hooks[(c.id+c.rev)%hooks.length]}\n${nm[0].toUpperCase()+nm.slice(1)} pilihan santri: adem, rapi, dan amanah.${promo}\nCheckout di toko SantriBos, link di bio.\n#santri #santribos #pesantren #muslimstyle${notes.length?'\n(Sudah mengikuti catatan Bos: '+notes.slice(-2).join('; ')+')':''}`}
+ return `${hooks[(c.id+c.rev)%hooks.length]}\n${nm[0].toUpperCase()+nm.slice(1)} pilihan santri: adem, rapi, dan amanah.${promo}\nCheckout di toko SantriBos, link di bio.\n#santri #santribos #pesantren #muslimstyle${c.insight?'\n(Insight Rani: '+c.insight+')':''}${notes.length?'\n(Sudah mengikuti catatan Bos: '+notes.slice(-2).join('; ')+')':''}`}
 HANDLERS.draft=t=>{const c=t.data.c;c.cap=caption(c);log('mk',`<b>Raka</b> selesai menulis naskah 30 detik + caption untuk ${c.plat}.`);give('editor',`Edit video & thumbnail: ${c.brief}`,16,'edit',{c},'konten')};
 HANDLERS.edit=t=>{const c=t.data.c;log('mk',`<b>Nisa</b> selesai mengedit video (cut, subtitle, musik nasyid tanpa alat musik) dan thumbnail.`);give('lead',`Review konten: ${c.brief}`,4,'review',{c},'editor')};
 HANDLERS.review=t=>{const c=t.data.c;ask(`Konten siap tayang: ${c.brief}`,`Platform: ${c.plat}\n\n${c.cap}`,'content',{c});fly('lead','bos','🎞️')};
@@ -309,11 +338,13 @@ function command(raw){const txt=raw.trim();if(!txt)return;const low=txt.toLowerC
  if(/zakat|sedekah|infak/.test(low)){give('finance','Hitung zakat/sedekah dari laba',5,'zakat',{pct:num(/(\d+)\s*%/)},'lead');return}
  if(/iklan|ads|boost|promosikan|naikkan views/.test(low)){const b=num(/rp\s?([\d.]+)/)||num(/(\d+)\s*(rb|ribu)/)*1000||100000;give('finance',`Setujui anggaran iklan ${rp(b)}`,4,'adsFin',{b},'lead');return}
  if(/live/.test(low)){give('konten','Siapkan rundown live TikTok',8,'liveprep',{},'lead');return}
+ if(/mvp|uji produk|produk uji/.test(low)){const prod=(txt.replace(/@\w+/,'').match(/mvp\s+(.+)/i)||[])[1]||'produk baru SantriBos';startMVP(prod.trim());return}
+ if(/riset|analisis pasar|analisa pasar|tren|kompetitor|pesaing|survei/.test(low)){give('analis','Riset pasar: '+txt.replace(/@\w+\s*/,''),12,'market',{q:txt.replace(/@\w+\s*/,'')},'lead');return}
  if(/produk baru|tambah produk|jual (juga )?/.test(low)){const nm=(txt.match(/(?:produk baru|tambah produk|jual(?: juga)?)\s*:?\s*([^,.]+?)(?:\s+harga|$|,)/i)||[])[1]||'Produk Baru SantriBos';const h=num(/rp\s?([\d.]+)/)||num(/harga\s*([\d.]+)/)||50000;give('admin',`Upload produk baru: ${nm}`,8,'newprod',{nm:nm.trim(),h},'lead');return}
  if(/follow ?up|balas (semua )?chat|chat yang belum/.test(low)){give('cs','Follow up pembeli yang belum bayar dan chat belum terbalas',6,'followup',{},'lead');return}
  // anything else: the leader decides who does it, and it always produces a result
  const ag=to&&to!=='bos'?to:guess(low);log('ld',`<b>Lina</b>: “Siap, Bos.” Tugas diberikan ke ${AG[ag].nm} (${AG[ag].role.split(' · ')[0]}).`);give(ag,txt.replace(/@\w+\s*/,''),8+Math.floor(Math.random()*6),'generic',{cmd:txt.replace(/@\w+\s*/,''),ag},'lead')}
-function guess(low){const K=[['konten',/konten|caption|copy|ide|tema|hashtag|tren|influencer|endorse|brand|logo|nama|slogan|desain|poster|foto/],['editor',/edit|thumbnail|video|gambar|template/],['akunting',/jurnal|pajak|catat|akuntansi|laporan|audit|biaya/],['finance',/uang|bayar|transfer|modal|harga|margin|budget|anggaran|gaji|bank|investasi|pinjam/],['admin',/kirim|resi|kemas|toko|marketplace|listing|etalase|gudang|supplier|ongkir|kurir/],['cs',/pembeli|pelanggan|customer|chat|komplain|review|ulasan|rating|balas|tanya/]];
+function guess(low){const K=[['analis',/riset|pasar|tren|kompetitor|pesaing|survei|data pembeli|kebutuhan/],['konten',/konten|caption|copy|ide|tema|hashtag|tren|influencer|endorse|brand|logo|nama|slogan|desain|poster|foto/],['editor',/edit|thumbnail|video|gambar|template/],['akunting',/jurnal|pajak|catat|akuntansi|laporan|audit|biaya/],['finance',/uang|bayar|transfer|modal|harga|margin|budget|anggaran|gaji|bank|investasi|pinjam/],['admin',/kirim|resi|kemas|toko|marketplace|listing|etalase|gudang|supplier|ongkir|kurir/],['cs',/pembeli|pelanggan|customer|chat|komplain|review|ulasan|rating|balas|tanya/]];
  for(const [a,re] of K)if(re.test(low))return a;return 'lead'}
 HANDLERS.generic=t=>{const a=t.data.ag||t.ag,cmd=t.data.cmd,who=AG[a],notes=S.train.filter(x=>x.ag===a).map(x=>x.note);
  const plan={lead:['Membagi tugas ke tim terkait','Memantau progres tiap agen','Merangkum hasil untuk Bos'],konten:['Riset tren dan kata kunci santri','Menyusun 3 opsi ide atau naskah','Memilih opsi terbaik sesuai gaya SantriBos'],editor:['Menyiapkan aset visual','Mengedit dan memberi subtitle','Ekspor format IG dan TikTok'],
@@ -346,6 +377,24 @@ HANDLERS.liveprep=t=>{log('mk',`<b>Raka</b> menyiapkan rundown live 30 menit: sa
 HANDLERS.live=t=>{S.posts.unshift({pf:'TikTok',cap:'LIVE: belanja perlengkapan santri bareng SantriBos',th:['live','🔴','#d0453b'],t:hhmm(S.min),day:S.day,vw:0,lk:0,cm:0,rate:140,boost:0});log('mk',`<b>Nisa</b> selesai live. Penonton masuk ke toko.`);for(let i=0;i<3;i++)at(S.min+5+i*12,'randomBuyer',{})};
 HANDLERS.newprod=t=>{const id='N'+S.seq;S.prod.push({id,nm:t.data.nm,em:'🆕',harga:t.data.h,hpp:Math.round(t.data.h*.6),stok:30});log('op',`<b>Tari</b> mengunggah produk baru “${esc(t.data.nm)}” ${rp(t.data.h)}, stok 30.`);content('produk baru '+t.data.nm,'IG Reels + TikTok','admin')};
 HANDLERS.followup=t=>{const w=S.orders.filter(o=>o.st==='wait');w.forEach(o=>say(o.cust,'out','Kak, pesanannya masih menunggu pembayaran ya. Ada yang bisa kami bantu? 🙏'));S.chats.forEach(c=>c.unread=0);log('op',`<b>Sari</b> follow up ${w.length} pesanan belum bayar dan menuntaskan semua chat.`)};
+
+HANDLERS.market=t=>{const q=t.data.q;const res=`RISET PASAR · Rani (Analis Pasar AI)\nPertanyaan: ${q}\n\nTemuan:\n1. ${INSIGHTS[0]}\n2. ${INSIGHTS[2]}\n3. ${INSIGHTS[4]}\n\nPesaing utama: 3 toko besar dengan harga 5–10% lebih murah, tetapi lambat membalas chat dan tidak menjelaskan kehalalan.\nPeluang: jual dengan kejujuran (foto asli, label halal jelas) dan respons cepat oleh CS AI.\n\nAlat: Perplexity atau ChatGPT (riset web) + Google Trends. Mohon dicek, Bos.`;
+ log('mk',`<b>Rani</b> menyelesaikan riset pasar: “${esc(q)}”.`);ask('Hasil riset pasar Rani',res,'task',{ag:'analis',task:q,cmd:q});fly('analis','bos','📊')};
+// ---------------- MVP: five phases, each run by AI agents, the boss approves at the end
+const MVP=[{n:'Analisis kebutuhan',ill:'🔎📋',ag:['analis'],tool:'Perplexity / ChatGPT · Google Trends',pr:p=>`Kamu analis pasar. Cari 10 keluhan orang tentang ${p}, lengkap dengan sumbernya, dalam tabel.`,dur:14,out:p=>`Masalah utama: pembeli ${p} sulit menemukan penjual yang jujur, cepat, dan paham kebutuhan santri.`},
+ {n:'Rancang produk',ill:'🧩💡',ag:['lead','finance'],tool:'Claude / ChatGPT',pr:p=>`Usulkan 5 varian ${p}, harga, modal, dan akad syariah, beserta risikonya.`,dur:12,out:p=>`Konsep: 3 varian ${p}, harga Rp75.000–Rp150.000, akad pre-order (Salam), margin 45%.`},
+ {n:'Bangun MVP',ill:'🎨🛠️',ag:['editor','konten'],tool:'Canva · CapCut · Claude/Gemini',pr:p=>`Buat katalog satu halaman untuk ${p} dengan foto, harga, dan tombol WhatsApp.`,dur:18,out:p=>`Siap jual: 5 contoh ${p}, katalog satu halaman, dan 2 video pendek.`},
+ {n:'Piloting dan leads',ill:'🎤📈',ag:['konten','cs'],tool:'Google Meet/Zoom gratis · Google Forms · WhatsApp Business',pr:p=>`Susun webinar gratis 30 menit tentang ${p}, formulir pendaftaran, dan 3 pesan follow-up.`,dur:20,out:p=>`Webinar diikuti 46 orang, 38 leads tercatat, 12 pesanan pre-order ${p}.`},
+ {n:'Evaluasi',ill:'📊✅',ag:['akunting'],tool:'Google Sheets + Gemini · ChatGPT/Claude',pr:p=>`Ringkas ulasan dan angka penjualan ${p}: yang disukai, dikeluhkan, dan 3 perbaikan versi 2.`,dur:10,out:p=>`Laba kotor Rp540.000 dari 12 pesanan; 10 dari 12 pembeli puas; perbaikan: pengiriman lebih cepat, pilihan warna, kemasan hadiah.`}];
+function startMVP(prod){S.mvp={prod,ph:0,done:[],start:hhmm(S.min)};log('ld',`🚀 <b>Lina</b> memulai MVP “${esc(prod)}”: lima fase, setiap fase dikerjakan karyawan AI.`);runPhase();tab='mvp';document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab==='mvp'));scrSig=''}
+function runPhase(){const m=S.mvp,ph=MVP[m.ph];if(!ph)return;ph.ag.forEach((a,i)=>give(a,`MVP · ${ph.n}: ${m.prod}`,ph.dur+i*2,'mvpstep',{ph:m.ph,last:i===ph.ag.length-1},i?ph.ag[0]:'lead'))}
+HANDLERS.mvpstep=t=>{const m=S.mvp;if(!m||t.data.ph!==m.ph||!t.data.last)return;const ph=MVP[m.ph];m.done.push({out:ph.out(m.prod),t:hhmm(S.min)});log(AG[ph.ag[0]].team,`🚀 MVP fase ${m.ph+1} selesai (${ph.n}): ${ph.out(m.prod)}`);
+ if(m.ph===3)for(let i=0;i<3;i++)at(S.min+5+i*8,'randomBuyer',{});
+ m.ph++;if(m.ph<MVP.length){fly(ph.ag[0],MVP[m.ph].ag[0],'🚀');runPhase()}else{ask(`Laporan MVP: ${m.prod}`,`MVP ${m.prod} selesai dalam 5 fase.\n\n`+MVP.map((p,i)=>`${i+1}. ${p.n} (${p.ag.map(a=>AG[a].nm).join(', ')} · ${p.tool})\n   ${m.done[i].out}`).join('\n')+`\n\nKeputusan Bos: lanjut ke versi 2, ubah, atau berhenti?`,'task',{ag:'lead',task:'MVP '+m.prod,cmd:'MVP '+m.prod});fly('lead','bos','📑')}};
+function mvpHTML(){const m=S.mvp;if(!m)return `<div class="mvpw"><p class="empty">Belum ada MVP berjalan. Ketik perintah seperti <b>mulai MVP kaligrafi custom</b>. Tim AI akan mengerjakan lima fase: analisis kebutuhan, rancang produk, bangun MVP, piloting dan leads, lalu evaluasi.</p>${MVP.map((p,i)=>phaseHTML(p,i,null)).join('')}</div>`;
+ return `<div class="mvpw"><div class="hd"><b>🚀 MVP: ${esc(m.prod)}</b><span class="chip ${m.ph>=MVP.length?'c-done':'c-ship'}">${m.ph>=MVP.length?'Selesai, menunggu keputusan Bos':'Fase '+(m.ph+1)+' dari 5'}</span></div>${MVP.map((p,i)=>phaseHTML(p,i,m)).join('')}</div>`}
+function phaseHTML(p,i,m){const st=!m?'wait':i<m.ph?'ok':i===m.ph?'run':'wait';const prod=m?m.prod:'produk Anda';
+ return `<div class="phase ${st}"><div class="ill">${p.ill}</div><h4>${i+1}. ${p.n}<span class="st ${st}">${st==='ok'?'selesai':st==='run'?'sedang dikerjakan':'menunggu'}</span></h4><div class="who">${p.ag.map(a=>AG[a].em+' '+AG[a].nm).join(' + ')} · ${p.tool}</div><div class="pr">${esc(p.pr(prod))}</div>${m&&m.done[i]?`<div class="out">✅ ${esc(m.done[i].out)}</div>`:''}</div>`}
 // random buyers after content, ads, live, and on day 2+
 const NAMES=['Zahra','Ilham','Bu Rahma','Fajar','Nabila','Hasan','Kak Dinda','Umar','Laila','Pak Hendra','Aulia','Rafi'];
 const KOTA=['Jakarta','Bogor','Depok','Bekasi','Bandung','Surabaya','Medan','Makassar','Yogyakarta','Semarang'];
@@ -353,12 +402,14 @@ function randomBuyer(d){const p=d&&d.th&&d.th[3]?P(d.th[3]):S.prod[Math.floor(Ma
  const asks=[`Kak, ${p.nm.toLowerCase()} masih ada? Lihat dari TikTok`,`${p.nm} ready kak? Mau ${n}`,`Liat konten SantriBos di IG, ${p.nm.toLowerCase()} bisa kirim hari ini?`,`Assalamualaikum, mau order ${p.nm.toLowerCase()} ${n} ya`];
  custArrives({cust:NAMES[Math.floor(Math.random()*NAMES.length)]+' '+String.fromCharCode(65+Math.floor(Math.random()*26))+'.',kota:KOTA[Math.floor(Math.random()*KOTA.length)],ask:asks[Math.floor(Math.random()*asks.length)],items:[[p.id,n]]})}
 // ---------------- clock
-const SCHED_FN={checkout:d=>checkout(d.x),checkoutU:d=>checkout(d.x,d.u),pay:d=>pay(d.no),randomBuyer:d=>randomBuyer(d),cust:d=>custArrives(d.x),content:d=>content(d.brief,d.plat,'lead'),brief:()=>{log('ld','<b>Lina</b> (Team Leader) membuka hari: Raka & Nisa siapkan konten pagi, Sari pegang chat, Tari cek stok, Fikri & Aldi siapkan pembukuan.');for(const a of ['konten','editor','admin','cs','finance','akunting'])fly('lead',a)},
+const SCHED_FN={checkout:d=>checkout(d.x),checkoutU:d=>checkout(d.x,d.u),pay:d=>pay(d.no),randomBuyer:d=>randomBuyer(d),cust:d=>custArrives(d.x),content:d=>content(d.brief,d.plat,'lead'),brief:()=>{log('ld','<b>Lina</b> (Team Leader) membuka hari: Raka & Nisa siapkan konten pagi, Sari pegang chat, Tari cek stok, Fikri & Aldi siapkan pembukuan.');for(const a of ['analis','konten','editor','admin','cs','finance','akunting'])fly('lead',a)},
  close:()=>closeDay(),stockam:()=>give('admin','Cek stok & etalase pagi',6,'stock',{},'lead'),deliver:()=>{let n=0;S.orders.forEach(o=>{if(o.st==='ship'&&o.day<S.day){o.st='done';n++}});if(n)log('fn',`<b>Fikri</b>: ${n} pesanan kemarin diterima pembeli; saldo marketplace cair ke rekening.`)}};
 function planDay(){S.sched=[];at(1,'brief');at(3,'stockam');at(2,'deliver');at(5,'content',{brief:S.day===1?'peci rajut untuk santri baru':'konten harian produk SantriBos',plat:'IG Reels + TikTok'});at(420,'content',{brief:S.day===1?'unboxing sarung tenun santri':'tips rapi ke masjid',plat:'TikTok'});
  if(S.day===1)DAY1.forEach(x=>at(x.at,'cust',{x}));else{const n=8+Math.floor(Math.random()*8);for(let i=0;i<n;i++)at(30+Math.floor(Math.random()*680),'randomBuyer',{})}
  at(780,'close')}
 function tick(){if(!S.run)return;S.min++;
+ if(S.min===245||S.min===440||S.min===605){const w={245:'Dzuhur',440:'Ashar',605:'Maghrib'}[S.min];S.prayUntil=S.min+12;log('ld',`🕌 <b>Waktu ${w}:</b> Lina mengajak tim shalat berjamaah. Pekerjaan dijeda sebentar.`);Object.keys(AG).filter(a=>!AG[a].human).forEach((a,i)=>setTimeout(()=>walkTo(a,'musholla',2600),i*180))}
+ else if(S.min%23===0){const idle=Object.keys(AG).filter(a=>!AG[a].human&&!S.cur[a]&&!(S.q[a]||[]).length&&!walking[a]);if(idle.length){const a=idle[Math.floor(Math.random()*idle.length)],sp=['pantry','printer','rapat'][Math.floor(Math.random()*3)];walkTo(a,sp,1200);if(sp==='pantry'&&Math.random()<.4)log(AG[a].team,`☕ <b>${AG[a].nm}</b> rehat sebentar di pantry.`)}}
  const due=S.sched.filter(s=>s.min<=S.min);S.sched=S.sched.filter(s=>s.min>S.min);for(const s of due)SCHED_FN[s.fn]&&SCHED_FN[s.fn](s.data);
  step();for(const p of S.posts){if(p.day!==S.day&&p.rate<1)continue;const add=(p.rate+p.boost)*(.6+Math.random()*.8);p.vw+=add;p.lk+=add*.08;p.cm+=add*.006;p.rate*=.993;p.boost*=.99}
  S.kpi.vw=S.posts.reduce((a,p)=>a+p.vw,0);if(S.min%5===0)save();renderAll()}
@@ -389,19 +440,20 @@ function renderScreen(){const el=$('scr');
  if(tab==='sosmed')el.innerHTML=S.posts.length?`<div class="posts">${S.posts.map(p=>`<div class="post"><div class="pic" style="background:${p.th[2]}"><span class="pf">${p.pf==='TikTok'?'♪ TikTok':'◎ Instagram'}</span>${p.th[1]}</div><div class="bd">${esc(p.cap.split('\n')[0])}<div class="st"><span>👁 ${Math.round(p.vw).toLocaleString('id-ID')}</span><span>♥ ${Math.round(p.lk).toLocaleString('id-ID')}</span><span>💬 ${Math.round(p.cm)}</span></div><small style="color:var(--muted)">H${p.day} ${p.t}</small></div></div>`).join('')}</div>`:'<p class="empty">Belum ada konten tayang. Konten pagi sedang dibuat tim marketing dan menunggu persetujuan Bos.</p>';
  if(tab==='fin'){const k=S.kpi,lb=k.om-k.hpp-k.fee-k.ads;el.innerHTML=`<div class="fin"><div><span>Penjualan</span><b>${rp(k.om)}</b></div><div><span>HPP</span><b>${rp(k.hpp)}</b></div><div><span>Biaya marketplace</span><b>${rp(k.fee)}</b></div><div><span>Iklan</span><b>${rp(k.ads)}</b></div><div><span>Laba bersih</span><b>${rp(lb)}</b></div><div><span>Zakat 2,5% (cadangan)</span><b>${rp(Math.max(0,lb)*.025)}</b></div></div>
    <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:6px 0">Jurnal umum (Aldi · Akunting AI)</h3>${S.jur.length?`<table class="tbl"><thead><tr><th>Jam</th><th>Ref</th><th>Akun</th><th class="n">Debit</th><th class="n">Kredit</th></tr></thead><tbody>${S.jur.slice(0,40).map(j=>j.rows.map((r,i)=>`<tr><td class="mono">${i?'':j.t}</td><td class="mono">${i?'':j.ref}</td><td style="${r[2]?'padding-left:22px':''}">${r[0]}</td><td class="n">${r[1]?rp(r[1]):''}</td><td class="n">${r[2]?rp(r[2]):''}</td></tr>`).join('')).join('')}</tbody></table>`:'<p class="empty">Belum ada jurnal.</p>'}`}
+ if(tab==='mvp')el.innerHTML=mvpHTML();
  if(tab==='prod')el.innerHTML=`<table class="tbl"><thead><tr><th>Produk</th><th class="n">Harga</th><th class="n">HPP</th><th class="n">Margin</th><th class="n">Stok</th></tr></thead><tbody>${S.prod.map(p=>`<tr><td>${p.em} ${esc(p.nm)}${S.promo&&(S.promo.id==='ALL'||S.promo.id===p.id)?` <span class="chip c-ask">promo ${S.promo.pct}%</span>`:''}</td><td class="n">${rp(price(p.id))}</td><td class="n">${rp(p.hpp)}</td><td class="n">${Math.round((1-p.hpp/price(p.id))*100)}%</td><td class="n" style="${p.stok<=8?'color:var(--red);font-weight:800':''}">${p.stok}</td></tr>`).join('')}</tbody></table><p class="empty">Ubah lewat perintah, misalnya “naikkan harga parfum 10%”, “tambah stok sarung 30”, atau “produk baru Mukena Travel harga Rp150.000”.</p>`}
 let scrSig='';
 function renderAll(){if(!S)return;$('clk').textContent=hhmm(S.min);$('dayl').textContent='Hari '+S.day;const k=S.kpi;
  $('k-tx').textContent=k.tx;$('k-om').textContent=rp(k.om);$('k-lb').textContent=rp(k.om-k.hpp-k.fee-k.ads);$('k-ch').textContent=k.ch;$('k-vw').textContent=Math.round(k.vw).toLocaleString('id-ID');
  renderDesks();renderLog();renderInbox();renderTrain();
  const un=S.chats.reduce((a,c)=>a+c.unread,0);$('n-chat').hidden=!un;$('n-chat').textContent=un;
- const sig=tab+thread+JSON.stringify([S.chats.length,S.chats[0]&&S.chats[0].msgs.length,S.orders.map(o=>o.st).join(),S.posts.length,Math.round(k.vw/50),S.jur.length,S.prod.map(p=>p.stok+'/'+p.harga).join(),S.promo]);if(sig!==scrSig){scrSig=sig;renderScreen()}}
+ const sig=tab+thread+JSON.stringify([S.mvp&&S.mvp.ph,S.mvp&&S.mvp.prod,S.chats.length,S.chats[0]&&S.chats[0].msgs.length,S.orders.map(o=>o.st).join(),S.posts.length,Math.round(k.vw/50),S.jur.length,S.prod.map(p=>p.stok+'/'+p.harga).join(),S.promo]);if(sig!==scrSig){scrSig=sig;renderScreen()}}
 let inSig='';
 function renderInbox(){$('inbox-n').textContent=S.inbox.length+' menunggu';$('bell-n').textContent=S.inbox.length;$('b-bell').classList.toggle('on',S.inbox.length>0);const sig=S.inbox.map(i=>i.id).join();if(sig===inSig)return;inSig=sig;
  $('inbox').innerHTML=S.inbox.length?S.inbox.map(i=>`<li><b>${esc(i.title)}</b><p>${esc(i.body)}</p><div class="acts"><button type="button" class="a-ok" data-dec="${i.id}" data-a="ok">✓ Setujui</button><button type="button" class="a-rev" data-dec="${i.id}" data-a="rev">✎ Revisi</button><button type="button" class="a-no" data-dec="${i.id}" data-a="no">✕ Tolak</button></div></li>`).join(''):'<li class="empty">Tidak ada yang menunggu. Tim AI bekerja; Anda tinggal mengarahkan.</li>'}
 let trSig='';function renderTrain(){const sig=S.train.length;if(sig===trSig)return;trSig=sig;$('train').innerHTML=S.train.length?S.train.slice(0,8).map(t=>`<li><b>${AG[t.ag]?AG[t.ag].nm:t.ag}</b> · ${esc(t.note)} <small style="color:var(--muted)">${t.t}</small></li>`).join(''):'<li class="empty">Belum ada koreksi. Saat Anda memilih Revisi atau Tolak, catatannya masuk ke sini dan dipakai agen berikutnya.</li>'}
 // ---------------- wiring
-const CHIPS=['@konten bikin video TikTok promo sarung tenun','kasih diskon 10% untuk peci hari ini','@akunting buatkan laporan keuangan hari ini','tambah stok parfum 30','pasang iklan Rp200.000','live TikTok jam 8 malam','hitung zakat dari laba','produk baru Mukena Travel harga Rp150.000','@cs follow up pembeli yang belum bayar','cari supplier sarung yang lebih murah','buatkan slogan baru untuk SantriBos'];
+const CHIPS=['mulai MVP kaligrafi custom','@analis riset pasar hampers santri akhir tahun','@konten bikin video TikTok promo sarung tenun','kasih diskon 10% untuk peci hari ini','@akunting buatkan laporan keuangan hari ini','tambah stok parfum 30','pasang iklan Rp200.000','live TikTok jam 8 malam','hitung zakat dari laba','produk baru Mukena Travel harga Rp150.000','@cs follow up pembeli yang belum bayar','cari supplier sarung yang lebih murah','buatkan slogan baru untuk SantriBos'];
 $('chips').innerHTML=CHIPS.map(c=>`<button type="button" data-chip="${esc(c)}">${esc(c)}</button>`).join('');
 document.addEventListener('click',e=>{const t=e.target;
  const tb=t.closest('[data-tab]');if(tb){tab=tb.dataset.tab;document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',b===tb));scrSig='';renderAll();return}
