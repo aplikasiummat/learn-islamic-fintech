@@ -91,7 +91,7 @@ const T = {
   sbS1t:"Masuk kantor", sbS1s:"Tekan Mulai hari. Team Leader membagi tugas ke tujuh karyawan AI.",
   sbS2t:"Lihat tim bekerja", sbS2s:"Chat dibalas, pesanan dikirim, konten dibuat, jurnal dicatat. Semua terlihat di lantai kantor.",
   sbS3t:"Putuskan", sbS3s:"Setujui, revisi, atau tolak konten, diskon, dan harga grosir. Revisi masuk ruang pelatihan.",
-  sbS4t:"Perintah apa saja", sbS4s:"Ketik perintah bebas. Team Leader memilih agen yang tepat dan hasilnya kembali ke meja Bos. Ketik "mulai MVP ..." untuk melihat tim AI menjalankan lima fase MVP.",
+  sbS4t:"Perintah apa saja", sbS4s:"Ketik perintah bebas. Team Leader memilih agen yang tepat dan hasilnya kembali ke meja Bos. Ketik “mulai MVP ...” untuk melihat tim AI menjalankan lima fase MVP.",
   sbMechEyebrow:"Mekanisme", sbMechTitle:"Apa saja yang disimulasikan", sbMechLead:"Berjalan langsung di browser, tanpa token AI. Agen bekerja dengan alur dan templat yang meniru kantor AI sungguhan.",
   sbK1:"Operasional", sbK1t:"CS dan Admin Toko", sbK1s:"Sari membalas chat, termasuk soal halal dan nego harga; Tari mengemas, input resi, dan menjaga stok.",
   sbK2:"Keuangan", sbK2t:"Finance dan Akunting", sbK2s:"Fikri memverifikasi dana dan menghitung margin; Aldi mencatat jurnal dan menyusun laba rugi.",
